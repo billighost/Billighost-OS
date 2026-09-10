@@ -15,7 +15,11 @@ export default function StartMenu({
   const APPS = [
     { id: 'files', name: 'Files', icon: '📁', desc: 'Virtual File System & Explorer' },
     { id: 'terminal', name: 'Terminal', icon: '⚡', desc: 'Billighost Command Shell' },
+    { id: 'browser', name: 'Browser', icon: '🌐', desc: 'Ghost Web Browser' },
     { id: 'notepad', name: 'Notepad', icon: '📝', desc: 'Text & Markdown Editor' },
+    { id: 'media', name: 'Music', icon: '🎵', desc: 'Audio Player & Visualizer' },
+    { id: 'gallery', name: 'Gallery', icon: '🖼️', desc: 'Image Viewer' },
+    { id: 'calculator', name: 'Calculator', icon: '🔢', desc: 'Standard & Scientific Calculator' },
     { id: 'settings', name: 'Settings', icon: '⚙️', desc: 'Personalization & Telemetry' },
     { id: 'monitor', name: 'Task Manager', icon: '📊', desc: 'Processes & Storage Monitor' },
   ];

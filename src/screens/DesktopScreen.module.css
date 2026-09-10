@@ -353,6 +353,65 @@
   transition: opacity 0.5s ease;
 }
 
+/* Snap Preview Overlays */
+.snapPreviewFull {
+  position: absolute;
+  inset: 0;
+  bottom: 52px;
+  background: rgba(126, 184, 255, 0.12);
+  border: 2px dashed rgba(126, 184, 255, 0.6);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 4000;
+}
+
+.snapPreviewLeft {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50vw;
+  bottom: 52px;
+  background: rgba(126, 184, 255, 0.12);
+  border: 2px dashed rgba(126, 184, 255, 0.6);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 4000;
+}
+
+.snapPreviewRight {
+  position: absolute;
+  top: 0;
+  left: 50vw;
+  width: 50vw;
+  bottom: 52px;
+  background: rgba(126, 184, 255, 0.12);
+  border: 2px dashed rgba(126, 184, 255, 0.6);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 4000;
+}
+
+.taskViewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.taskViewBtn:hover {
+  background: rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.3);
+  color: var(--accent-glow);
+}
+
 @keyframes desktopFadeIn {
   from {
     opacity: 0;

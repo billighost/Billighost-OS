@@ -8,6 +8,7 @@ import { VFS } from '../services/storage/indexedDB';
 import DesktopIconGrid from '../components/desktop/DesktopIconGrid';
 import Window from '../components/desktop/Window';
 import StartMenu from '../components/desktop/StartMenu';
+import TaskViewModal from '../components/desktop/TaskViewModal';
 import {
   NetworkFlyout,
   BatteryFlyout,
@@ -20,6 +21,10 @@ import FileManagerApp from '../apps/FileManagerApp';
 import TerminalApp from '../apps/TerminalApp';
 import NotepadApp from '../apps/NotepadApp';
 import TaskManagerApp from '../apps/TaskManagerApp';
+import GhostBrowserApp from '../apps/GhostBrowserApp';
+import AudioPlayerApp from '../apps/AudioPlayerApp';
+import ImageViewerApp from '../apps/ImageViewerApp';
+import CalculatorApp from '../apps/CalculatorApp';
 
 import styles from './DesktopScreen.module.css';
 
@@ -45,8 +50,10 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   // --- Clock ---
   const [time, setTime] = useState(() => getFormattedTime(appearance.clockFormat));
 
-  // --- UI Flyouts ---
+  // --- UI Flyouts & Task View ---
   const [activeFlyout, setActiveFlyout] = useState(null); // 'start' | 'network' | 'battery' | 'calendar' | 'control' | null
+  const [showTaskView, setShowTaskView] = useState(false);
+  const [snapPreview, setSnapPreview] = useState(null); // 'full' | 'left' | 'right' | null
 
   // --- Window Manager State ---
   const [windows, setWindows] = useState([]);
@@ -90,6 +97,18 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     }
   }, [appearance.accentColor]);
 
+  // Alt + Tab Keyboard Shortcut for Task View
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.altKey || e.metaKey) && (e.key === 'Tab' || e.key === 'q')) {
+        e.preventDefault();
+        setShowTaskView(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // --- Window Actions ---
   const handleLaunchApp = useCallback((appId, title, icon, props = {}) => {
     playClick();
@@ -118,6 +137,10 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         terminal: { w: 640, h: 400 },
         notepad: { w: 600, h: 420 },
         monitor: { w: 540, h: 380 },
+        browser: { w: 780, h: 500 },
+        media: { w: 460, h: 320 },
+        gallery: { w: 640, h: 460 },
+        calculator: { w: 480, h: 440 },
       };
 
       const size = defaultSizes[appId] || { w: 640, h: 420 };
@@ -129,6 +152,8 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         props,
         isMinimized: false,
         isMaximized: false,
+        snapState: null,
+        restoreSize: size,
         position: initialPos,
         size,
         zIndex: nextZIndex + 1,
@@ -143,7 +168,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   const handleFocusWindow = useCallback((id) => {
     setActiveWindowId(id);
     setWindows(prev =>
-      prev.map(w => (w.id === id ? { ...w, zIndex: nextZIndex + 1 } : w))
+      prev.map(w => (w.id === id ? { ...w, isMinimized: false, zIndex: nextZIndex + 1 } : w))
     );
     setNextZIndex(z => z + 1);
   }, [nextZIndex]);
@@ -167,7 +192,29 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
 
   const handleMaximizeWindow = useCallback((id) => {
     setWindows(prev =>
-      prev.map(w => (w.id === id ? { ...w, isMaximized: !w.isMaximized } : w))
+      prev.map(w => {
+        if (w.id !== id) return w;
+        return {
+          ...w,
+          isMaximized: !w.isMaximized,
+          snapState: null,
+          restoreSize: w.isMaximized ? w.restoreSize : w.size,
+        };
+      })
+    );
+  }, []);
+
+  const handleSnap = useCallback((id, snapType) => {
+    setWindows(prev =>
+      prev.map(w => {
+        if (w.id !== id) return w;
+        return {
+          ...w,
+          snapState: snapType,
+          isMaximized: false,
+          restoreSize: w.snapState ? w.restoreSize : w.size,
+        };
+      })
     );
   }, []);
 
@@ -179,7 +226,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
 
   const handleUpdateSize = useCallback((id, size) => {
     setWindows(prev =>
-      prev.map(w => (w.id === id ? { ...w, size } : w))
+      prev.map(w => (w.id === id ? { ...w, size, restoreSize: size } : w))
     );
   }, []);
 
@@ -217,6 +264,11 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         <div className={styles.wallpaperFallback} />
       )}
 
+      {/* Snap Preview Ghost Outlines */}
+      {snapPreview === 'full' && <div className={styles.snapPreviewFull} />}
+      {snapPreview === 'left' && <div className={styles.snapPreviewLeft} />}
+      {snapPreview === 'right' && <div className={styles.snapPreviewRight} />}
+
       {/* Desktop Workspace & Icon Grid */}
       <div className={styles.desktopArea}>
         <DesktopIconGrid
@@ -234,6 +286,8 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             onClose={() => handleCloseWindow(win.id)}
             onMinimize={() => handleMinimizeWindow(win.id)}
             onMaximize={() => handleMaximizeWindow(win.id)}
+            onSnap={handleSnap}
+            onSnapPreview={setSnapPreview}
             onUpdatePos={handleUpdatePos}
             onUpdateSize={handleUpdateSize}
             playClick={playClick}
@@ -247,7 +301,13 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             {win.appId === 'files' && (
               <FileManagerApp
                 initialPath={win.props?.initialPath || '/Users/User'}
-                onOpenFile={(path, name) => handleLaunchApp('notepad', name, '📝', { filePath: path })}
+                onOpenFile={(path, name) => {
+                  if (name.endsWith('.svg') || name.endsWith('.png') || name.endsWith('.jpg')) {
+                    handleLaunchApp('gallery', name, '🖼️', { filePath: path });
+                  } else {
+                    handleLaunchApp('notepad', name, '📝', { filePath: path });
+                  }
+                }}
                 playClick={playClick}
               />
             )}
@@ -270,9 +330,42 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 playClick={playClick}
               />
             )}
+            {win.appId === 'browser' && (
+              <GhostBrowserApp
+                playClick={playClick}
+              />
+            )}
+            {win.appId === 'media' && (
+              <AudioPlayerApp
+                playClick={playClick}
+              />
+            )}
+            {win.appId === 'gallery' && (
+              <ImageViewerApp
+                filePath={win.props?.filePath || null}
+                playClick={playClick}
+              />
+            )}
+            {win.appId === 'calculator' && (
+              <CalculatorApp
+                playClick={playClick}
+              />
+            )}
           </Window>
         ))}
       </div>
+
+      {/* Task View / Alt+Tab Exposé Switcher */}
+      {showTaskView && (
+        <TaskViewModal
+          windows={windows}
+          activeWindowId={activeWindowId}
+          onSelectWindow={handleFocusWindow}
+          onCloseWindow={handleCloseWindow}
+          onClose={() => setShowTaskView(false)}
+          playClick={playClick}
+        />
+      )}
 
       {/* Flyout Panels */}
       {activeFlyout === 'start' && (
@@ -325,7 +418,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
 
       {/* Glass Taskbar */}
       <div className={styles.taskbar} onClick={(e) => e.stopPropagation()}>
-        {/* Left: Start Button */}
+        {/* Left: Start Button + Task View */}
         <div className={styles.taskbarLeft}>
           <button
             className={`${styles.startBtn} ${activeFlyout === 'start' ? styles.startBtnActive : ''}`}
@@ -334,6 +427,17 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
           >
             <span className={styles.startLogoDot} />
             Billighost
+          </button>
+
+          <button
+            className={`${styles.taskViewBtn} ${showTaskView ? styles.taskViewBtnActive : ''}`}
+            onClick={() => {
+              playClick();
+              setShowTaskView(prev => !prev);
+            }}
+            title="Task View (Alt+Tab)"
+          >
+            ⧉
           </button>
         </div>
 
@@ -348,7 +452,6 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 onClick={() => {
                   playClick();
                   if (win.isMinimized) {
-                    setWindows(prev => prev.map(w => w.id === win.id ? { ...w, isMinimized: false } : w));
                     handleFocusWindow(win.id);
                   } else if (isActive) {
                     handleMinimizeWindow(win.id);
