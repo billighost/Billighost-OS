@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useBattery } from '../hooks/useBattery';
 import { useNetwork } from '../hooks/useNetwork';
 import { useStorageQuota } from '../hooks/useStorageQuota';
 import { LocalSettings } from '../services/storage/localStorage';
 import { VFS } from '../services/storage/indexedDB';
+import { NotificationService } from '../services/notificationService';
 
 import DesktopIconGrid from '../components/desktop/DesktopIconGrid';
 import Window from '../components/desktop/Window';
 import StartMenu from '../components/desktop/StartMenu';
 import TaskViewModal from '../components/desktop/TaskViewModal';
+import NotificationToasts from '../components/desktop/NotificationToasts';
 import {
   NetworkFlyout,
   BatteryFlyout,
@@ -25,6 +27,7 @@ import GhostBrowserApp from '../apps/GhostBrowserApp';
 import AudioPlayerApp from '../apps/AudioPlayerApp';
 import ImageViewerApp from '../apps/ImageViewerApp';
 import CalculatorApp from '../apps/CalculatorApp';
+import RecycleBinApp from '../apps/RecycleBinApp';
 
 import styles from './DesktopScreen.module.css';
 
@@ -41,6 +44,15 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   const [profile, setProfile] = useState(() => LocalSettings.getProfile());
   const [appearance, setAppearance] = useState(() => LocalSettings.getAppearance());
   const [sound, setSound] = useState(() => LocalSettings.getSound());
+  const [security, setSecurity] = useState(() => LocalSettings.getSecurity());
+
+  // --- Virtual Desktops / Workspaces ---
+  const [workspaces, setWorkspaces] = useState([
+    { id: 'ws-1', name: 'Desktop 1' },
+    { id: 'ws-2', name: 'Desktop 2' },
+  ]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState('ws-1');
+  const lastActivityRef = useRef(Date.now());
 
   // --- Real Hardware Telemetry ---
   const battery = useBattery();
@@ -70,17 +82,126 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     const handleProfile = (e) => setProfile(e.detail);
     const handleAppearance = (e) => setAppearance(e.detail);
     const handleSound = (e) => setSound(e.detail);
+    const handleSecurity = (e) => setSecurity(e.detail);
 
     window.addEventListener('billighost:profile-change', handleProfile);
     window.addEventListener('billighost:appearance-change', handleAppearance);
     window.addEventListener('billighost:sound-change', handleSound);
+    window.addEventListener('billighost:security-change', handleSecurity);
 
     return () => {
       window.removeEventListener('billighost:profile-change', handleProfile);
       window.removeEventListener('billighost:appearance-change', handleAppearance);
       window.removeEventListener('billighost:sound-change', handleSound);
+      window.removeEventListener('billighost:security-change', handleSecurity);
     };
   }, []);
+
+  // Idle Auto-Lock Detection
+  useEffect(() => {
+    const updateActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    window.addEventListener('mousemove', updateActivity);
+    window.addEventListener('keydown', updateActivity);
+    window.addEventListener('mousedown', updateActivity);
+    window.addEventListener('touchstart', updateActivity);
+
+    const checkInterval = setInterval(() => {
+      const timeoutMinutes = security?.autoLockMinutes || 0;
+      if (timeoutMinutes > 0) {
+        const elapsedMs = Date.now() - lastActivityRef.current;
+        if (elapsedMs >= timeoutMinutes * 60 * 1000) {
+          if (onLock) {
+            onLock();
+            NotificationService.send({
+              title: 'Session Auto-Locked',
+              message: `Inactivity timeout of ${timeoutMinutes} min reached`,
+              icon: '🔒',
+              type: 'info',
+            });
+          }
+        }
+      }
+    }, 10000);
+
+    return () => {
+      window.removeEventListener('mousemove', updateActivity);
+      window.removeEventListener('keydown', updateActivity);
+      window.removeEventListener('mousedown', updateActivity);
+      window.removeEventListener('touchstart', updateActivity);
+      clearInterval(checkInterval);
+    };
+  }, [security?.autoLockMinutes, onLock]);
+
+  // Network Telemetry Notifications
+  const prevOnlineRef = useRef(network.isOnline);
+  useEffect(() => {
+    if (prevOnlineRef.current !== network.isOnline) {
+      if (network.isOnline) {
+        NotificationService.send({
+          title: 'Network Connected',
+          message: `Connected via ${network.effectiveType.toUpperCase()} (${network.downlink} Mbps)`,
+          icon: '🌐',
+          type: 'success',
+        });
+      } else {
+        NotificationService.send({
+          title: 'Network Disconnected',
+          message: 'System is now in offline mode',
+          icon: '⚠️',
+          type: 'warning',
+        });
+      }
+      prevOnlineRef.current = network.isOnline;
+    }
+  }, [network.isOnline, network.effectiveType, network.downlink]);
+
+  // Virtual Desktops Switcher Handlers
+  const handleSelectWorkspace = useCallback((wsId) => {
+    setActiveWorkspaceId(wsId);
+    const ws = workspaces.find(w => w.id === wsId);
+    if (ws) {
+      NotificationService.send({
+        title: 'Virtual Desktop',
+        message: `Switched to ${ws.name}`,
+        icon: '🖥️',
+        type: 'info',
+      });
+    }
+  }, [workspaces]);
+
+  const handleCreateWorkspace = useCallback(() => {
+    if (workspaces.length >= 5) return;
+    const newId = `ws-${Date.now()}`;
+    const newName = `Desktop ${workspaces.length + 1}`;
+    const newWs = { id: newId, name: newName };
+    setWorkspaces(prev => [...prev, newWs]);
+    setActiveWorkspaceId(newId);
+    NotificationService.send({
+      title: 'New Desktop',
+      message: `${newName} created and active`,
+      icon: '🖥️',
+      type: 'success',
+    });
+  }, [workspaces.length]);
+
+  const handleRemoveWorkspace = useCallback((wsId) => {
+    if (workspaces.length <= 1) return;
+    const targetWs = workspaces.find(w => w.id === wsId);
+    setWorkspaces(prev => prev.filter(w => w.id !== wsId));
+    setWindows(prev => prev.map(w => w.workspaceId === wsId ? { ...w, workspaceId: 'ws-1' } : w));
+    if (activeWorkspaceId === wsId) {
+      setActiveWorkspaceId('ws-1');
+    }
+    NotificationService.send({
+      title: 'Desktop Removed',
+      message: `Closed ${targetWs?.name || 'desktop'}. Windows moved to Desktop 1.`,
+      icon: '🖥️',
+      type: 'info',
+    });
+  }, [workspaces, activeWorkspaceId]);
 
   // Clock interval
   useEffect(() => {
@@ -97,17 +218,30 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     }
   }, [appearance.accentColor]);
 
-  // Alt + Tab Keyboard Shortcut for Task View
+  // Keyboard Shortcuts: Alt+Tab (Task View) & Ctrl+Alt+Arrows (Workspace Switch)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.altKey || e.metaKey) && (e.key === 'Tab' || e.key === 'q')) {
         e.preventDefault();
         setShowTaskView(prev => !prev);
       }
+      if (e.ctrlKey && e.altKey) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          const currentIndex = workspaces.findIndex(w => w.id === activeWorkspaceId);
+          const nextIndex = (currentIndex + 1) % workspaces.length;
+          handleSelectWorkspace(workspaces[nextIndex].id);
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          const currentIndex = workspaces.findIndex(w => w.id === activeWorkspaceId);
+          const prevIndex = (currentIndex - 1 + workspaces.length) % workspaces.length;
+          handleSelectWorkspace(workspaces[prevIndex].id);
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [workspaces, activeWorkspaceId, handleSelectWorkspace]);
 
   // --- Window Actions ---
   const handleLaunchApp = useCallback((appId, title, icon, props = {}) => {
@@ -119,7 +253,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         setActiveWindowId(existing.id);
         return prev.map(w =>
           w.id === existing.id
-            ? { ...w, isMinimized: false, zIndex: nextZIndex + 1, props: { ...w.props, ...props } }
+            ? { ...w, workspaceId: activeWorkspaceId, isMinimized: false, zIndex: nextZIndex + 1, props: { ...w.props, ...props } }
             : w
         );
       }
@@ -141,6 +275,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         media: { w: 460, h: 320 },
         gallery: { w: 640, h: 460 },
         calculator: { w: 480, h: 440 },
+        trash: { w: 680, h: 440 },
       };
 
       const size = defaultSizes[appId] || { w: 640, h: 420 };
@@ -150,6 +285,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         title,
         icon,
         props,
+        workspaceId: activeWorkspaceId,
         isMinimized: false,
         isMaximized: false,
         snapState: null,
@@ -163,7 +299,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
       setActiveWindowId(newWin.id);
       return [...prev, newWin];
     });
-  }, [nextZIndex, playClick]);
+  }, [nextZIndex, playClick, activeWorkspaceId]);
 
   const handleFocusWindow = useCallback((id) => {
     setActiveWindowId(id);
@@ -250,6 +386,13 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     return null;
   }, [appearance.customWallpaperData, appearance.wallpaperCss]);
 
+  // Filter windows by active virtual desktop workspace
+  const visibleWindows = useMemo(() => {
+    return windows.filter(
+      w => !w.workspaceId || w.workspaceId === activeWorkspaceId || w.workspaceId === 'all'
+    );
+  }, [windows, activeWorkspaceId]);
+
   return (
     <div className={styles.container} onClick={closeAllFlyouts}>
       {/* Night Light Screen Filter */}
@@ -277,7 +420,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         />
 
         {/* Floating Windows Manager */}
-        {windows.map((win) => (
+        {visibleWindows.map((win) => (
           <Window
             key={win.id}
             window={win}
@@ -351,14 +494,27 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 playClick={playClick}
               />
             )}
+            {win.appId === 'trash' && (
+              <RecycleBinApp
+                playClick={playClick}
+              />
+            )}
           </Window>
         ))}
       </div>
+
+      {/* Real-time Notification Toasts */}
+      <NotificationToasts playClick={playClick} />
 
       {/* Task View / Alt+Tab Exposé Switcher */}
       {showTaskView && (
         <TaskViewModal
           windows={windows}
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspaceId}
+          onSelectWorkspace={handleSelectWorkspace}
+          onCreateWorkspace={handleCreateWorkspace}
+          onRemoveWorkspace={handleRemoveWorkspace}
           activeWindowId={activeWindowId}
           onSelectWindow={handleFocusWindow}
           onCloseWindow={handleCloseWindow}
@@ -441,9 +597,9 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
           </button>
         </div>
 
-        {/* Center: Running Applications Tabs */}
+        {/* Center: Running Applications Tabs (Filtered by active workspace) */}
         <div className={styles.taskbarCenter}>
-          {windows.map((win) => {
+          {visibleWindows.map((win) => {
             const isActive = activeWindowId === win.id && !win.isMinimized;
             return (
               <button

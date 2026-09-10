@@ -1,16 +1,28 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { LocalSettings } from '../services/storage/localStorage';
 import styles from './PinScreen.module.css';
-
-const CORRECT_PIN = '0813';
 
 export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
   const [pin, setPin] = useState(['', '', '', '']);
   const [isError, setIsError] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [security, setSecurity] = useState(() => LocalSettings.getSecurity());
+  const [profile, setProfile] = useState(() => LocalSettings.getProfile());
   const inputRefs = useRef([]);
 
   const { playKeyPress = () => {}, playError = () => {}, playSuccess = () => {} } = audio;
+
+  useEffect(() => {
+    const handleSec = (e) => setSecurity(e.detail);
+    const handleProf = (e) => setProfile(e.detail);
+    window.addEventListener('billighost:security-change', handleSec);
+    window.addEventListener('billighost:profile-change', handleProf);
+    return () => {
+      window.removeEventListener('billighost:security-change', handleSec);
+      window.removeEventListener('billighost:profile-change', handleProf);
+    };
+  }, []);
 
   // Auto focus first input on mount
   useEffect(() => {
@@ -22,7 +34,8 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
 
   const evaluatePin = useCallback(
     (enteredPin) => {
-      if (enteredPin === CORRECT_PIN) {
+      const correctPin = security?.pin || '0813';
+      if (enteredPin === correctPin) {
         setIsSuccess(true);
         playSuccess();
         setTimeout(() => {
@@ -38,7 +51,7 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
         }, 600);
       }
     },
-    [onSuccess, playError, playSuccess]
+    [onSuccess, playError, playSuccess, security?.pin]
   );
 
   const handleInputChange = (index, value) => {

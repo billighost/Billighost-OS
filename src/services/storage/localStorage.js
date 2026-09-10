@@ -25,10 +25,16 @@ export const DEFAULT_SOUND_CONFIG = {
   soundEffects: true,
 };
 
+export const DEFAULT_SECURITY = {
+  pin: '0813',
+  autoLockMinutes: 0, // 0 = disabled
+};
+
 const STORAGE_KEYS = {
   USER_PROFILE: 'billighost_user_profile',
   APPEARANCE: 'billighost_appearance',
   SOUND: 'billighost_sound_config',
+  SECURITY: 'billighost_security',
   WINDOW_STATE: 'billighost_window_state',
 };
 
@@ -105,11 +111,36 @@ export const LocalSettings = {
     return { ...DEFAULT_SOUND_CONFIG };
   },
 
+  // --- Security & PIN ---
+  getSecurity() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.SECURITY);
+      return data ? { ...DEFAULT_SECURITY, ...JSON.parse(data) } : { ...DEFAULT_SECURITY };
+    } catch {
+      return { ...DEFAULT_SECURITY };
+    }
+  },
+
+  setSecurity(updates) {
+    const current = this.getSecurity();
+    const merged = { ...current, ...updates };
+    localStorage.setItem(STORAGE_KEYS.SECURITY, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent('billighost:security-change', { detail: merged }));
+    return merged;
+  },
+
+  resetSecurity() {
+    localStorage.removeItem(STORAGE_KEYS.SECURITY);
+    window.dispatchEvent(new CustomEvent('billighost:security-change', { detail: DEFAULT_SECURITY }));
+    return { ...DEFAULT_SECURITY };
+  },
+
   // --- Reset All Settings to Factory Default ---
   resetAll() {
     this.resetProfile();
     this.resetAppearance();
     this.resetSound();
+    this.resetSecurity();
     localStorage.removeItem(STORAGE_KEYS.WINDOW_STATE);
   },
 };

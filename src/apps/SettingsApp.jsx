@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { LocalSettings, DEFAULT_USER_PROFILE, DEFAULT_APPEARANCE } from '../services/storage/localStorage';
+import { LocalSettings, DEFAULT_USER_PROFILE, DEFAULT_APPEARANCE, DEFAULT_SECURITY } from '../services/storage/localStorage';
+import { NotificationService } from '../services/notificationService';
 import { VFS } from '../services/storage/indexedDB';
 import { CacheStorageService } from '../services/storage/cacheStorage';
 import { useStorageQuota } from '../hooks/useStorageQuota';
@@ -68,7 +69,12 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
   const [profile, setProfile] = useState(() => LocalSettings.getProfile());
   const [appearance, setAppearance] = useState(() => LocalSettings.getAppearance());
   const [sound, setSound] = useState(() => LocalSettings.getSound());
+  const [security, setSecurity] = useState(() => LocalSettings.getSecurity());
   const [saveBanner, setSaveBanner] = useState('');
+
+  const [curPin, setCurPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
 
   const avatarInputRef = useRef(null);
   const wallpaperInputRef = useRef(null);
@@ -80,6 +86,51 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
   const showSavedMessage = (msg) => {
     setSaveBanner(msg);
     setTimeout(() => setSaveBanner(''), 2500);
+  };
+
+  // --- Security PIN Operations ---
+  const handleChangePin = (e) => {
+    e.preventDefault();
+    playClick();
+    if (curPin !== security.pin) {
+      alert('Current PIN is incorrect.');
+      return;
+    }
+    if (newPin.length !== 4 || isNaN(newPin)) {
+      alert('New PIN must be exactly 4 digits.');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      alert('New PIN and Confirm PIN do not match.');
+      return;
+    }
+    const updated = LocalSettings.setSecurity({ pin: newPin });
+    setSecurity(updated);
+    setCurPin('');
+    setNewPin('');
+    setConfirmPin('');
+    NotificationService.send({
+      title: 'Security PIN Updated',
+      message: 'Your OS login PIN has been updated.',
+      icon: '🔒',
+      type: 'success',
+    });
+    showSavedMessage('Security PIN updated successfully!');
+  };
+
+  const handleResetPin = () => {
+    playClick();
+    if (confirm('Reset security PIN to factory default (0813)?')) {
+      const reset = LocalSettings.resetSecurity();
+      setSecurity(reset);
+      NotificationService.send({
+        title: 'Security PIN Reset',
+        message: 'Login PIN reset to default (0813).',
+        icon: '🛡️',
+        type: 'info',
+      });
+      showSavedMessage('PIN restored to default (0813)!');
+    }
   };
 
   // --- Profile Operations ---
@@ -262,6 +313,13 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
             onClick={() => { playClick(); setActiveTab('sound'); }}
           >
             <span className={styles.navIcon}>🔊</span> Sound & Audio
+          </button>
+
+          <button
+            className={`${styles.navItem} ${activeTab === 'security' ? styles.navItemActive : ''}`}
+            onClick={() => { playClick(); setActiveTab('security'); }}
+          >
+            <span className={styles.navIcon}>🔒</span> Security & PIN
           </button>
 
           <button
@@ -608,6 +666,66 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 7. SECURITY & PIN TAB */}
+        {activeTab === 'security' && (
+          <div className={styles.tabContent}>
+            <div className={styles.tabHeader}>
+              <h2>Security & Session PIN</h2>
+              <p>Configure your lock screen authorization PIN and idle timers.</p>
+            </div>
+
+            <form onSubmit={handleChangePin} className={styles.card}>
+              <div className={styles.formGroup}>
+                <label>Current PIN</label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={curPin}
+                  onChange={(e) => setCurPin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Enter current 4-digit PIN"
+                  className={styles.inputField}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>New PIN (4 digits)</label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Enter new 4-digit PIN"
+                  className={styles.inputField}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Confirm New PIN</label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Repeat new 4-digit PIN"
+                  className={styles.inputField}
+                  required
+                />
+              </div>
+
+              <div className={styles.btnRow}>
+                <button type="submit" className={styles.btnPrimary}>
+                  Update Security PIN
+                </button>
+                <button type="button" className={styles.btnDanger} onClick={handleResetPin}>
+                  Reset PIN to Default (0813)
+                </button>
+              </div>
+            </form>
           </div>
         )}
       </div>

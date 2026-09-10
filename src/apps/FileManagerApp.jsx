@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { VFS } from '../services/storage/indexedDB';
+import { NotificationService } from '../services/notificationService';
 import styles from './FileManagerApp.module.css';
 
 export default function FileManagerApp({
@@ -72,9 +73,45 @@ export default function FileManagerApp({
   const handleDeleteSelected = async () => {
     if (!selectedItem) return;
     playClick();
-    if (confirm(`Delete ${selectedItem.name}?`)) {
-      await VFS.deleteNode(selectedItem.path);
+    if (currentPath === '/Users/User/.trash') {
+      if (confirm(`Permanently delete ${selectedItem.name}?`)) {
+        await VFS.deleteNode(selectedItem.path);
+        NotificationService.send({
+          title: 'Permanently Deleted',
+          message: `Removed "${selectedItem.name}" forever`,
+          icon: '🗑️',
+          type: 'warning',
+        });
+        setSelectedItem(null);
+      }
+    } else {
+      if (confirm(`Move ${selectedItem.name} to Recycle Bin?`)) {
+        await VFS.moveToTrash(selectedItem.path);
+        NotificationService.send({
+          title: 'Moved to Recycle Bin',
+          message: `"${selectedItem.name}" was moved to the Recycle Bin`,
+          icon: '🗑️',
+          type: 'info',
+        });
+        setSelectedItem(null);
+      }
+    }
+  };
+
+  const handleRestoreSelected = async () => {
+    if (!selectedItem) return;
+    playClick();
+    try {
+      const restored = await VFS.restoreFromTrash(selectedItem.path);
+      NotificationService.send({
+        title: 'Item Restored',
+        message: `Restored "${restored.name}" to ${restored.parentPath}`,
+        icon: '♻️',
+        type: 'success',
+      });
       setSelectedItem(null);
+    } catch (err) {
+      alert(`Could not restore: ${err.message}`);
     }
   };
 
@@ -112,6 +149,20 @@ export default function FileManagerApp({
           </button>
           <button
             className={styles.toolBtn}
+            onClick={() => { playClick(); setCurrentPath('/Users/User'); }}
+            title="Go to Home"
+          >
+            🏠
+          </button>
+          <button
+            className={styles.toolBtn}
+            onClick={() => { playClick(); setCurrentPath('/Users/User/.trash'); }}
+            title="Go to Recycle Bin"
+          >
+            🗑️
+          </button>
+          <button
+            className={styles.toolBtn}
             onClick={() => loadDirectory(currentPath)}
             title="Refresh folder"
           >
@@ -121,7 +172,7 @@ export default function FileManagerApp({
 
         {/* Address Bar */}
         <div className={styles.addressBar}>
-          <span className={styles.addressIcon}>📁</span>
+          <span className={styles.addressIcon}>{currentPath === '/Users/User/.trash' ? '🗑️' : '📁'}</span>
           <span className={styles.addressText}>{currentPath}</span>
         </div>
 
@@ -145,6 +196,15 @@ export default function FileManagerApp({
           >
             📥 Import
           </button>
+          {selectedItem && currentPath === '/Users/User/.trash' && (
+            <button
+              className={styles.toolBtn}
+              onClick={handleRestoreSelected}
+              title="Restore to original folder"
+            >
+              ♻️ Restore
+            </button>
+          )}
           {selectedItem && selectedItem.type === 'file' && (
             <button className={styles.toolBtn} onClick={handleExportSelected} title="Download to PC">
               📤 Export

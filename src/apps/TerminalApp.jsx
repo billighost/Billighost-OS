@@ -176,6 +176,36 @@ export default function TerminalApp({ onLock, onRestart }) {
         break;
       }
 
+      case 'trash': {
+        if (!args[0]) {
+          newHistory.push({ type: 'error', text: 'trash: missing operand' });
+        } else {
+          const targetPath = args[0].startsWith('/') ? args[0] : `${currentDir === '/' ? '' : currentDir}/${args[0]}`;
+          try {
+            await VFS.moveToTrash(targetPath);
+            newHistory.push({ type: 'output', text: `Moved to Recycle Bin: ${targetPath}` });
+          } catch (err) {
+            newHistory.push({ type: 'error', text: `trash: ${err.message}` });
+          }
+        }
+        break;
+      }
+
+      case 'restore': {
+        if (!args[0]) {
+          newHistory.push({ type: 'error', text: 'restore: missing operand' });
+        } else {
+          const trashPath = args[0].startsWith('/') ? args[0] : `/Users/User/.trash/${args[0]}`;
+          try {
+            const restored = await VFS.restoreFromTrash(trashPath);
+            newHistory.push({ type: 'output', text: `Restored ${restored.name} to ${restored.parentPath}` });
+          } catch (err) {
+            newHistory.push({ type: 'error', text: `restore: ${err.message}` });
+          }
+        }
+        break;
+      }
+
       case 'battery':
         newHistory.push({
           type: 'output',

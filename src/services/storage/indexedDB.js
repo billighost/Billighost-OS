@@ -42,6 +42,7 @@ const DEFAULT_DIRS = [
   '/Users/User/Downloads',
   '/Users/User/Pictures',
   '/Users/User/Music',
+  '/Users/User/.trash',
 ];
 
 const DEFAULT_FILES = [
@@ -100,6 +101,11 @@ export const VFS = {
 
     if (count === 0) {
       await this.seedDefaults();
+    } else {
+      const trash = await this.getNode('/Users/User/.trash');
+      if (!trash) {
+        await this.createDirectory('/Users/User/.trash');
+      }
     }
   },
 
@@ -324,6 +330,91 @@ export const VFS = {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  },
+
+  async moveToTrash(path) {
+    const node = await this.getNode(path);
+    if (!node) throw new Error(`Node not found: ${path}`);
+    if (path === '/Users/User/.trash') throw new Error('Cannot trash the recycle bin itself');
+    if (path.startsWith('/Users/User/.trash/')) throw new Error('Node is already in the recycle bin');
+
+    const trashPath = `/Users/User/.trash/${node.name}`;
+    
+    // If a node exists with this name in trash, overwrite it
+    const existingInTrash = await this.getNode(trashPath);
+    if (existingInTrash) {
+      await this.deleteNode(trashPath);
+    }
+
+    await this.deleteNode(path);
+
+    const trashedNode = {
+      ...node,
+      path: trashPath,
+      parentPath: '/Users/User/.trash',
+      originalPath: node.path,
+      originalParent: node.parentPath,
+      deletedAt: Date.now(),
+    };
+
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NODES, 'readwrite');
+      const store = tx.objectStore(STORE_NODES);
+      store.put(trashedNode);
+      tx.oncomplete = () => {
+        window.dispatchEvent(new CustomEvent('billighost:vfs-update', { detail: { path, action: 'trash' } }));
+        resolve(trashedNode);
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+
+  async restoreFromTrash(trashPath) {
+    const node = await this.getNode(trashPath);
+    if (!node) throw new Error(`Node not found in trash: ${trashPath}`);
+
+    const originalParent = node.originalParent || '/Users/User/Desktop';
+    const parentNode = await this.getNode(originalParent);
+    const targetParent = parentNode && parentNode.type === 'dir' ? originalParent : '/Users/User/Desktop';
+    const restoredPath = `${targetParent}/${node.name}`;
+
+    await this.deleteNode(trashPath);
+
+    const restoredNode = {
+      ...node,
+      path: restoredPath,
+      parentPath: targetParent,
+      updatedAt: Date.now(),
+    };
+    delete restoredNode.originalPath;
+    delete restoredNode.originalParent;
+    delete restoredNode.deletedAt;
+
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NODES, 'readwrite');
+      const store = tx.objectStore(STORE_NODES);
+      store.put(restoredNode);
+      tx.oncomplete = () => {
+        window.dispatchEvent(new CustomEvent('billighost:vfs-update', { detail: { path: restoredPath, action: 'restore' } }));
+        resolve(restoredNode);
+      };
+      tx.onerror = () => reject(tx.error);
+    });
+  },
+
+  async emptyTrash() {
+    const trashItems = await this.listDirectory('/Users/User/.trash');
+    for (const item of trashItems) {
+      await this.deleteNode(item.path);
+    }
+    window.dispatchEvent(new CustomEvent('billighost:vfs-update', { detail: { action: 'empty-trash' } }));
+    return true;
+  },
+
+  async listTrash() {
+    return this.listDirectory('/Users/User/.trash');
   },
 
   async resetToDefaults() {

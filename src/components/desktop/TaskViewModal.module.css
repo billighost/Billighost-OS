@@ -8,9 +8,91 @@
   z-index: 5000;
   display: flex;
   flex-direction: column;
-  padding: 40px 60px;
+  padding: 30px 60px;
   animation: taskViewFade 0.2s var(--ease-spring);
   user-select: none;
+}
+
+.workspaceBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.workspaceList {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 10px;
+  border-radius: var(--radius-lg);
+}
+
+.workspaceTab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workspaceTab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.workspaceTabActive {
+  background: rgba(126, 184, 255, 0.18) !important;
+  border-color: var(--accent-glow) !important;
+  color: var(--accent-glow) !important;
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.25);
+  font-weight: 600;
+}
+
+.wsIcon {
+  font-size: 0.95rem;
+}
+
+.removeWsBtn {
+  background: none;
+  border: none;
+  color: var(--text-ghost);
+  font-size: 0.68rem;
+  margin-left: 4px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.removeWsBtn:hover {
+  color: var(--accent-error);
+}
+
+.addWorkspaceBtn {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addWorkspaceBtn:hover {
+  border-color: var(--accent-glow);
+  color: var(--accent-glow);
+  background: rgba(126, 184, 255, 0.08);
 }
 
 .header {

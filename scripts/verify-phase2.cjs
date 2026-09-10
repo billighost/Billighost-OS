@@ -113,8 +113,8 @@ async function run() {
 
   // Exit Task View by clicking Calculator card
   console.log('Selecting Calculator from Task View...');
-  await page.click('span:has-text("Calculator")');
-  await page.waitForTimeout(400);
+  await page.click('[data-testid="taskview-card-calculator"]');
+  await page.waitForTimeout(600);
 
   // 7. Multi-window desktop shot
   const multiWindowShot = path.join(ARTIFACTS_DIR, '17_aero_snap_multitasking.png');

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { NotificationService } from '../../services/notificationService';
 import styles from './SystemTrayFlyouts.module.css';
 
 // 1. Network Flyout Panel
@@ -282,6 +283,7 @@ export function ActionCenterFlyout({
         </div>
 
         {/* Volume Slider */}
+        {/* Volume Slider */}
         <div className={styles.sliderCard}>
           <div className={styles.sliderHeader}>
             <span>Master Volume</span>
@@ -313,7 +315,63 @@ export function ActionCenterFlyout({
             Browser IndexedDB Quota: {storage.percentUsed}% utilized
           </div>
         </div>
+
+        {/* Notifications Feed */}
+        <div className={styles.telemetryCard}>
+          <div className={styles.telemetryRow}>
+            <span style={{ fontWeight: 600 }}>Notifications</span>
+            <button
+              className={styles.closeBtn}
+              style={{ fontSize: '0.68rem', color: 'var(--accent-glow)' }}
+              onClick={() => { playClick(); NotificationService.clear(); }}
+            >
+              Clear All
+            </button>
+          </div>
+          <NotificationsList playClick={playClick} />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function NotificationsList({ playClick }) {
+  const [items, setItems] = useState(() => NotificationService.getAll());
+
+  useEffect(() => {
+    const handleUpdate = (e) => setItems(e.detail);
+    window.addEventListener('billighost:notifications-update', handleUpdate);
+    return () => window.removeEventListener('billighost:notifications-update', handleUpdate);
+  }, []);
+
+  if (items.length === 0) {
+    return <div style={{ fontSize: '0.72rem', color: 'var(--text-ghost)', textAlign: 'center', padding: '6px 0' }}>No notifications</div>;
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '120px', overflowY: 'auto' }}>
+      {items.map((n) => (
+        <div
+          key={n.id}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '4px 8px',
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '4px',
+            fontSize: '0.72rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+            <span>{n.icon}</span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+              {n.title}
+            </span>
+          </div>
+          <span style={{ fontSize: '0.65rem', color: 'var(--text-ghost)', marginLeft: '6px' }}>{n.timeFormatted}</span>
+        </div>
+      ))}
     </div>
   );
 }

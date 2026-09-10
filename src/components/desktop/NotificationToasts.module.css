@@ -1,0 +1,103 @@
+.toastsContainer {
+  position: absolute;
+  bottom: 64px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toastCard {
+  width: 320px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(13, 13, 20, 0.9);
+  backdrop-filter: blur(32px) saturate(1.5);
+  -webkit-backdrop-filter: blur(32px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 16px rgba(126, 184, 255, 0.1);
+  pointer-events: auto;
+  cursor: pointer;
+  animation: toastSlideIn 0.25s var(--ease-spring);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.toastCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(126, 184, 255, 0.35);
+}
+
+.toast_success {
+  border-left: 3px solid var(--accent-success);
+}
+
+.toast_warning {
+  border-left: 3px solid var(--accent-warning);
+}
+
+.toast_error {
+  border-left: 3px solid var(--accent-error);
+}
+
+.toast_info {
+  border-left: 3px solid var(--accent-glow);
+}
+
+.toastIcon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.toastContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.toastTitle {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toastMessage {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--text-ghost);
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 0.7rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.closeBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

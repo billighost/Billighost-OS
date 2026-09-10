@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { VFS } from '../../services/storage/indexedDB';
+import { NotificationService } from '../../services/notificationService';
 import styles from './DesktopIconGrid.module.css';
 
 export default function DesktopIconGrid({
@@ -31,6 +32,7 @@ export default function DesktopIconGrid({
   const SYSTEM_SHORTCUTS = [
     { id: 'shortcut-pc', name: 'This PC', icon: '💻', action: () => onLaunchApp('files', 'Files', '📁', { initialPath: '/' }) },
     { id: 'shortcut-files', name: 'File Explorer', icon: '📁', action: () => onLaunchApp('files', 'Files', '📁', { initialPath: '/Users/User' }) },
+    { id: 'shortcut-trash', name: 'Recycle Bin', icon: '🗑️', action: () => onLaunchApp('trash', 'Recycle Bin', '🗑️') },
     { id: 'shortcut-terminal', name: 'Terminal', icon: '⚡', action: () => onLaunchApp('terminal', 'Terminal', '⚡') },
     { id: 'shortcut-browser', name: 'Browser', icon: '🌐', action: () => onLaunchApp('browser', 'Ghost Browser', '🌐') },
     { id: 'shortcut-notepad', name: 'Notepad', icon: '📝', action: () => onLaunchApp('notepad', 'Notepad', '📝') },
@@ -101,11 +103,49 @@ export default function DesktopIconGrid({
     window.addEventListener('mouseup', handleMouseUp);
   };
 
+  useEffect(() => {
+    const handleKeyDown = async (e) => {
+      if (e.key === 'Delete' && selectedIds.size > 0) {
+        for (const testId of selectedIds) {
+          if (testId.startsWith('vfs-')) {
+            const fileName = testId.replace('vfs-', '');
+            try {
+              await VFS.moveToTrash(`/Users/User/Desktop/${fileName}`);
+              NotificationService.send({
+                title: 'Moved to Recycle Bin',
+                message: `"${fileName}" was moved to the Recycle Bin`,
+                icon: '🗑️',
+                type: 'info',
+              });
+            } catch (err) {
+              console.error(err);
+            }
+          }
+        }
+        setSelectedIds(new Set());
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds]);
+
   const handleContextMenu = (e) => {
     e.preventDefault();
     setContextMenu({
       x: Math.min(window.innerWidth - 190, e.clientX),
       y: Math.min(window.innerHeight - 240, e.clientY),
+      targetNode: null,
+    });
+  };
+
+  const handleItemContextMenu = (e, node) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedIds(new Set([`vfs-${node.name}`]));
+    setContextMenu({
+      x: Math.min(window.innerWidth - 190, e.clientX),
+      y: Math.min(window.innerHeight - 240, e.clientY),
+      targetNode: node,
     });
   };
 
@@ -123,6 +163,22 @@ export default function DesktopIconGrid({
     const folderName = `Folder_${Date.now().toString().slice(-4)}`;
     await VFS.createDirectory(`/Users/User/Desktop/${folderName}`);
     closeContextMenu();
+  };
+
+  const handleTrashItem = async (node) => {
+    playClick();
+    closeContextMenu();
+    try {
+      await VFS.moveToTrash(node.path);
+      NotificationService.send({
+        title: 'Moved to Recycle Bin',
+        message: `"${node.name}" was moved to the Recycle Bin`,
+        icon: '🗑️',
+        type: 'info',
+      });
+    } catch (err) {
+      alert(`Error moving to trash: ${err.message}`);
+    }
   };
 
   // Compute Marquee box styling
@@ -188,6 +244,7 @@ export default function DesktopIconGrid({
               }
               closeContextMenu();
             }}
+            onContextMenu={(e) => handleItemContextMenu(e, node)}
             onDoubleClick={(e) => {
               e.stopPropagation();
               playClick();
@@ -221,64 +278,107 @@ export default function DesktopIconGrid({
           style={{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button className={styles.menuItem} onClick={handleCreateFile}>
-            <span>📝</span> New Text File
-          </button>
-          <button className={styles.menuItem} onClick={handleCreateFolder}>
-            <span>📁</span> New Folder
-          </button>
-          <div className={styles.menuDivider} />
-          <button
-            className={styles.menuItem}
-            onClick={() => {
-              playClick();
-              onLaunchApp('terminal', 'Terminal', '⚡');
-              closeContextMenu();
-            }}
-          >
-            <span>⚡</span> Open Terminal
-          </button>
-          <button
-            className={styles.menuItem}
-            onClick={() => {
-              playClick();
-              onLaunchApp('browser', 'Ghost Browser', '🌐');
-              closeContextMenu();
-            }}
-          >
-            <span>🌐</span> Open Browser
-          </button>
-          <button
-            className={styles.menuItem}
-            onClick={() => {
-              playClick();
-              onLaunchApp('settings', 'Settings', '⚙️', { activeTab: 'wallpaper' });
-              closeContextMenu();
-            }}
-          >
-            <span>🖼️</span> Personalize Wallpaper
-          </button>
-          <button
-            className={styles.menuItem}
-            onClick={() => {
-              playClick();
-              onLaunchApp('settings', 'Settings', '⚙️', { activeTab: 'about' });
-              closeContextMenu();
-            }}
-          >
-            <span>ℹ️</span> System Specs
-          </button>
-          <div className={styles.menuDivider} />
-          <button
-            className={styles.menuItem}
-            onClick={() => {
-              playClick();
-              loadDesktopFiles();
-              closeContextMenu();
-            }}
-          >
-            <span>🔄</span> Refresh
-          </button>
+          {contextMenu.targetNode ? (
+            <>
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  playClick();
+                  const node = contextMenu.targetNode;
+                  closeContextMenu();
+                  if (node.type === 'dir') {
+                    onLaunchApp('files', node.name, '📁', { initialPath: node.path });
+                  } else if (node.name.endsWith('.svg') || node.name.endsWith('.png') || node.name.endsWith('.jpg')) {
+                    onLaunchApp('gallery', node.name, '🖼️', { filePath: node.path });
+                  } else {
+                    onLaunchApp('notepad', node.name, '📝', { filePath: node.path });
+                  }
+                }}
+              >
+                <span>📂</span> Open
+              </button>
+              <button
+                className={styles.menuItem}
+                data-testid="menu-move-to-trash"
+                onClick={() => handleTrashItem(contextMenu.targetNode)}
+              >
+                <span>🗑️</span> Move to Recycle Bin
+              </button>
+              {contextMenu.targetNode.type === 'file' && (
+                <button
+                  className={styles.menuItem}
+                  onClick={() => {
+                    playClick();
+                    VFS.exportFile(contextMenu.targetNode.path);
+                    closeContextMenu();
+                  }}
+                >
+                  <span>📤</span> Export to PC
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <button className={styles.menuItem} onClick={handleCreateFile}>
+                <span>📝</span> New Text File
+              </button>
+              <button className={styles.menuItem} onClick={handleCreateFolder}>
+                <span>📁</span> New Folder
+              </button>
+              <div className={styles.menuDivider} />
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  playClick();
+                  onLaunchApp('terminal', 'Terminal', '⚡');
+                  closeContextMenu();
+                }}
+              >
+                <span>⚡</span> Open Terminal
+              </button>
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  playClick();
+                  onLaunchApp('browser', 'Ghost Browser', '🌐');
+                  closeContextMenu();
+                }}
+              >
+                <span>🌐</span> Open Browser
+              </button>
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  playClick();
+                  onLaunchApp('settings', 'Settings', '⚙️', { activeTab: 'wallpaper' });
+                  closeContextMenu();
+                }}
+              >
+                <span>🖼️</span> Personalize Wallpaper
+              </button>
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  playClick();
+                  onLaunchApp('settings', 'Settings', '⚙️', { activeTab: 'about' });
+                  closeContextMenu();
+                }}
+              >
+                <span>ℹ️</span> System Specs
+              </button>
+              <div className={styles.menuDivider} />
+              <button
+                className={styles.menuItem}
+                onClick={() => {
+                  playClick();
+                  loadDesktopFiles();
+                  closeContextMenu();
+                }}
+              >
+                <span>🔄</span> Refresh
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
