@@ -1,0 +1,224 @@
+.calculatorLayout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 16, 0.88);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  overflow: hidden;
+  user-select: none;
+}
+
+.mainCalc {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 12px;
+}
+
+.screen {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.equationLine {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-height: 18px;
+}
+
+.resultLine {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.modeBar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.modeBtn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modeBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.modeActive {
+  background: rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.35);
+  color: var(--accent-glow);
+}
+
+.keypad {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.keypadScientific {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btnOp {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.btnAction {
+  background: rgba(126, 184, 255, 0.1);
+  border-color: rgba(126, 184, 255, 0.25);
+  color: var(--accent-glow);
+}
+
+.btnEqual {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: var(--accent-success);
+}
+
+.btnZero {
+  grid-column: span 2;
+}
+
+.sciBtn {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: var(--radius-sm);
+  color: #c4b5fd;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px;
+  transition: all 0.15s ease;
+}
+
+.sciBtn:hover {
+  background: rgba(167, 139, 250, 0.18);
+}
+
+/* History */
+.historySidebar {
+  width: 170px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.015);
+  display: flex;
+  flex-direction: column;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.clearHistoryBtn {
+  background: none;
+  border: none;
+  color: var(--text-ghost);
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.clearHistoryBtn:hover {
+  color: var(--accent-error);
+}
+
+.historyList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+.historyItem {
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: right;
+  transition: all 0.15s ease;
+}
+
+.historyItem:hover {
+  background: rgba(126, 184, 255, 0.08);
+  border-color: rgba(126, 184, 255, 0.2);
+}
+
+.historyExpr {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-ghost);
+}
+
+.historyRes {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.emptyHistory {
+  text-align: center;
+  padding: 30px 0;
+  font-size: 0.72rem;
+  color: var(--text-ghost);
+}

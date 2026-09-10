@@ -1,0 +1,365 @@
+.container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+  opacity: 0;
+  animation: desktopFadeIn 0.8s var(--ease-spring) forwards;
+}
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.wallpaperFallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: radial-gradient(ellipse at 30% 40%, #0d1b2a 0%, #050505 50%),
+              radial-gradient(ellipse at 70% 60%, #1a0a2e 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, #0a1628 0%, transparent 40%);
+  background-color: #050505;
+}
+
+.wallpaperFallback::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 25% 35%, rgba(126, 184, 255, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 75% 55%, rgba(167, 139, 250, 0.05) 0%, transparent 35%);
+}
+
+.desktopArea {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: calc(100% - 56px);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.welcomeCard {
+  align-self: flex-start;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 340px;
+  animation: fadeInUp 0.8s var(--ease-spring) 0.3s backwards;
+}
+
+.welcomeTitle {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-success);
+  box-shadow: 0 0 8px var(--accent-success);
+}
+
+.welcomeDesc {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.welcomeSubtext {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-ghost);
+  margin-top: 4px;
+}
+
+/* Bottom Taskbar */
+.taskbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: rgba(10, 10, 15, 0.65);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.taskbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.startBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.startBtn:hover {
+  background: rgba(126, 184, 255, 0.12);
+  border-color: rgba(126, 184, 255, 0.3);
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.2);
+}
+
+.startLogoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.taskbarCenter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  margin: 0 16px;
+  overflow-x: auto;
+}
+
+.appTab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  max-width: 160px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.appTab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.appTabActive {
+  background: rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.35);
+  color: var(--accent-glow);
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.2);
+}
+
+.appTabIcon {
+  font-size: 0.9rem;
+}
+
+.appTabTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.trayBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trayBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.trayBtnActive {
+  background: rgba(126, 184, 255, 0.12) !important;
+  border-color: rgba(126, 184, 255, 0.3) !important;
+  color: var(--accent-glow) !important;
+}
+
+.actionCenterBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.actionCenterBtn:hover {
+  background: rgba(126, 184, 255, 0.12);
+  color: var(--accent-glow);
+}
+
+.lockBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.lockBtn:hover {
+  background: rgba(255, 77, 106, 0.12);
+  border-color: rgba(255, 77, 106, 0.3);
+  color: #ff758f;
+}
+
+/* Custom CSS Icons */
+.batteryIcon {
+  width: 20px;
+  height: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  padding: 1px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.batteryIcon::after {
+  content: '';
+  position: absolute;
+  right: -3.5px;
+  top: 2px;
+  width: 2px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 0 1px 1px 0;
+}
+
+.batteryFill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+.wifiIcon {
+  width: 14px;
+  height: 14px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.wifiIcon span {
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.wifiDot {
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 1px;
+}
+
+.wifiRing1 {
+  width: 8px;
+  height: 8px;
+  bottom: 2px;
+}
+
+.wifiRing2 {
+  width: 14px;
+  height: 14px;
+  bottom: 3px;
+}
+
+/* Night light warm screen overlay */
+.nightLightOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(255, 140, 0, 0.12);
+  mix-blend-mode: multiply;
+  z-index: 9990;
+  transition: opacity 0.5s ease;
+}
+
+@keyframes desktopFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

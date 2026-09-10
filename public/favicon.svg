@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <radialGradient id="ghostGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#7eb8ff" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#a78bfa" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#050505" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ghostBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#7eb8ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#050505"/>
+  <circle cx="32" cy="32" r="28" fill="url(#ghostGlow)"/>
+  <!-- Stylized Minimal Ethereal Silhouette -->
+  <path d="M32 16 C23 16 18 23 18 31 C18 39 20 48 23 48 C25 48 26 44 28 44 C30 44 31 48 33 48 C35 48 36 44 38 44 C40 44 41 48 43 48 C46 48 46 39 46 31 C46 23 41 16 32 16 Z" fill="url(#ghostBody)" opacity="0.95"/>
+  <circle cx="27" cy="28" r="2.5" fill="#050505"/>
+  <circle cx="37" cy="28" r="2.5" fill="#050505"/>
+</svg>

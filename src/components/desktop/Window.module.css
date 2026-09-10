@@ -1,0 +1,152 @@
+.window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: rgba(13, 13, 20, 0.82);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  user-select: none;
+  animation: windowOpen 0.22s var(--ease-spring);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.windowActive {
+  border-color: rgba(126, 184, 255, 0.35);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(126, 184, 255, 0.15);
+}
+
+.windowSnapped {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border-top: none !important;
+}
+
+.windowDragging {
+  opacity: 0.94;
+  cursor: grabbing;
+  transition: none !important;
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: grab;
+}
+
+.titleBar:active {
+  cursor: grabbing;
+}
+
+.windowIdentity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.windowIcon {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+}
+
+.windowTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+  letter-spacing: 0.01em;
+}
+
+.windowControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controlBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+}
+
+.btnMinimize:hover {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+
+.btnMaximize:hover {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+.btnClose:hover {
+  background: rgba(255, 77, 106, 0.25);
+  color: #ff4d6a;
+}
+
+.windowBody {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: se-resize;
+  z-index: 10;
+}
+
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid rgba(255, 255, 255, 0.25);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+@keyframes windowOpen {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

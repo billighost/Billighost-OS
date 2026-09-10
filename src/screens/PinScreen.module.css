@@ -1,0 +1,246 @@
+.container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  opacity: 0;
+  animation: pinScreenIn 0.6s var(--ease-spring) 0.1s forwards;
+}
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.wallpaperFallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: radial-gradient(ellipse at 30% 40%, #0d1b2a 0%, #050505 50%),
+              radial-gradient(ellipse at 70% 60%, #1a0a2e 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, #0a1628 0%, transparent 40%);
+  background-color: #050505;
+}
+
+.wallpaperFallback::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 25% 35%, rgba(126, 184, 255, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 75% 55%, rgba(167, 139, 250, 0.05) 0%, transparent 35%);
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(5, 5, 5, 0.55);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.avatarWrapper {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  position: relative;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.avatarWrapper::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-glow), var(--accent-soft));
+  opacity: 0.4;
+  z-index: 0;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.avatarPlaceholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.avatarInitial {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--accent-glow);
+  opacity: 0.7;
+}
+
+.username {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+  margin-top: -8px;
+}
+
+.pinContainer {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.pinBox {
+  width: 56px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: border-color 0.3s var(--ease-spring),
+              box-shadow 0.3s var(--ease-spring),
+              background 0.3s var(--ease-spring);
+  cursor: text;
+}
+
+.pinBox:focus-within {
+  border-color: var(--accent-glow);
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.15),
+              inset 0 0 8px rgba(126, 184, 255, 0.05);
+  background: rgba(126, 184, 255, 0.03);
+}
+
+.pinInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.5rem;
+  text-align: center;
+  color: transparent;
+  caret-color: transparent;
+}
+
+.pinDot {
+  width: 14px;
+  height: 14px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0);
+}
+
+.pinDotVisible {
+  opacity: 1;
+  animation: dotScale 0.3s var(--ease-out-back) forwards;
+}
+
+.pinShake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.pinError .pinBox {
+  border-color: var(--accent-error);
+  box-shadow: 0 0 12px rgba(255, 77, 106, 0.2);
+  background: rgba(255, 77, 106, 0.04);
+}
+
+.pinSuccess .pinBox {
+  border-color: var(--accent-success);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.2);
+  background: rgba(52, 211, 153, 0.04);
+}
+
+.hint {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-ghost);
+  letter-spacing: 0.03em;
+  margin-top: -4px;
+}
+
+@keyframes pinScreenIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes dotScale {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  12% { transform: translateX(-8px); }
+  25% { transform: translateX(7px); }
+  37% { transform: translateX(-6px); }
+  50% { transform: translateX(5px); }
+  62% { transform: translateX(-3px); }
+  75% { transform: translateX(2px); }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(126, 184, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(126, 184, 255, 0.3);
+  }
+}

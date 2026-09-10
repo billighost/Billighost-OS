@@ -1,0 +1,138 @@
+.gridContainer {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  bottom: 68px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 16px 20px;
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.marqueeBox {
+  position: absolute;
+  background: rgba(126, 184, 255, 0.15);
+  border: 1px solid rgba(126, 184, 255, 0.6);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.iconItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 84px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.iconItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.iconSelected {
+  background: rgba(126, 184, 255, 0.15) !important;
+  border-color: rgba(126, 184, 255, 0.4) !important;
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.2);
+}
+
+.iconGraphic {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  transition: transform 0.15s ease;
+}
+
+.iconItem:hover .iconGraphic {
+  transform: scale(1.05);
+}
+
+.iconLabel {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: center;
+  margin-top: 4px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 76px;
+}
+
+/* Context Menu */
+.contextMenu {
+  position: fixed;
+  width: 190px;
+  background: rgba(13, 13, 20, 0.92);
+  backdrop-filter: blur(36px) saturate(1.5);
+  -webkit-backdrop-filter: blur(36px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(126, 184, 255, 0.1);
+  padding: 6px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: contextFadeIn 0.15s var(--ease-spring);
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.menuItem:hover {
+  background: rgba(126, 184, 255, 0.14);
+  color: var(--accent-glow);
+}
+
+.menuItem span {
+  font-size: 0.9rem;
+}
+
+.menuDivider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 6px;
+}
+
+@keyframes contextFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

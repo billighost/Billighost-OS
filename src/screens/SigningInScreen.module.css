@@ -1,0 +1,230 @@
+.container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: signingInFade 0.6s var(--ease-spring) forwards;
+  z-index: 10;
+  user-select: none;
+}
+
+.wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.wallpaperFallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 40%, #0c182a 0%, #050505 60%),
+              radial-gradient(circle at 75% 65%, #180928 0%, transparent 45%);
+  background-color: #050505;
+}
+
+.wallpaperFallback::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(126, 184, 255, 0.07) 0%, transparent 50%);
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(5, 5, 5, 0.6);
+  backdrop-filter: blur(28px) saturate(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Orbital spinner container */
+.spinnerWrapper {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinnerNucleus {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  box-shadow: 0 0 16px var(--accent-glow), 0 0 32px var(--accent-glow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.orbitRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(126, 184, 255, 0.15);
+  animation: ringRotate 8s linear infinite;
+}
+
+.orbitDot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  margin: -4px 0 0 -4px;
+}
+
+.dot1 {
+  background: var(--accent-glow);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: orbit1 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.dot2 {
+  background: var(--accent-soft);
+  box-shadow: 0 0 10px var(--accent-soft);
+  animation: orbit2 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s infinite;
+}
+
+.dot3 {
+  background: #c4b5fd;
+  box-shadow: 0 0 8px rgba(196, 181, 253, 0.8);
+  animation: orbit3 1.8s cubic-bezier(0.4, 0, 0.2, 1) 0.6s infinite;
+}
+
+.textGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: baseline;
+}
+
+.ellipsisDot1 {
+  animation: ellipsis1 1.4s infinite;
+}
+
+.ellipsisDot2 {
+  animation: ellipsis2 1.4s infinite;
+}
+
+.ellipsisDot3 {
+  animation: ellipsis3 1.4s infinite;
+}
+
+.email {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.progressBarTrack {
+  width: 140px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-glow), var(--accent-soft));
+  animation: progressFill 2.4s ease-out forwards;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+@keyframes signingInFade {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ringRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit1 {
+  0% {
+    transform: rotate(0deg) translateX(24px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(24px) rotate(-360deg);
+  }
+}
+
+@keyframes orbit2 {
+  0% {
+    transform: rotate(120deg) translateX(24px) rotate(-120deg);
+  }
+  100% {
+    transform: rotate(480deg) translateX(24px) rotate(-480deg);
+  }
+}
+
+@keyframes orbit3 {
+  0% {
+    transform: rotate(240deg) translateX(24px) rotate(-240deg);
+  }
+  100% {
+    transform: rotate(600deg) translateX(24px) rotate(-600deg);
+  }
+}
+
+@keyframes progressFill {
+  0% {
+    width: 0%;
+  }
+  40% {
+    width: 60%;
+  }
+  85% {
+    width: 92%;
+  }
+  100% {
+    width: 100%;
+  }
+}

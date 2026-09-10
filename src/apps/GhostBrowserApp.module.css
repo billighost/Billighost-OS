@@ -1,0 +1,213 @@
+.browserContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 16, 0.85);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+.navBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.navButtons {
+  display: flex;
+  gap: 4px;
+}
+
+.navBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.navBtn:hover:not(:disabled) {
+  background: rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.3);
+}
+
+.navBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.omniboxForm {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0 8px;
+}
+
+.lockIcon {
+  font-size: 0.75rem;
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+.omniboxInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 6px 0;
+}
+
+.goBtn {
+  background: rgba(126, 184, 255, 0.18);
+  border: 1px solid rgba(126, 184, 255, 0.3);
+  border-radius: 4px;
+  color: var(--accent-glow);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.goBtn:hover {
+  background: rgba(126, 184, 255, 0.3);
+}
+
+.externalBtn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.externalBtn:hover {
+  color: var(--accent-glow);
+  background: rgba(126, 184, 255, 0.12);
+}
+
+.bookmarksBar {
+  display: flex;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  overflow-x: auto;
+}
+
+.bookmarkBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.bookmarkBtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.viewportArea {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+.browserFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.loadIndicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(126, 184, 255, 0.2);
+  z-index: 10;
+}
+
+.loadBar {
+  height: 100%;
+  width: 40%;
+  background: var(--accent-glow);
+  animation: loadingSlide 1.2s infinite ease-in-out;
+}
+
+.internalDoc {
+  padding: 40px;
+  background: #0a0a10;
+  color: #fff;
+  height: 100%;
+}
+
+.internalDoc h1 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.internalDoc p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}
+
+.docCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.docCard h3 {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.docCard ul {
+  padding-left: 20px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+}
+
+@keyframes loadingSlide {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(300%); }
+}

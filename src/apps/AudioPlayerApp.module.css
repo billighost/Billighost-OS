@@ -1,0 +1,147 @@
+.playerContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 16, 0.9);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  overflow: hidden;
+  user-select: none;
+}
+
+.visualizerArea {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 50%, rgba(126, 184, 255, 0.08) 0%, transparent 70%);
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.trackOverlay {
+  position: absolute;
+  top: 16px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trackTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.trackArtist {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-glow);
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px 10px 20px;
+}
+
+.timeLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  width: 36px;
+}
+
+.progressBarTrack {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: var(--accent-glow);
+  border-radius: 999px;
+  transition: width 0.1s linear;
+}
+
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.uploadLabel {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.uploadLabel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.centerControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.circleBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(126, 184, 255, 0.15);
+  border: 1px solid rgba(126, 184, 255, 0.35);
+  color: var(--accent-glow);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.circleBtn:hover {
+  transform: scale(1.08);
+  background: rgba(126, 184, 255, 0.25);
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.3);
+}
+
+.volumeControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.volumeIcon {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.volumeSlider {
+  width: 70px;
+  accent-color: var(--accent-glow);
+  cursor: pointer;
+}

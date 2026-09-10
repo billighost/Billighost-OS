@@ -1,0 +1,323 @@
+.flyoutContainer {
+  position: absolute;
+  bottom: 60px;
+  right: 16px;
+  width: 320px;
+  background: rgba(13, 13, 20, 0.88);
+  backdrop-filter: blur(40px) saturate(1.5);
+  -webkit-backdrop-filter: blur(40px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(126, 184, 255, 0.12);
+  z-index: 1000;
+  animation: flyoutSlideUp 0.22s var(--ease-spring);
+  overflow: hidden;
+  user-select: none;
+}
+
+.flyoutHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.flyoutTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.iconIndicator {
+  font-size: 1rem;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--text-ghost);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.closeBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.flyoutContent {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.telemetryCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.telemetryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.monoValue {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.badgeSuccess {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--accent-success);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  border-radius: 999px;
+}
+
+.badgeError {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  background: rgba(255, 77, 106, 0.15);
+  color: var(--accent-error);
+  border: 1px solid rgba(255, 77, 106, 0.3);
+  border-radius: 999px;
+}
+
+.actionRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actionBtn {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(126, 184, 255, 0.08);
+  border: 1px solid rgba(126, 184, 255, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-glow);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover {
+  background: rgba(126, 184, 255, 0.16);
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.2);
+}
+
+.resultText {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--accent-success);
+  text-align: center;
+}
+
+/* Battery Gauge */
+.batteryBigGauge {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.gaugeNumber {
+  font-family: var(--font-mono);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.gaugeStatus {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.batteryProgressBar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.batteryProgressFill {
+  height: 100%;
+  transition: width 0.4s ease;
+  border-radius: 999px;
+}
+
+.toggleBtn {
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+}
+
+.toggleBtnActive {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: rgba(52, 211, 153, 0.4);
+  color: var(--accent-success);
+}
+
+/* Calendar */
+.clockHeader {
+  text-align: center;
+  padding: 6px 0 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bigDigitalTime {
+  font-family: var(--font-mono);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent-glow);
+}
+
+.fullDateString {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.calDayHeader {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-ghost);
+  padding: 4px 0;
+}
+
+.calCell {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-primary);
+  padding: 6px 0;
+  border-radius: 6px;
+}
+
+.calToday {
+  background: var(--accent-glow);
+  color: #050505;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.4);
+}
+
+.calEmpty {
+  visibility: hidden;
+}
+
+/* Control Center */
+.quickGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.quickTile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quickTile:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.quickTileActive {
+  background: rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.35);
+  color: var(--accent-glow);
+}
+
+.tileIcon {
+  font-size: 1.1rem;
+}
+
+.tileLabel {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sliderCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: var(--accent-glow);
+  cursor: pointer;
+}
+
+.telemetrySub {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-ghost);
+  margin-top: 4px;
+}
+
+@keyframes flyoutSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
