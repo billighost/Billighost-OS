@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { NotificationService } from '../services/notificationService';
+import { importFile, LIBRARY, ACCEPT } from '../services/storage/fileImport';
 import styles from './AudioPlayerApp.module.css';
 
 const SYNTH_PRESETS = [
@@ -121,6 +122,16 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
   const mediaSourceRef = useRef(null);
   const objectUrlRef = useRef(null);
 
+  /*
+   * Mirror of the audio parameters.
+   *
+   * initAudio must stay dependency-free (rebuilding the graph on a volume
+   * change would restart playback), but it still needs the current values
+   * when it constructs the nodes. A ref gives it those without becoming a
+   * dependency.
+   */
+  const paramsRef = useRef({ volume: 75, isMuted: false, eqBass: 2, eqMid: 0, eqTreble: 3, spatialReverb: true });
+
   const audioElementRef = useRef(null);
   const synthOscsRef = useRef([]);
   const animFrameRef = useRef(null);
@@ -149,24 +160,36 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
     analyserRef.current = analyser;
 
     const masterGain = ctx.createGain();
-    masterGain.gain.value = 0;
+    /*
+     * Seed with the live values, not 0/neutral.
+     *
+     * The parameter-sync effect below only fires when its dependencies
+     * CHANGE. A graph built at gain 0 therefore stayed silent until the
+     * volume slider was touched — audio was playing inaudibly, which is
+     * exactly the "I import a song and hear nothing until I tweak the
+     * volume" symptom. Reading from refs keeps initAudio dependency-free.
+     */
+    masterGain.gain.value = paramsRef.current.isMuted ? 0 : paramsRef.current.volume / 100;
     gainNodeRef.current = masterGain;
 
     // 3-Band EQ
     const bass = ctx.createBiquadFilter();
     bass.type = 'lowshelf';
     bass.frequency.value = 250;
+    bass.gain.value = paramsRef.current.eqBass;
     bassFilterRef.current = bass;
 
     const mid = ctx.createBiquadFilter();
     mid.type = 'peaking';
     mid.frequency.value = 1000;
     mid.Q.value = 1.0;
+    mid.gain.value = paramsRef.current.eqMid;
     midFilterRef.current = mid;
 
     const treble = ctx.createBiquadFilter();
     treble.type = 'highshelf';
     treble.frequency.value = 3500;
+    treble.gain.value = paramsRef.current.eqTreble;
     trebleFilterRef.current = treble;
 
     /*
@@ -181,11 +204,11 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
 
     // Parallel wet/dry so the mix is controllable and never doubles at unity.
     const dryGain = ctx.createGain();
-    dryGain.gain.value = 1;
+    dryGain.gain.value = paramsRef.current.spatialReverb ? 0.88 : 1;
     dryGainRef.current = dryGain;
 
     const wetGain = ctx.createGain();
-    wetGain.gain.value = 0;
+    wetGain.gain.value = paramsRef.current.spatialReverb ? 0.24 : 0;
     wetGainRef.current = wetGain;
 
     bass.connect(mid);
@@ -204,6 +227,8 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
 
   /* Push live parameter values onto the graph. One owner for node state. */
   useEffect(() => {
+    paramsRef.current = { volume, isMuted, eqBass, eqMid, eqTreble, spatialReverb };
+
     const ctx = audioCtxRef.current;
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -376,12 +401,32 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
     setSpatialReverb(prev => !prev);
   };
 
-  // File Upload
-  const handleFileUpload = (e) => {
+  /**
+   * Import a track.
+   *
+   * The file is written into the VFS Music library first, so it can be
+   * reopened from File Explorer later instead of disappearing when this
+   * window closes.
+   */
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     playClick();
+    e.target.value = '';
     stopAudio();
+
+    let saved = null;
+    try {
+      saved = await importFile(file, { dir: LIBRARY.audio });
+    } catch (err) {
+      NotificationService.send({
+        title: 'Import Failed',
+        message: err?.message || 'Could not import that file.',
+        type: 'error',
+      });
+      return;
+    }
+    window.dispatchEvent(new CustomEvent('billighost:vfs-update'));
 
     // Release the previous upload before replacing it, or each new file
     // leaks a blob URL and an orphaned MediaElementSource stays wired in.
@@ -398,11 +443,11 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
       URL.revokeObjectURL(objectUrlRef.current);
     }
 
-    const objectUrl = URL.createObjectURL(file);
+    const objectUrl = saved.url || URL.createObjectURL(file);
     objectUrlRef.current = objectUrl;
     setUploadedAudioUrl(objectUrl);
     setTrackTitle(file.name.replace(/\.[^/.]+$/, ''));
-    setTrackArtist('Local Audio File');
+    setTrackArtist('Music Library');
 
     initAudio();
     const audioEl = new Audio(objectUrl);
@@ -434,9 +479,9 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
     audioEl.play();
     setIsPlaying(true);
     NotificationService.send({
-      title: 'Audio File Loaded',
-      message: `Playing ${file.name}`,
-      type: 'info',
+      title: 'Added to Music',
+      message: `${file.name} — saved to ${LIBRARY.audio}`,
+      type: 'success',
     });
   };
 
@@ -832,7 +877,7 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
                 Import Audio
                 <input
                   type="file"
-                  accept="audio/*"
+                  accept={ACCEPT.audio}
                   onChange={handleFileUpload}
                   style={{ display: 'none' }}
                 />

@@ -36,15 +36,38 @@ import AudioPlayerApp from '../apps/AudioPlayerApp';
 import ImageViewerApp from '../apps/ImageViewerApp';
 import CalculatorApp from '../apps/CalculatorApp';
 import RecycleBinApp from '../apps/RecycleBinApp';
+import VideoEditorApp from '../apps/VideoEditorApp';
 
 import {
-  GearIcon, WindowsIcon, FolderIcon, ImageIcon, PenIcon, BoltIcon,
+  GearIcon, WindowsIcon, FolderIcon, ImageIcon, PenIcon,
   CodeIcon, BrushIcon, SearchIcon, WidgetsIcon, TerminalIcon,
   CalculatorIcon, GhostIcon, MusicNoteIcon, TrashIcon, GaugeIcon,
-  FileIcon,
+  FileIcon, FilmIcon,
 } from '../components/Icons';
 
 import styles from './DesktopScreen.module.css';
+
+/**
+ * Which app opens a given file.
+ *
+ * Previously inline in the File Explorer callback and text-biased: anything
+ * unrecognised went to Notepad, so double-clicking a video opened a text
+ * editor full of binary. Kept as a table so every caller routes alike.
+ */
+const OPEN_WITH = {
+  gallery: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg', 'bmp', 'ico'],
+  video: ['mp4', 'webm', 'mkv', 'mov', 'avi', 'm4v', 'ogv'],
+  media: ['mp3', 'wav', 'ogg', 'oga', 'flac', 'm4a', 'aac', 'opus', 'weba'],
+  code: ['js', 'jsx', 'ts', 'tsx', 'css', 'json', 'html', 'sh', 'py', 'rs', 'go', 'yml', 'yaml', 'xml'],
+};
+
+function appForFile(name = '') {
+  const ext = name.toLowerCase().split('.').pop();
+  for (const [app, exts] of Object.entries(OPEN_WITH)) {
+    if (exts.includes(ext)) return app;
+  }
+  return 'notepad';   // text and unknown types
+}
 
 function getFormattedTime(format = '24h') {
   const now = new Date();
@@ -69,6 +92,7 @@ function AppTabSvgIcon({ appId }) {
     calculator: <CalculatorIcon size={14} />,
     trash: <TrashIcon size={14} />,
     monitor: <GaugeIcon size={14} />,
+    video: <FilmIcon size={14} />,
   };
   return iconMap[appId] || <FileIcon size={14} />;
 }
@@ -88,6 +112,7 @@ export function AppIcon({ appId, size = 15 }) {
     calculator: <CalculatorIcon size={size} />,
     trash: <TrashIcon size={size} />,
     monitor: <GaugeIcon size={size} />,
+    video: <FilmIcon size={size} />,
   };
   return map[appId] || <FileIcon size={size} />;
 }
@@ -349,6 +374,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         gallery: { w: 640, h: 460 },
         calculator: { w: 480, h: 440 },
         trash: { w: 680, h: 440 },
+        video: { w: 900, h: 600 },
       };
 
       const size = defaultSizes[appId] || { w: 640, h: 420 };
@@ -714,15 +740,9 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             {win.appId === 'files' && (
               <FileManagerApp
                 initialPath={win.props?.initialPath || '/Users/User'}
-                onOpenFile={(path, name) => {
-                  if (name.endsWith('.svg') || name.endsWith('.png') || name.endsWith('.jpg')) {
-                    handleLaunchApp('gallery', name, null, { filePath: path });
-                  } else if (name.endsWith('.js') || name.endsWith('.css') || name.endsWith('.json') || name.endsWith('.html') || name.endsWith('.sh')) {
-                    handleLaunchApp('code', name, null, { filePath: path });
-                  } else {
-                    handleLaunchApp('notepad', name, null, { filePath: path });
-                  }
-                }}
+                onOpenFile={(path, name) => handleLaunchApp(
+                  appForFile(name), name, null, { filePath: path }
+                )}
                 playClick={playClick}
                 osModal={osModal}
               />
@@ -783,6 +803,13 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             )}
             {win.appId === 'trash' && (
               <RecycleBinApp
+                playClick={playClick}
+                osModal={osModal}
+              />
+            )}
+            {win.appId === 'video' && (
+              <VideoEditorApp
+                filePath={win.props?.filePath || null}
                 playClick={playClick}
                 osModal={osModal}
               />
@@ -980,18 +1007,20 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
           <button
             className={`${styles.trayBtn} ${activeFlyout === 'battery' ? styles.trayBtnActive : ''}`}
             onClick={() => toggleFlyout('battery')}
-            title={`Battery: ${battery.supported ? `${battery.level}%` : 'AC'} \u2022 ${battery.statusText}`}
+            title={`Battery: ${battery.levelText} \u2022 ${battery.statusText}`}
           >
             <div className={styles.batteryIcon}>
               <div
                 className={styles.batteryFill}
                 style={{
-                  width: `${Math.max(10, battery.level)}%`,
-                  background: battery.charging ? 'var(--accent-success)' : battery.level < 20 ? 'var(--accent-error)' : 'var(--accent-success)',
+                  width: `${battery.barWidth}%`,
+                  background: battery.tone === 'critical' ? 'var(--accent-error)'
+                    : battery.tone === 'warn' ? 'var(--accent-warning)'
+                    : 'var(--accent-success)',
                 }}
               />
             </div>
-            <span>{battery.supported ? `${battery.level}%` : 'AC'}</span>
+            <span>{battery.levelText}</span>
           </button>
 
           {/* Real Local Clock & Date */}

@@ -403,3 +403,51 @@
 .linkBtn:hover {
   text-decoration: underline;
 }
+
+/* ── Empty state ─────────────────────────────
+   Shown when no image is open. Replaces the old bundled sample image, so
+   the studio never displays artwork the user did not add.
+   ──────────────────────────────────────────── */
+
+.emptyStudio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+  color: var(--text-ghost);
+}
+
+.emptyTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+.emptyDesc {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  max-width: 30ch;
+  line-height: 1.5;
+}
+
+.emptyAction {
+  margin-top: 6px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: rgba(126, 184, 255, 0.16);
+  border: 1px solid rgba(126, 184, 255, 0.35);
+  color: #cfe4ff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.emptyAction:hover {
+  background: rgba(126, 184, 255, 0.26);
+  border-color: rgba(126, 184, 255, 0.5);
+}

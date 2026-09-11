@@ -26,15 +26,82 @@ export function useAudio() {
     return Math.max(0, Math.min(1, vol / 100));
   };
 
+  /*
+   * Has the page received a user gesture yet?
+   *
+   * Constructing an AudioContext before one has occurred logs
+   * "The AudioContext was not allowed to start" on every call, which is what
+   * filled the console during boot. The context is therefore not created at
+   * all until `unlockedRef` flips; sounds requested before that are queued
+   * (the boot ambience) and play the moment audio becomes permitted.
+   */
+  const unlockedRef = useRef(false);
+  const pendingRef = useRef([]);
+  // Lets the queued boot ambience call the latest implementation without the
+  // callback capturing itself mid-initialisation.
+  const bootAmbientRef = useRef(null);
+
   const getContext = useCallback(() => {
+    if (!unlockedRef.current) return null;
+
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
       ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (ctxRef.current.state === 'suspended') {
-      ctxRef.current.resume();
+      ctxRef.current.resume().catch(() => {});
     }
     return ctxRef.current;
   }, []);
+
+  /**
+   * Autoplay unlock.
+   *
+   * Chrome refuses to start an AudioContext until the page has been
+   * interacted with, so the boot ambience was silently dropped and the first
+   * click or two produced nothing. Attaching a one-shot listener to the
+   * earliest possible gestures creates and resumes the context at the first
+   * legal moment, after which every later sound just works.
+   */
+  useEffect(() => {
+    let done = false;
+
+    const unlock = () => {
+      if (done) return;
+      done = true;
+      unlockedRef.current = true;
+
+      try {
+        const ctx = getContext();
+        if (!ctx) return;   // audio not permitted yet
+        if (ctx) {
+          // A one-sample silent buffer is the canonical way to convince
+          // Chrome the context is genuinely in use.
+          const buffer = ctx.createBuffer(1, 1, 22050);
+          const src = ctx.createBufferSource();
+          src.buffer = buffer;
+          src.connect(ctx.destination);
+          src.start(0);
+        }
+      } catch {
+        /* audio unavailable */
+      }
+
+      // Play whatever was requested before audio was permitted.
+      const queued = pendingRef.current;
+      pendingRef.current = [];
+      queued.forEach(fn => {
+        try { fn(); } catch { /* best effort */ }
+      });
+
+      remove();
+    };
+
+    const events = ['pointerdown', 'keydown', 'touchstart'];
+    const remove = () => events.forEach(e => window.removeEventListener(e, unlock, true));
+    events.forEach(e => window.addEventListener(e, unlock, { capture: true, passive: true }));
+
+    return remove;
+  }, [getContext]);
 
   /** Soft click — 800Hz sine, 50ms */
   const playClick = useCallback(() => {
@@ -42,6 +109,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -68,6 +136,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -94,6 +163,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -120,6 +190,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -146,6 +217,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -172,6 +244,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const freqs = [880, 1174.66]; // A5, D6
 
       freqs.forEach((freq, idx) => {
@@ -203,6 +276,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
 
       // Bandpass noise sweep
       const bufferSize = Math.floor(ctx.sampleRate * 0.2);
@@ -254,6 +328,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const bufferSize = ctx.sampleRate * 0.4;
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -292,6 +367,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -324,6 +400,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
 
       notes.forEach((freq, i) => {
@@ -354,7 +431,17 @@ export function useAudio() {
     try {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
+
       const ctx = getContext();
+      if (!ctx) {
+        /*
+         * Boot runs before any click, so audio is not permitted yet. Queue it
+         * rather than dropping it: the ambience then begins at the first
+         * interaction instead of being lost entirely.
+         */
+        pendingRef.current.push(() => bootAmbientRef.current?.());
+        return;
+      }
 
       /* Low sine hum */
       const osc = ctx.createOscillator();
@@ -407,6 +494,7 @@ export function useAudio() {
       const mult = getVolumeMultiplier();
       if (mult <= 0) return;
       const ctx = getContext();
+      if (!ctx) return;   // audio not permitted yet
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
@@ -426,6 +514,11 @@ export function useAudio() {
       /* Audio not available */
     }
   }, [getContext]);
+
+  // Keep the ref pointed at the current implementation.
+  useEffect(() => {
+    bootAmbientRef.current = playBootAmbient;
+  }, [playBootAmbient]);
 
   // Global event listener for system sound effects
   useEffect(() => {

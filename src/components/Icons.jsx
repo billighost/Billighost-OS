@@ -1054,3 +1054,190 @@ export const SmartphoneIcon = makeIcon('smartphone', () => (
     <rect data-part="shimmer" x="7.4" y="7.2" width="9.2" height="8.4" rx="1" fill="rgba(126,184,255,0.1)" stroke="none" />
   </>
 ));
+
+/* ══════════════════════════════════════════════
+   MEDIA & VIDEO STUDIO
+   ══════════════════════════════════════════════ */
+
+/**
+ * Film — reel body with sprocket perforations and a frame divider.
+ * hover: perforations march in sequence, scanline sweeps
+ * press: shutter flash
+ */
+export const FilmIcon = makeIcon('film', () => (
+  <>
+    <rect x="2.4" y="4.2" width="19.2" height="15.6" rx="2.2" />
+    <line x1="7.4" y1="4.2" x2="7.4" y2="19.8" opacity="0.5" strokeWidth="1.2" />
+    <line x1="16.6" y1="4.2" x2="16.6" y2="19.8" opacity="0.5" strokeWidth="1.2" />
+    <g fill={A_GLOW} stroke="none" opacity="0.75">
+      <rect data-part="wave" x="4.1" y="6.4" width="1.8" height="1.8" rx="0.4" />
+      <rect data-part="wave" data-i="1" x="4.1" y="11.1" width="1.8" height="1.8" rx="0.4" />
+      <rect data-part="wave" data-i="2" x="4.1" y="15.8" width="1.8" height="1.8" rx="0.4" />
+      <rect data-part="wave" data-i="2" x="18.1" y="6.4" width="1.8" height="1.8" rx="0.4" />
+      <rect data-part="wave" data-i="1" x="18.1" y="11.1" width="1.8" height="1.8" rx="0.4" />
+      <rect data-part="wave" x="18.1" y="15.8" width="1.8" height="1.8" rx="0.4" />
+    </g>
+    <line data-part="scan" x1="8" y1="12" x2="16" y2="12" stroke={A_SOFT} strokeWidth="1" opacity="0" />
+    <rect data-part="flash" x="7.4" y="4.2" width="9.2" height="15.6" fill="#ffffff" stroke="none" />
+  </>
+));
+
+export const PlayIcon = makeIcon('play', () => (
+  <>
+    <circle data-part="pulse" cx="12" cy="12" r="9.6" opacity="0.28" />
+    <polygon data-part="core" points="9.4 6.8 18 12 9.4 17.2" fill="currentColor" stroke="none" />
+    <circle data-part="flash" cx="12" cy="12" r="7" fill={A_OK} stroke="none" />
+  </>
+));
+
+export const PauseIcon = makeIcon('pause', () => (
+  <>
+    <circle data-part="pulse" cx="12" cy="12" r="9.6" opacity="0.28" />
+    <rect data-part="spread" x="8.6" y="7.2" width="2.6" height="9.6" rx="0.8" fill="currentColor" stroke="none" />
+    <rect data-part="spreadR" x="12.8" y="7.2" width="2.6" height="9.6" rx="0.8" fill="currentColor" stroke="none" />
+  </>
+));
+
+export const StopIcon = makeIcon('stop', () => (
+  <>
+    <circle data-part="pulse" cx="12" cy="12" r="9.6" opacity="0.28" />
+    <rect data-part="core" x="8.4" y="8.4" width="7.2" height="7.2" rx="1.2" fill="currentColor" stroke="none" />
+  </>
+));
+
+/** Scissors — blades open on hover, rivet pulses at the pivot. */
+export const ScissorsIcon = makeIcon('scissors', () => (
+  <>
+    <g data-part="spread">
+      <circle cx="6.2" cy="18.2" r="2.5" />
+      <line x1="19.6" y1="4.4" x2="8.1" y2="16.3" strokeWidth="1.6" />
+    </g>
+    <g data-part="spreadR">
+      <circle cx="6.2" cy="5.8" r="2.5" />
+      <line x1="19.6" y1="19.6" x2="8.1" y2="7.7" strokeWidth="1.6" />
+    </g>
+    <circle data-part="pulse" cx="12" cy="12" r="1.15" fill={A_GLOW} stroke="none" />
+  </>
+));
+
+/** Camera — body, lens, viewfinder hump, flash bulb. */
+export const CameraIcon = makeIcon('camera', () => (
+  <>
+    <path d="M3.4 8.2h3.1l1.5-2.3h7.9l1.5 2.3h3.2a1.8 1.8 0 0 1 1.8 1.8v8.2a1.8 1.8 0 0 1-1.8 1.8H3.4a1.8 1.8 0 0 1-1.8-1.8V10a1.8 1.8 0 0 1 1.8-1.8z" />
+    <circle data-part="pulse" cx="12" cy="13.8" r="4" />
+    <circle cx="12" cy="13.8" r="1.7" fill={A_GLOW} stroke="none" opacity="0.6" />
+    <circle data-part="glow" cx="19.2" cy="10.6" r="0.9" fill={A_WARN} stroke="none" />
+    <circle data-part="flash" cx="12" cy="13.8" r="6.5" fill="#ffffff" stroke="none" />
+  </>
+));
+
+/* ══════════════════════════════════════════════
+   FILE TYPE ICONS
+
+   Each is the same page silhouette plus a type glyph and a coloured fold,
+   so a folder of mixed files is readable at a glance without labels.
+   ══════════════════════════════════════════════ */
+
+/** Shared page outline with a folded corner tinted per type. */
+function pageBase(accent) {
+  return (
+    <>
+      <path
+        d="M13.6 2.4H6.4a2 2 0 0 0-2 2v15.2a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2V8.4z"
+        fill="rgba(255,255,255,0.03)"
+      />
+      <polyline points="13.6 2.4 13.6 8.4 19.6 8.4" opacity="0.7" />
+      <path d="M13.6 2.4L19.6 8.4" stroke={accent} strokeWidth="1.2" opacity="0.55" />
+    </>
+  );
+}
+
+export const FileAudioIcon = makeIcon('fileAudio', () => (
+  <>
+    <g data-part="lift">{pageBase(A_SOFT)}</g>
+    <g stroke={A_SOFT} strokeWidth="1.5">
+      <line data-part="wave" x1="8" y1="16.4" x2="8" y2="13.6" />
+      <line data-part="wave" data-i="1" x1="10.4" y1="17.6" x2="10.4" y2="12.4" />
+      <line data-part="wave" data-i="2" x1="12.8" y1="16.8" x2="12.8" y2="13.2" />
+      <line data-part="wave" data-i="3" x1="15.2" y1="18" x2="15.2" y2="12" />
+    </g>
+  </>
+));
+
+export const FileVideoIcon = makeIcon('fileVideo', () => (
+  <>
+    <g data-part="lift">{pageBase(A_GLOW)}</g>
+    <rect x="7.2" y="12.4" width="6.6" height="5.4" rx="1" stroke={A_GLOW} strokeWidth="1.3" />
+    <polygon data-part="pulse" points="14.2 13.6 17.4 12.2 17.4 18 14.2 16.6" fill={A_GLOW} stroke="none" opacity="0.75" />
+    <polygon points="9.2 14.1 11.6 15.1 9.2 16.1" fill="#fff" stroke="none" opacity="0.85" />
+  </>
+));
+
+export const FileImageIcon = makeIcon('fileImage', () => (
+  <>
+    <g data-part="lift">{pageBase(A_OK)}</g>
+    <rect x="7.2" y="12" width="9.6" height="6.4" rx="1" stroke={A_OK} strokeWidth="1.3" />
+    <circle data-part="rise" cx="9.8" cy="14.2" r="1" fill={A_WARN} stroke="none" />
+    <path d="M7.6 17.8l2.6-2.4 1.9 1.7 2.1-2.2 2.4 2.9" stroke={A_OK} strokeWidth="1.2" />
+  </>
+));
+
+export const FileCodeIcon = makeIcon('fileCode', () => (
+  <>
+    <g data-part="lift">{pageBase(A_GLOW)}</g>
+    <g strokeWidth="1.4" stroke={A_GLOW}>
+      <polyline data-part="spread" points="10 13.4 7.6 15.6 10 17.8" />
+      <polyline data-part="spreadR" points="14 13.4 16.4 15.6 14 17.8" />
+    </g>
+  </>
+));
+
+export const FileArchiveIcon = makeIcon('fileArchive', () => (
+  <>
+    <g data-part="lift">{pageBase(A_WARN)}</g>
+    <g stroke={A_WARN} strokeWidth="1.4">
+      <line data-part="wave" x1="12" y1="11.4" x2="12" y2="12.6" />
+      <line data-part="wave" data-i="1" x1="12" y1="14" x2="12" y2="15.2" />
+      <line data-part="wave" data-i="2" x1="12" y1="16.6" x2="12" y2="17.8" />
+    </g>
+    <rect data-part="pulse" x="10.5" y="18.2" width="3" height="2.2" rx="0.6" stroke={A_WARN} strokeWidth="1.2" />
+  </>
+));
+
+export const FilePdfIcon = makeIcon('filePdf', () => (
+  <>
+    <g data-part="lift">{pageBase(A_ERR)}</g>
+    <path
+      data-part="draw"
+      pathLength="1"
+      d="M8 17.6c2.6-.6 4.2-3.1 4-5 -.1-1.1-1.3-1.3-1.6-.3-.5 1.6 1.1 4.2 3 5 1 .4 2 .4 2.6.2"
+      stroke={A_ERR}
+      strokeWidth="1.3"
+      strokeDasharray="1"
+      strokeDashoffset="1"
+    />
+  </>
+));
+
+export const FileSheetIcon = makeIcon('fileSheet', () => (
+  <>
+    <g data-part="lift">{pageBase(A_OK)}</g>
+    <g stroke={A_OK} strokeWidth="1.1" opacity="0.85">
+      <rect x="7.2" y="12" width="9.6" height="6.6" rx="0.8" />
+      <line data-part="typeIn" x1="7.2" y1="14.2" x2="16.8" y2="14.2" />
+      <line data-part="typeIn" data-i="1" x1="7.2" y1="16.4" x2="16.8" y2="16.4" />
+      <line x1="10.4" y1="12" x2="10.4" y2="18.6" />
+      <line x1="13.6" y1="12" x2="13.6" y2="18.6" />
+    </g>
+  </>
+));
+
+export const FileFontIcon = makeIcon('fileFont', () => (
+  <>
+    <g data-part="lift">{pageBase(A_SOFT)}</g>
+    <g stroke={A_SOFT} strokeWidth="1.5">
+      <line data-part="typeIn" x1="8.4" y1="12.6" x2="15.6" y2="12.6" />
+      <line x1="12" y1="12.6" x2="12" y2="18.4" />
+    </g>
+  </>
+));

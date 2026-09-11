@@ -42,7 +42,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  height: calc(100% - 52px);
+  height: calc(100% - var(--bh-taskbar-h));
   padding: 32px;
   display: flex;
   flex-direction: column;
@@ -103,7 +103,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 52px;
+  height: var(--bh-taskbar-h);
   z-index: 10;
   display: flex;
   align-items: center;
@@ -486,9 +486,6 @@
   .desktopArea {
     padding: 16px;
   }
-  .taskbar {
-    height: 42px;
-  }
   .startBtn {
     font-size: 0.75rem;
     padding: 4px 10px;
@@ -508,10 +505,6 @@
 @media (max-height: 480px) {
   .desktopArea {
     padding: 8px;
-    height: calc(100% - 36px);
-  }
-  .taskbar {
-    height: 36px;
   }
 }
 
@@ -538,3 +531,19 @@
   box-shadow: 0 0 8px rgba(126, 184, 255, 0.4);
 }
 
+/* ── Taskbar height tokens per viewport ──────
+   Defined here (not on .taskbar) so the value is inherited by the desktop
+   layout and readable from JS via getComputedStyle.
+   ──────────────────────────────────────────── */
+
+@media (max-height: 620px) {
+  :global(:root) {
+    --bh-taskbar-h: 42px;
+  }
+}
+
+@media (max-height: 480px) {
+  :global(:root) {
+    --bh-taskbar-h: 36px;
+  }
+}

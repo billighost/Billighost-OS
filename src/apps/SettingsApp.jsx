@@ -1213,7 +1213,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
               <div className={styles.specGrid}>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Charge Level</span>
-                  <span className={styles.specValue}>{battery.level}%</span>
+                  <span className={styles.specValue}>{battery.levelText}</span>
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Power Source</span>
@@ -1613,7 +1613,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Battery Charge</span>
-                  <span className={styles.specValue}>{battery.level}% ({battery.statusText})</span>
+                  <span className={styles.specValue}>{battery.levelText} ({battery.statusText})</span>
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Virtual File System</span>

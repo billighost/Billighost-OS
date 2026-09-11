@@ -158,6 +158,18 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
 
         <div className={styles.username}>bb2010ng@gmail.com</div>
 
+        {/*
+          Plain <div>, and the inputs are type="text" with the digits masked
+          visually by the .pinDot overlay.
+
+          A <form> silenced Chrome's "password field not contained in a form"
+          note but immediately traded it for "Multiple forms should be
+          contained in their own form elements", because four single-character
+          password inputs do not look like one credential to the heuristic.
+          Since this is a local unlock code rather than a transmitted
+          credential, type="text" + inputMode="numeric" is the honest markup:
+          no password manager should offer to save it, and no warning fires.
+        */}
         <div
           className={`${styles.pinContainer} ${isError ? styles.pinShake : ''} ${
             isError ? styles.pinError : ''
@@ -173,15 +185,18 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}
-                type="password"
+                type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={1}
+                autoCorrect="off"
+                spellCheck={false}
                 value={pin[index]}
                 onChange={(e) => handleInputChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={handlePaste}
                 className={styles.pinInput}
+                name={`pin-digit-${index + 1}`}
                 autoComplete="off"
                 aria-label={`PIN digit ${index + 1}`}
               />

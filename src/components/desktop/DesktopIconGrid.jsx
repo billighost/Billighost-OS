@@ -5,7 +5,7 @@ import {
   MonitorIcon, FolderIcon, FolderOpenIcon, TrashIcon, BoltIcon, GlobeIcon,
   PenIcon, MusicNoteIcon, ImageIcon, GearIcon,
   FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
-  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon,
+  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon, FilmIcon,
 } from '../Icons';
 import styles from './DesktopIconGrid.module.css';
 
@@ -46,6 +46,7 @@ export default function DesktopIconGrid({
     { id: 'shortcut-notepad', name: 'Notepad', icon: <PenIcon size={28} />, action: () => onLaunchApp('notepad', 'Notepad', null) },
     { id: 'shortcut-music', name: 'Music', icon: <MusicNoteIcon size={28} />, action: () => onLaunchApp('media', 'Audio Player', null) },
     { id: 'shortcut-gallery', name: 'Gallery', icon: <ImageIcon size={28} />, action: () => onLaunchApp('gallery', 'Image Viewer', null) },
+    { id: 'shortcut-video', name: 'Video Studio', icon: <FilmIcon size={28} />, action: () => onLaunchApp('video', 'Video Studio', null) },
     { id: 'shortcut-calc', name: 'Calculator', icon: <CalculatorIcon size={28} />, action: () => onLaunchApp('calculator', 'Calculator', null) },
     { id: 'shortcut-settings', name: 'Settings', icon: <GearIcon size={28} />, action: () => onLaunchApp('settings', 'Settings', null) },
   ];

@@ -490,11 +490,11 @@ export default function WidgetsPanel({
                   />
                   <path
                     className={styles.radialFill}
-                    strokeDasharray={`${battery.supported ? battery.level : 100}, 100`}
+                    strokeDasharray={`${battery.barWidth}, 100`}
                     style={{ stroke: battery.charging ? 'var(--accent-success, #34d399)' : 'var(--accent-glow, #7eb8ff)' }}
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   />
-                  <text x="18" y="20.35" className={styles.radialText}>{battery.supported ? `${battery.level}%` : 'AC'}</text>
+                  <text x="18" y="20.35" className={styles.radialText}>{battery.levelText}</text>
                 </svg>
                 <span className={styles.radialLabel}>Battery</span>
               </div>

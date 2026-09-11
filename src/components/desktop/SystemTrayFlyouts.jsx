@@ -89,16 +89,16 @@ export function BatteryFlyout({ battery, onClose, playClick = () => {} }) {
 
       <div className={styles.flyoutContent}>
         <div className={styles.batteryBigGauge}>
-          <div className={styles.gaugeNumber}>{battery.level}%</div>
+          <div className={styles.gaugeNumber}>{battery.levelText}</div>
           <div className={styles.gaugeStatus}>{battery.statusText}</div>
           <div className={styles.batteryProgressBar}>
             <div
               className={styles.batteryProgressFill}
               style={{
-                width: `${battery.level}%`,
+                width: `${battery.barWidth}%`,
                 background: battery.charging
                   ? 'var(--accent-success)'
-                  : battery.level < 20
+                  : battery.tone === 'warn' || battery.tone === 'critical'
                   ? 'var(--accent-error)'
                   : 'var(--accent-glow)',
               }}

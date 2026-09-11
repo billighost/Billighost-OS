@@ -384,12 +384,12 @@ export default function TaskManagerApp({
             <div className={styles.detailCard}>
               <div className={styles.detailTitle}>
                 <span>System Power Architecture</span>
-                <span className={styles.monoValue}>{battery.level}% ({battery.statusText})</span>
+                <span className={styles.monoValue}>{battery.levelText} ({battery.statusText})</span>
               </div>
               <div className={styles.progressBar}>
                 <div
                   className={styles.progressFill}
-                  style={{ width: `${battery.level}%`, background: battery.charging ? '#34d399' : '#fbbf24' }}
+                  style={{ width: `${battery.barWidth}%`, background: battery.tone === 'critical' ? '#ff4d6a' : battery.tone === 'warn' ? '#fbbf24' : '#34d399' }}
                 />
               </div>
               <div className={styles.perfSub}>

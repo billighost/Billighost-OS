@@ -1,30 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { VFS } from '../services/storage/indexedDB';
+import { urlForPath, revokeUrl, importFile, LIBRARY, ACCEPT } from '../services/storage/fileImport';
 import { LocalSettings } from '../services/storage/localStorage';
 import { NotificationService } from '../services/notificationService';
+import { ImageIcon } from '../components/Icons';
 import styles from './ImageViewerApp.module.css';
-
-const DEFAULT_SAMPLE_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'%3E%3Cdefs%3E%3CradialGradient id='g' cx='50%25' cy='50%25' r='70%25'%3E%3Cstop offset='0%25' stop-color='%231e1b4b'/%3E%3Cstop offset='50%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%23050505'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23g)'/%3E%3Ccircle cx='400' cy='250' r='120' fill='none' stroke='%237eb8ff' stroke-width='3' stroke-dasharray='8 8'/%3E%3Ctext x='400' y='255' fill='%23e2e8f0' font-family='sans-serif' font-size='22' font-weight='bold' text-anchor='middle'%3EBILLIGHOST OS%3C/text%3E%3Ctext x='400' y='285' fill='%2394a3b8' font-family='sans-serif' font-size='14' text-anchor='middle'%3EHigh-Definition Image Studio%3C/text%3E%3C/svg%3E";
-
-const SAMPLE_GALLERY = [
-  { name: 'Billighost_Default.svg', src: DEFAULT_SAMPLE_IMG },
-  {
-    name: 'Cosmic_Nebula.svg',
-    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'%3E%3Crect width='100%25' height='100%25' fill='%23080612'/%3E%3Ccircle cx='250' cy='200' r='180' fill='%237928ca' opacity='0.5' filter='blur(40px)'/%3E%3Ccircle cx='550' cy='300' r='160' fill='%2300f3ff' opacity='0.4' filter='blur(40px)'/%3E%3Ccircle cx='400' cy='250' r='100' fill='%23ff007f' opacity='0.6' filter='blur(30px)'/%3E%3Ctext x='400' y='260' fill='%23ffffff' font-family='monospace' font-size='20' font-weight='bold' text-anchor='middle'%3ECOSMIC NEBULA%3C/text%3E%3C/svg%3E",
-  },
-  {
-    name: 'Cyber_Matrix.svg',
-    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500'%3E%3Crect width='100%25' height='100%25' fill='%23020904'/%3E%3Ctext x='400' y='240' fill='%2300ff66' font-family='monospace' font-size='24' font-weight='bold' text-anchor='middle'%3E01000010 01001001%3C/text%3E%3Ctext x='400' y='280' fill='%2300bb44' font-family='monospace' font-size='14' text-anchor='middle'%3ECYBERPUNK CORE ARCHITECTURE%3C/text%3E%3C/svg%3E",
-  },
-];
 
 export default function ImageViewerApp({
   filePath = null,
   playClick = () => {},
 }) {
-  const [imageSrc, setImageSrc] = useState(DEFAULT_SAMPLE_IMG);
-  const [fileName, setFileName] = useState('Sample_Wallpaper.svg');
-  const [galleryItems, setGalleryItems] = useState(SAMPLE_GALLERY);
+  // No bundled sample imagery: the studio opens empty and shows an import
+  // prompt, so nothing appears in the gallery that is not a real file.
+  const [imageSrc, setImageSrc] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [galleryItems, setGalleryItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Transform states
@@ -59,6 +49,8 @@ export default function ImageViewerApp({
   const [cropAspect, setCropAspect] = useState('free'); // 'free' | '1:1' | '16:9' | '4:3'
 
   const fileInputRef = useRef(null);
+  // Tracks the object URL currently shown, so it can be revoked on replace.
+  const urlRef = useRef(null);
   const imageElementRef = useRef(null);
 
   // Load initial image or folder items from VFS
@@ -67,28 +59,48 @@ export default function ImageViewerApp({
     (async () => {
       if (filePath) {
         try {
-          const content = await VFS.readFile(filePath);
+          /*
+           * Always go through a blob URL.
+           *
+           * Raw SVG markup passed straight to `src` is parsed as a relative
+           * URL, so the browser requested "…<svg xmlns=…>" as a path and got
+           * a 404. urlForPath() wraps whatever is stored — Blob or string —
+           * in an object URL that <img> can actually load.
+           */
+          const { url } = await urlForPath(filePath);
           if (isMounted) {
-            setImageSrc(content);
+            if (urlRef.current) revokeUrl(urlRef.current);
+            urlRef.current = url;
+            setImageSrc(url);
             setFileName(filePath.split('/').pop());
+          } else {
+            revokeUrl(url);
           }
-        } catch {}
+        } catch (err) {
+          if (isMounted) {
+            NotificationService.send({
+              title: 'Could not open image',
+              message: err?.message || String(err),
+              type: 'error',
+            });
+          }
+        }
       }
 
-      // Try reading Pictures folder for filmstrip
+      // Filmstrip is built from the real Pictures folder only.
       try {
         const pics = await VFS.listDirectory('/Users/User/Pictures');
-        const imgFiles = pics.filter(p => /\.(png|jpg|jpeg|webp|svg)$/i.test(p.name));
+        const imgFiles = pics.filter(p => /\.(png|jpg|jpeg|webp|svg|gif|avif|bmp)$/i.test(p.name));
         if (isMounted && imgFiles.length > 0) {
           const loaded = await Promise.all(
-            imgFiles.slice(0, 12).map(async (file) => {
-              const data = await VFS.readFile(file.path);
-              return { name: file.name, src: data, path: file.path };
+            imgFiles.slice(0, 24).map(async (file) => {
+              const { url } = await urlForPath(file.path);
+              return { name: file.name, src: url, path: file.path };
             })
           );
-          setGalleryItems([...SAMPLE_GALLERY, ...loaded]);
+          if (isMounted) setGalleryItems(loaded);
         }
-      } catch {}
+      } catch { /* Pictures may not exist yet */ }
     })();
 
     return () => { isMounted = false; };
@@ -336,20 +348,44 @@ export default function ImageViewerApp({
   }, [isSlideshow, slideshowInterval, handleNextPhoto]);
 
   // Upload local file
-  const handleUpload = (e) => {
+  /**
+   * Import a picture.
+   *
+   * Saved into the Pictures library first, so it can be reopened from File
+   * Explorer later rather than living only in this window's memory.
+   */
+  const handleUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     playClick();
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setImageSrc(ev.target.result);
-      setFileName(file.name);
-      setFileSize(file.size);
+    e.target.value = '';
+
+    try {
+      const saved = await importFile(file, { dir: LIBRARY.image });
+      window.dispatchEvent(new CustomEvent('billighost:vfs-update'));
+
+      if (urlRef.current) revokeUrl(urlRef.current);
+      const url = saved.url || URL.createObjectURL(file);
+      urlRef.current = url;
+
+      setImageSrc(url);
+      setFileName(saved.name);
+      setFileSize(saved.size);
       handleResetZoom();
       handleResetFilters();
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+
+      NotificationService.send({
+        title: 'Added to Pictures',
+        message: `${saved.name} — saved to ${LIBRARY.image}`,
+        type: 'success',
+      });
+    } catch (err) {
+      NotificationService.send({
+        title: 'Import Failed',
+        message: err?.message || String(err),
+        type: 'error',
+      });
+    }
   };
 
   const handleImageLoaded = (e) => {
@@ -474,7 +510,7 @@ export default function ImageViewerApp({
             type="file"
             ref={fileInputRef}
             onChange={handleUpload}
-            accept="image/*"
+            accept={ACCEPT.image}
             style={{ display: 'none' }}
           />
           <button className={styles.toolBtn} onClick={() => fileInputRef.current?.click()} title="Open Image from PC">
@@ -494,22 +530,39 @@ export default function ImageViewerApp({
           onMouseLeave={handleMouseUp}
           style={{ cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
         >
-          <div
-            className={styles.imageStage}
-            style={{
-              transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom}) rotate(${rotation}deg) scaleX(${isFlippedH ? -1 : 1}) scaleY(${isFlippedV ? -1 : 1})`,
-            }}
-          >
-            <img
-              ref={imageElementRef}
-              src={imageSrc}
-              alt={fileName}
-              className={styles.mainImage}
-              style={{ filter: cssFilter }}
-              onLoad={handleImageLoaded}
-              draggable={false}
-            />
-          </div>
+          {imageSrc ? (
+            <div
+              className={styles.imageStage}
+              style={{
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom}) rotate(${rotation}deg) scaleX(${isFlippedH ? -1 : 1}) scaleY(${isFlippedV ? -1 : 1})`,
+              }}
+            >
+              <img
+                ref={imageElementRef}
+                src={imageSrc}
+                alt={fileName}
+                className={styles.mainImage}
+                style={{ filter: cssFilter }}
+                onLoad={handleImageLoaded}
+                draggable={false}
+              />
+            </div>
+          ) : (
+            /* Empty state — `<img src={null}>` would request the page URL. */
+            <div className={styles.emptyStudio}>
+              <ImageIcon size={44} />
+              <span className={styles.emptyTitle}>No image open</span>
+              <span className={styles.emptyDesc}>
+                Import a picture, or open one from your Pictures folder.
+              </span>
+              <button
+                className={styles.emptyAction}
+                onClick={() => { playClick(); fileInputRef.current?.click(); }}
+              >
+                Import Image
+              </button>
+            </div>
+          )}
         </div>
 
         {/* SIDE PANEL 1: COLOR ADJUSTMENTS */}

@@ -437,7 +437,7 @@ export default function TerminalApp({ onLock, onRestart }) {
         newHistory.push({
           type: 'output',
           text: `[Battery Telemetry]
-  Level: ${battery.level}%
+  Level: ${battery.levelText}
   State: ${battery.statusText}
   Power: ${battery.charging ? 'AC Connected' : 'Battery Discharging'}
   Source: ${battery.supported ? 'Web Battery API' : 'AC Desktop Fallback'}`,
@@ -478,7 +478,7 @@ export default function TerminalApp({ onLock, onRestart }) {
     /_/    \\_\\  CPU: ${navigator.hardwareConcurrency || 8} Cores
                 Memory: ${navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Browser Heap'}
                 Storage: ${storage.usageFormatted} / ${storage.quotaFormatted} (${storage.percentUsed}%)
-                Battery: ${battery.level}% (${battery.statusText})
+                Battery: ${battery.levelText} (${battery.statusText})
                 Network: ${network.isOnline ? network.effectiveType.toUpperCase() + ' (' + network.downlink + ' Mbps)' : 'Offline'}
                 Shell: billighost-sh 1.2`,
         });

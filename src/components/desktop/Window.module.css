@@ -31,7 +31,11 @@
   isolation: isolate;
   user-select: none;
   animation: windowOpen 0.22s var(--ease-spring);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    opacity 0.18s var(--ease-out-expo),
+    transform 0.24s var(--ease-out-expo);
 }
 
 /* ── Refraction rim ─────────────────────────
@@ -411,4 +415,21 @@
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+/* ── Minimized ───────────────────────────────
+   Hidden from view and from interaction, but still mounted so the app keeps
+   its state and any audio it is playing keeps running. `visibility` is
+   delayed so it only lands after the fade-out completes.
+   ──────────────────────────────────────────── */
+
+.windowMinimized {
+  opacity: 0;
+  transform: scale(0.94) translateY(20px);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity 0.18s var(--ease-out-expo),
+    transform 0.24s var(--ease-out-expo),
+    visibility 0s linear 0.24s;
 }

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { appIcon } from '../appIcons';
 import styles from './TaskViewModal.module.css';
 
 export default function TaskViewModal({
@@ -106,7 +107,7 @@ export default function TaskViewModal({
             >
               <div className={styles.cardHeader}>
                 <div className={styles.cardIdentity}>
-                  <span className={styles.cardIcon}>{win.icon || '📁'}</span>
+                  <span className={styles.cardIcon}>{appIcon(win.appId, 15)}</span>
                   <span className={styles.cardTitle}>{win.title}</span>
                 </div>
                 <button
@@ -124,7 +125,7 @@ export default function TaskViewModal({
 
               <div className={styles.cardPreview}>
                 <div className={styles.previewPlaceholder}>
-                  <span className={styles.previewBigIcon}>{win.icon || '📁'}</span>
+                  <span className={styles.previewBigIcon}>{appIcon(win.appId, 30)}</span>
                   <span className={styles.previewAppName}>{win.appId.toUpperCase()}</span>
                   <span className={styles.previewStatus}>{win.isMinimized ? 'Minimized' : 'Running'}</span>
                 </div>

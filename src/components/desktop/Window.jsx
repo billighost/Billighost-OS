@@ -1,8 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { appIcon } from '../appIcons';
 import styles from './Window.module.css';
 
-/* Shell geometry — the taskbar owns the bottom strip of the viewport. */
-const TASKBAR_H = 52;
+/*
+ * Taskbar height, read from the `--bh-taskbar-h` token rather than hardcoded.
+ *
+ * The CSS lowers it to 42px / 36px on short viewports. A fixed 52 here would
+ * leave a strip of dead space above the taskbar on exactly those screens —
+ * a maximized window that does not reach the bar.
+ */
+function taskbarHeight() {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue('--bh-taskbar-h').trim();
+  const n = parseFloat(raw);
+  return Number.isFinite(n) && n > 0 ? n : 52;   // token may be unset before first paint
+}
 
 /*
  * Minimum window sizes.
@@ -21,7 +32,7 @@ const MIN_H = 360;
 function workArea() {
   return {
     w: window.innerWidth,
-    h: Math.max(MIN_H, window.innerHeight - TASKBAR_H),
+    h: Math.max(MIN_H, window.innerHeight - taskbarHeight()),
   };
 }
 
@@ -239,15 +250,24 @@ export default function Window({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (win.isMinimized) return null;
-
+  /*
+   * Minimizing hides the window; it must NOT unmount it.
+   *
+   * Returning null here destroyed the whole app subtree: the audio player's
+   * teardown closed its AudioContext (music stopped), and every app lost its
+   * local state — scroll position, editor theme, unsaved edits, uploads —
+   * because the component was recreated from scratch on restore.
+   *
+   * It stays mounted and is hidden with CSS instead. `inert` keeps it out of
+   * the tab order and the accessibility tree while hidden.
+   */
   let windowStyle;
   if (win.isMaximized) {
     windowStyle = {
       top: 0,
       left: 0,
       width: '100vw',
-      height: 'calc(100vh - 52px)',
+      height: 'calc(100vh - var(--bh-taskbar-h))',
       borderRadius: 0,
       zIndex: win.zIndex,
     };
@@ -256,7 +276,7 @@ export default function Window({
       top: 0,
       left: 0,
       width: '50vw',
-      height: 'calc(100vh - 52px)',
+      height: 'calc(100vh - var(--bh-taskbar-h))',
       borderRadius: 0,
       zIndex: win.zIndex,
     };
@@ -265,7 +285,7 @@ export default function Window({
       top: 0,
       left: '50vw',
       width: '50vw',
-      height: 'calc(100vh - 52px)',
+      height: 'calc(100vh - var(--bh-taskbar-h))',
       borderRadius: 0,
       zIndex: win.zIndex,
     };
@@ -285,9 +305,11 @@ export default function Window({
     <div
       data-testid="os-window"
       data-app={win.appId}
-      className={`${styles.window} ${isActive ? styles.windowActive : ''} ${isDragging ? styles.windowDragging : ''} ${isResizing ? styles.windowResizing : ''} ${isSnapped ? styles.windowSnapped : ''}`}
+      className={`${styles.window} ${isActive ? styles.windowActive : ''} ${isDragging ? styles.windowDragging : ''} ${isResizing ? styles.windowResizing : ''} ${isSnapped ? styles.windowSnapped : ''} ${win.isMinimized ? styles.windowMinimized : ''}`}
       style={windowStyle}
-      onMouseDown={onFocus}
+      onMouseDown={win.isMinimized ? undefined : onFocus}
+      inert={win.isMinimized || undefined}
+      aria-hidden={win.isMinimized || undefined}
     >
       {/* Title Bar */}
       <div
@@ -298,7 +320,9 @@ export default function Window({
         onDoubleClick={() => onMaximize(win.id)}
       >
         <div className={styles.windowIdentity}>
-          <span className={styles.windowIcon}>{win.icon || '📁'}</span>
+          {/* Resolved from appId — the old `win.icon || '📁'` fell through to
+              a folder emoji for every app, because launches pass icon: null. */}
+          <span className={styles.windowIcon}>{appIcon(win.appId, 14)}</span>
           <span className={styles.windowTitle}>{win.title}</span>
         </div>
 

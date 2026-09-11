@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { VFS } from '../services/storage/indexedDB';
+import { importFiles, ACCEPT } from '../services/storage/fileImport';
+import { fileIcon } from '../components/appIcons';
 import { NotificationService } from '../services/notificationService';
 import {
   ArrowUpIcon, HomeIcon, TrashIcon, RefreshIcon,
-  FolderIcon, FileIcon, FileTextIcon,
+  FolderIcon, FileIcon,
   PlusIcon, DownloadIcon, UploadIcon, RecycleIcon,
 } from '../components/Icons';
 import styles from './FileManagerApp.module.css';
@@ -399,23 +401,40 @@ export default function FileManagerApp({
     await VFS.exportFile(selectedItem.path);
   };
 
-  const handleUploadFromPC = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  /**
+   * Import from the real machine into the current folder.
+   *
+   * Previously this used FileReader.readAsText() for everything, which
+   * decodes binary as UTF-8 — importing a video built a multi-hundred-
+   * megabyte string and froze the tab. The shared import service keeps
+   * binary content as a Blob and enforces a size ceiling.
+   *
+   * Files land in the CURRENT folder here (not the library default) because
+   * that is what a file manager implies; the media apps route to their own
+   * libraries instead.
+   */
+  const handleUploadFromPC = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
     playClick();
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const content = ev.target.result;
-      const targetPath = currentPath === '/' ? `/${file.name}` : `${currentPath}/${file.name}`;
-      await VFS.writeFile(targetPath, content, file.type || 'text/plain');
+    e.target.value = '';   // reset immediately so re-importing the same file works
+
+    const { imported, failed } = await importFiles(files, { dir: currentPath });
+
+    if (imported.length) {
       NotificationService.send({
-        title: 'Import Complete',
-        message: `Uploaded "${file.name}" to current directory`,
+        title: imported.length === 1 ? 'Import Complete' : `${imported.length} Files Imported`,
+        message: imported.map(f => f.name).slice(0, 3).join(', ')
+          + (imported.length > 3 ? ` +${imported.length - 3} more` : ''),
         type: 'success',
       });
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+      await refreshDirectory(currentPath);
+      window.dispatchEvent(new CustomEvent('billighost:vfs-update'));
+    }
+
+    for (const f of failed) {
+      NotificationService.send({ title: 'Import Failed', message: `${f.name}: ${f.message}`, type: 'error' });
+    }
   };
 
   // Keyboard Navigation
@@ -615,6 +634,8 @@ export default function FileManagerApp({
           <input
             type="file"
             ref={fileInputRef}
+            multiple
+            accept={ACCEPT.any}
             onChange={handleUploadFromPC}
             style={{ display: 'none' }}
           />
@@ -707,15 +728,7 @@ export default function FileManagerApp({
                   }}
                 >
                   <div className={styles.itemIcon}>
-                    {item.type === 'dir' ? (
-                      <FolderIcon size={28} />
-                    ) : item.name.endsWith('.png') || item.name.endsWith('.jpg') ? (
-                      <span style={{ fontSize: '24px' }}>🖼️</span>
-                    ) : item.name.endsWith('.md') ? (
-                      <FileTextIcon size={28} />
-                    ) : (
-                      <FileIcon size={28} />
-                    )}
+                    {item.type === 'dir' ? <FolderIcon size={28} /> : fileIcon(item.name, 28)}
                   </div>
                   <div className={styles.itemName} title={item.name}>{item.name}</div>
                   <div className={styles.itemMeta}>
@@ -769,7 +782,7 @@ export default function FileManagerApp({
                   >
                     <span className={styles.colName}>
                       <span className={styles.listIcon}>
-                        {item.type === 'dir' ? '📁' : '📄'}
+                        {item.type === 'dir' ? <FolderIcon size={15} /> : fileIcon(item.name, 15)}
                       </span>
                       {item.name}
                     </span>

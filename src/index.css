@@ -54,6 +54,15 @@
   --shadow-inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --shadow-ambient: 0 8px 32px rgba(0, 0, 0, 0.4);
 
+  /*
+   * Shell metrics. The taskbar height is a token because THREE places need
+   * it in agreement: the CSS that draws the bar, the CSS that lays out the
+   * desktop, and JS that clamps window geometry. Hardcoding 52 in JS while
+   * CSS drops to 36 on short viewports is what produced a maximized window
+   * with a strip of dead space above the taskbar.
+   */
+  --bh-taskbar-h: 52px;
+
   /* Liquid Glass */
   --glass-blur: 40px;
   --glass-bg: rgba(18, 18, 28, 0.55);

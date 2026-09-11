@@ -1,0 +1,688 @@
+/* ============================================
+   BILLIGHOST OS — Video Studio
+   ============================================
+
+   Four-region grid: top bar, stage, timeline, side panel. The stage is the
+   only region that grows; everything else is intrinsically sized, so the
+   preview takes whatever space is left rather than being squeezed out.
+   ============================================ */
+
+.studio {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /*
+   * Columns are set per mode below. In player mode the panel column does not
+   * exist at all, so the picture gets the whole width rather than being
+   * squeezed beside an empty rail.
+   */
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'top'
+    'stage'
+    'time';
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #07080d;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  overflow: hidden;
+  container-type: inline-size;
+  container-name: studio;
+}
+
+/* ── Top bar ─────────────────────────────── */
+
+.topBar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(16, 18, 28, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--accent-glow);
+}
+
+.clipName {
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 26ch;
+}
+
+.clipMeta {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-ghost);
+  white-space: nowrap;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  white-space: nowrap;
+}
+
+.action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.action:disabled {
+  opacity: 0.34;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: rgba(126, 184, 255, 0.16);
+  border-color: rgba(126, 184, 255, 0.36);
+  color: #cfe4ff;
+}
+
+.primary:hover:not(:disabled) {
+  background: rgba(126, 184, 255, 0.26);
+}
+
+/* ── Stage ───────────────────────────────── */
+
+.stage {
+  grid-area: stage;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(126, 184, 255, 0.06) 0%, #05060a 72%);
+  overflow: hidden;
+}
+
+.video {
+  max-width: 100%;
+  max-height: 100%;
+  /* Fills the stage without cropping; the letterbox reads as a viewer. */
+  object-fit: contain;
+  background: #000;
+}
+
+.exportCanvas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Empty & error states ────────────────── */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 30px;
+  text-align: center;
+  color: var(--text-ghost);
+}
+
+.emptyTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.emptyDesc {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  max-width: 32ch;
+  line-height: 1.55;
+}
+
+.emptyAction {
+  margin-top: 4px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  background: rgba(126, 184, 255, 0.16);
+  border: 1px solid rgba(126, 184, 255, 0.35);
+  color: #cfe4ff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.emptyAction:hover {
+  background: rgba(126, 184, 255, 0.26);
+}
+
+.errorOverlay,
+.exportOverlay {
+  position: absolute;
+  inset: auto 16px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(10, 12, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(14px);
+}
+
+.errorTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-error);
+}
+
+.errorDesc,
+.exportNote {
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.exportLabel {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--accent-glow);
+}
+
+.exportTrack {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.exportFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-glow), var(--accent-soft));
+  transition: width 0.15s linear;
+}
+
+/* ── Timeline ────────────────────────────── */
+
+.timeline {
+  grid-area: time;
+  padding: 10px 14px 12px;
+  background: rgba(12, 14, 22, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.track {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+/* The kept range, drawn brighter than the discarded remainder. */
+.trimRange {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(126, 184, 255, 0.5), rgba(167, 139, 250, 0.5));
+}
+
+.playhead {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 14px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+  transform: translateX(-1px);
+  pointer-events: none;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.tBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.13s ease, color 0.13s ease;
+}
+
+.tBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
+}
+
+.tBtn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.tPlay {
+  background: rgba(126, 184, 255, 0.18);
+  border-color: rgba(126, 184, 255, 0.4);
+  color: #cfe4ff;
+  padding: 6px 13px;
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 3px;
+}
+
+.spacer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.trimReadout {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--accent-glow);
+  white-space: nowrap;
+}
+
+.vol {
+  width: 82px;
+  accent-color: var(--accent-glow);
+}
+
+.rate {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.68rem;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+/* ── Side panel ──────────────────────────── */
+
+.panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: rgba(11, 13, 20, 0.92);
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.panelTabs {
+  display: flex;
+  gap: 3px;
+  padding: 8px 8px 0;
+  flex-shrink: 0;
+}
+
+.panelTab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 4px;
+  border-radius: 7px 7px 0 0;
+  background: transparent;
+  border: none;
+  color: var(--text-ghost);
+  font-size: 0.71rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.panelTab:hover {
+  color: var(--text-primary);
+}
+
+.panelTabActive {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.panelBody {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.presetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.preset {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--text-secondary);
+  font-size: 0.67rem;
+  cursor: pointer;
+  transition: background 0.13s ease;
+}
+
+.preset:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.presetActive {
+  background: rgba(126, 184, 255, 0.2);
+  border-color: rgba(126, 184, 255, 0.42);
+  color: #cfe4ff;
+}
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sliderLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+}
+
+.sliderVal {
+  font-family: var(--font-mono);
+  color: var(--accent-glow);
+}
+
+.slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent-glow);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+}
+
+.fieldVal {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent-glow);
+}
+
+.field input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent-soft);
+}
+
+.statBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+}
+
+.stat span:last-child {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.wideBtn {
+  padding: 7px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: 0.71rem;
+  cursor: pointer;
+}
+
+.wideBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ── Library list ────────────────────────── */
+
+.libEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 8px;
+  color: var(--text-ghost);
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.libItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.libOpen {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-secondary);
+  font-size: 0.71rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.13s ease;
+}
+
+.libOpen:hover {
+  background: rgba(126, 184, 255, 0.14);
+  color: #fff;
+}
+
+.libName {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libSize {
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  color: var(--text-ghost);
+  flex-shrink: 0;
+}
+
+.libDel {
+  padding: 6px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-ghost);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.libDel:hover {
+  background: rgba(255, 77, 106, 0.16);
+  border-color: rgba(255, 77, 106, 0.32);
+  color: var(--accent-error);
+}
+
+/* ── Adaptive: collapse to a single column ──
+   Below 640px the side panel would leave the preview unusably narrow, so
+   the layout stacks and the panel becomes a short drawer under the timeline.
+   ──────────────────────────────────────────── */
+
+@container studio (max-width: 640px) {
+  .studio {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto;
+    grid-template-areas:
+      'top'
+      'stage'
+      'time'
+      'panel';
+  }
+
+  .panel {
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    max-height: 34%;
+  }
+
+  .clipMeta {
+    display: none;
+  }
+}
+
+@container studio (max-width: 460px) {
+  .trimReadout,
+  .rate {
+    display: none;
+  }
+
+  .vol {
+    width: 58px;
+  }
+}
+
+/* ── Modes ───────────────────────────────────
+   Opens as a plain player; editing is opt-in.
+   ──────────────────────────────────────────── */
+
+.studioEditing {
+  grid-template-columns: 1fr 264px;
+  grid-template-areas:
+    'top    top'
+    'stage  panel'
+    'time   panel';
+}
+
+/* A calmer transport in player mode — fewer controls, more room each. */
+.studioPlayer .transport {
+  gap: 8px;
+}
+
+.studioPlayer .timeline {
+  padding: 12px 18px 14px;
+}
+
+/* The Edit toggle reads as a mode switch, not another action. */
+.modeToggle {
+  border-color: rgba(167, 139, 250, 0.3);
+  color: #c4b5fd;
+}
+
+.modeToggle:hover:not(:disabled) {
+  background: rgba(167, 139, 250, 0.16);
+}
+
+.modeOn {
+  background: rgba(167, 139, 250, 0.22);
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #ddd6fe;
+}
+
+/* Editing-mode container query needs the editing width, not the whole app. */
+@container studio (max-width: 640px) {
+  .studioEditing {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto auto;
+    grid-template-areas:
+      'top'
+      'stage'
+      'time'
+      'panel';
+  }
+}

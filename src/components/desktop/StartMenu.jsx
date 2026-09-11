@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
-  FolderIcon, BoltIcon, GlobeIcon, PenIcon, MusicNoteIcon,
-  ImageIcon, GridHashIcon, GearIcon, ChartBarIcon,
-  FileIcon, FileTextIcon, ScrollIcon,
+  FolderIcon, PenIcon, MusicNoteIcon, ImageIcon, GearIcon,
+  FileTextIcon, ScrollIcon, GhostIcon, TerminalIcon,
+  CalculatorIcon, GaugeIcon, FilmIcon,
   LockIcon, RefreshIcon, PowerIcon, SearchIcon,
   CodeIcon, BrushIcon,
 } from '../Icons';
@@ -23,18 +23,19 @@ export default function StartMenu({
     { id: 'files', name: 'Files', icon: <FolderIcon size={22} />, desc: 'Virtual File System & Explorer' },
     { id: 'code', name: 'Code Studio', icon: <CodeIcon size={22} />, desc: 'Syntax-Highlighted Code Editor' },
     { id: 'paint', name: 'Paint Studio', icon: <BrushIcon size={22} />, desc: 'Canvas Art & Graphics Studio' },
-    { id: 'terminal', name: 'Terminal', icon: <BoltIcon size={22} />, desc: 'Billighost Command Shell' },
-    { id: 'browser', name: 'Browser', icon: <GlobeIcon size={22} />, desc: 'Ghost Web Browser' },
+    { id: 'terminal', name: 'Terminal', icon: <TerminalIcon size={22} />, desc: 'Billighost Command Shell' },
+    { id: 'browser', name: 'Ghost Browser', icon: <GhostIcon size={22} />, desc: 'Private Web Browser' },
     { id: 'notepad', name: 'Notepad', icon: <PenIcon size={22} />, desc: 'Text & Markdown Editor' },
     { id: 'media', name: 'Music', icon: <MusicNoteIcon size={22} />, desc: 'Audio Player & Visualizer' },
-    { id: 'gallery', name: 'Gallery', icon: <ImageIcon size={22} />, desc: 'Image Viewer' },
-    { id: 'calculator', name: 'Calculator', icon: <GridHashIcon size={22} />, desc: 'Standard & Scientific Calculator' },
+    { id: 'video', name: 'Video Studio', icon: <FilmIcon size={22} />, desc: 'Trim, Grade & Export Video' },
+    { id: 'gallery', name: 'Gallery', icon: <ImageIcon size={22} />, desc: 'Image Viewer & Editor' },
+    { id: 'calculator', name: 'Calculator', icon: <CalculatorIcon size={22} />, desc: 'Standard & Scientific Calculator' },
     { id: 'settings', name: 'Settings', icon: <GearIcon size={22} />, desc: 'Personalization & Telemetry' },
-    { id: 'monitor', name: 'Task Manager', icon: <ChartBarIcon size={22} />, desc: 'Processes & Storage Monitor' },
+    { id: 'monitor', name: 'Task Manager', icon: <GaugeIcon size={22} />, desc: 'Processes & Storage Monitor' },
   ];
 
   const RECENT_DOCS = [
-    { name: 'Welcome.txt', path: '/Users/User/Desktop/Welcome.txt', icon: <FileIcon size={16} /> },
+    { name: 'Welcome.txt', path: '/Users/User/Desktop/Welcome.txt', icon: <FileTextIcon size={16} /> },
     { name: 'OS_Notes.md', path: '/Users/User/Desktop/OS_Notes.md', icon: <FileTextIcon size={16} /> },
     { name: 'Terminal_Guide.txt', path: '/Users/User/Documents/Terminal_Guide.txt', icon: <ScrollIcon size={16} /> },
   ];

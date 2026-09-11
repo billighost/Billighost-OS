@@ -116,23 +116,40 @@ export function useWeather() {
       }
     };
 
-    const resolveCoordsAndFetch = () => {
+    const resolveCoordsAndFetch = async () => {
       const fallback = getFallbackLocation();
 
-      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      /*
+       * Never call getCurrentPosition() unprompted.
+       *
+       * Two reasons: Chrome logs "[Violation] Only request geolocation
+       * information in response to a user gesture", and an unsolicited
+       * permission prompt on boot is hostile. The timezone fallback is good
+       * enough to render immediately; precise coordinates are only requested
+       * when permission has ALREADY been granted.
+       */
+      const hasGeo = typeof navigator !== 'undefined' && !!navigator.geolocation;
+
+      let granted = false;
+      try {
+        if (hasGeo && navigator.permissions?.query) {
+          const status = await navigator.permissions.query({ name: 'geolocation' });
+          granted = status.state === 'granted';
+        }
+      } catch {
+        granted = false;   // Permissions API unavailable — treat as not granted
+      }
+
+      if (hasGeo && granted) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            fetchForecast(pos.coords.latitude, pos.coords.longitude, fallback.city);
-          },
-          () => {
-            // Geolocation permission denied or failed: use timezone fallback
-            fetchForecast(fallback.lat, fallback.lon, fallback.city);
-          },
+          (pos) => fetchForecast(pos.coords.latitude, pos.coords.longitude, fallback.city),
+          () => fetchForecast(fallback.lat, fallback.lon, fallback.city),
           { timeout: 4000 }
         );
-      } else {
-        fetchForecast(fallback.lat, fallback.lon, fallback.city);
+        return;
       }
+
+      fetchForecast(fallback.lat, fallback.lon, fallback.city);
     };
 
     resolveCoordsAndFetch();

@@ -108,17 +108,19 @@ export default function LockScreen({ onUnlock, playUnlock, playClick, wallpaperS
         {/* Bottom-left: Status indicators */}
         <div className={styles.bottomLeft}>
           {/* Battery */}
-          <div className={styles.statusChip} title={`Battery: ${battery.level}% (${battery.statusText})`}>
+          <div className={styles.statusChip} title={`Battery: ${battery.levelText} (${battery.statusText})`}>
             <div className={styles.batteryIcon}>
               <div
                 className={styles.batteryFill}
                 style={{
-                  width: `${Math.max(10, battery.level)}%`,
-                  background: battery.level < 20 && !battery.charging ? 'var(--accent-error)' : 'var(--accent-success)'
+                  width: `${battery.barWidth}%`,
+                  background: battery.tone === 'critical' ? 'var(--accent-error)'
+                    : battery.tone === 'warn' ? 'var(--accent-warning)'
+                    : 'var(--accent-success)'
                 }}
               />
             </div>
-            <span>{battery.supported ? `${battery.level}%` : 'AC'}</span>
+            <span>{battery.levelText}</span>
           </div>
 
           {/* Network */}

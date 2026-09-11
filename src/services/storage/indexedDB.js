@@ -71,22 +71,6 @@ const DEFAULT_FILES = [
     mimeType: 'text/plain',
   },
   {
-    path: '/Users/User/Pictures/Neon_Wallpaper.svg',
-    name: 'Neon_Wallpaper.svg',
-    parentPath: '/Users/User/Pictures',
-    type: 'file',
-    content: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><defs><radialGradient id="g" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="#1e1b4b"/><stop offset="50%" stop-color="#0f172a"/><stop offset="100%" stop-color="#050505"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="400" cy="250" r="120" fill="none" stroke="#7eb8ff" stroke-width="3" stroke-dasharray="8 8"/><text x="400" y="255" fill="#e2e8f0" font-family="sans-serif" font-size="22" font-weight="bold" text-anchor="middle">BILLIGHOST OS</text><text x="400" y="285" fill="#94a3b8" font-family="sans-serif" font-size="14" text-anchor="middle">High-Definition Image Preview</text></svg>`,
-    mimeType: 'image/svg+xml',
-  },
-  {
-    path: '/Users/User/Music/Ambient_Track.txt',
-    name: 'Ambient_Track.txt',
-    parentPath: '/Users/User/Music',
-    type: 'file',
-    content: `Track: Billighost Ambient Synth (Procedural)\nGenre: Cyberpunk Chillwave\nEngine: Web Audio Oscillator Synthesizer`,
-    mimeType: 'text/plain',
-  },
-  {
     path: '/Users/User/Documents/system_script.js',
     name: 'system_script.js',
     parentPath: '/Users/User/Documents',
@@ -272,11 +256,52 @@ export const VFS = {
     return null;
   },
 
+  /**
+   * Reads a file as TEXT.
+   *
+   * Binary files are stored as Blobs, so returning `node.content` raw handed
+   * text apps a Blob and crashed them on the first `.split()`. Blobs are
+   * decoded here; genuinely binary content should be opened with
+   * `readBlob()` / `urlForPath()` instead of this.
+   */
   async readFile(path) {
     const node = await this.getNode(path);
     if (!node) throw new Error(`File not found: ${path}`);
     if (node.type !== 'file') throw new Error(`Path is a directory: ${path}`);
-    return node.content;
+
+    if (node.content instanceof Blob) {
+      // Refuse to stringify real binary — that is how the tab froze before.
+      if (this.isBinaryMime(node.mimeType) && node.mimeType !== 'image/svg+xml') {
+        throw new Error(
+          `"${node.name}" is a ${node.mimeType || 'binary'} file and cannot be opened as text.`
+        );
+      }
+      return await node.content.text();
+    }
+
+    return typeof node.content === 'string' ? node.content : String(node.content ?? '');
+  },
+
+  /** Raw content for binary consumers: a Blob regardless of how it was stored. */
+  async readBlob(path) {
+    const node = await this.getNode(path);
+    if (!node) throw new Error(`File not found: ${path}`);
+    if (node.content instanceof Blob) return node.content;
+    return new Blob([node.content ?? ''], { type: node.mimeType || 'text/plain' });
+  },
+
+  /**
+   * True for MIME types that must never be handled as text.
+   *
+   * Reading a video or audio file with FileReader.readAsText() decodes the
+   * binary as UTF-8 — a 50MB MKV becomes a ~50-million-character string,
+   * which freezes the tab while it is built and again while IndexedDB
+   * serialises it. Binary content is stored as a Blob instead, which
+   * IndexedDB supports natively and keeps off the main thread.
+   */
+  isBinaryMime(mimeType = '') {
+    return /^(video|audio|image|font)\//.test(mimeType)
+      || /(zip|gzip|pdf|octet-stream|msword|excel|sqlite)/.test(mimeType);
   },
 
   async writeFile(path, content, mimeType = 'text/plain') {
@@ -285,7 +310,8 @@ export const VFS = {
     const name = parts[parts.length - 1];
     const parentPath = '/' + parts.slice(0, -1).join('/');
     const now = Date.now();
-    const size = new Blob([content]).size;
+    // A Blob already knows its size; re-wrapping it would copy the bytes.
+    const size = content instanceof Blob ? content.size : new Blob([content]).size;
 
     const existing = await this.getNode(path);
 
