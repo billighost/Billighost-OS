@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { NotificationService } from '../services/notificationService';
-import { importFile, LIBRARY, ACCEPT } from '../services/storage/fileImport';
+import { importFile, LIBRARY, ACCEPT, urlForPath, revokeUrl } from '../services/storage/fileImport';
 import styles from './AudioPlayerApp.module.css';
 
 const SYNTH_PRESETS = [
@@ -75,7 +75,7 @@ const VISUALIZER_MODES = [
   { id: 'particles', name: 'Sound Particles' },
 ];
 
-export default function AudioPlayerApp({ playClick = () => {} }) {
+export default function AudioPlayerApp({ playClick = () => {}, filePath = null }) {
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPresetIndex, setCurrentPresetIndex] = useState(0);
@@ -131,6 +131,8 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
    * dependency.
    */
   const paramsRef = useRef({ volume: 75, isMuted: false, eqBass: 2, eqMid: 0, eqTreble: 3, spatialReverb: true });
+  // Read by the file loader's `onended`, which must not re-run per toggle.
+  const isLoopingRef = useRef(true);
 
   const audioElementRef = useRef(null);
   const synthOscsRef = useRef([]);
@@ -228,6 +230,7 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
   /* Push live parameter values onto the graph. One owner for node state. */
   useEffect(() => {
     paramsRef.current = { volume, isMuted, eqBass, eqMid, eqTreble, spatialReverb };
+    isLoopingRef.current = isLooping;
 
     const ctx = audioCtxRef.current;
     if (!ctx) return;
@@ -245,7 +248,7 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
     // Wet stays low: a subtle sense of space, never a second voice.
     if (wetGainRef.current) ramp(wetGainRef.current.gain, spatialReverb ? 0.24 : 0);
     if (dryGainRef.current) ramp(dryGainRef.current.gain, spatialReverb ? 0.88 : 1);
-  }, [volume, isMuted, eqBass, eqMid, eqTreble, spatialReverb]);
+  }, [volume, isMuted, eqBass, eqMid, eqTreble, spatialReverb, isLooping]);
 
   // Start procedural sound generator
   const startProceduralSynth = useCallback((preset) => {
@@ -508,6 +511,87 @@ export default function AudioPlayerApp({ playClick = () => {} }) {
       startProceduralSynth(SYNTH_PRESETS[currentPresetIndex]);
     }
   };
+
+  /**
+   * Open a track handed in from File Explorer or a desktop icon.
+   *
+   * Without this the window opened but played nothing — the path was passed
+   * and then ignored, so the app looked broken while "working".
+   */
+  useEffect(() => {
+    if (!filePath) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { url, node } = await urlForPath(filePath);
+        if (cancelled) {
+          revokeUrl(url);
+          return;
+        }
+
+        stopAudio();
+        if (objectUrlRef.current) revokeUrl(objectUrlRef.current);
+        objectUrlRef.current = url;
+
+        initAudio();
+        const ctx = audioCtxRef.current;
+        if (ctx?.state === 'suspended') ctx.resume().catch(() => {});
+
+        // Replace any previous element/source before wiring a new one.
+        if (mediaSourceRef.current) {
+          try { mediaSourceRef.current.disconnect(); } catch { /* already detached */ }
+          mediaSourceRef.current = null;
+        }
+        if (audioElementRef.current) {
+          audioElementRef.current.pause();
+          audioElementRef.current.src = '';
+        }
+
+        const audioEl = new Audio(url);
+        audioElementRef.current = audioEl;
+        audioEl.playbackRate = playbackSpeed;
+
+        const source = ctx.createMediaElementSource(audioEl);
+        mediaSourceRef.current = source;
+        source.connect(bassFilterRef.current);
+
+        audioEl.onloadedmetadata = () => {
+          if (!cancelled) setDuration(Math.floor(audioEl.duration) || 180);
+        };
+        audioEl.ontimeupdate = () => {
+          if (!cancelled) setCurrentTime(Math.floor(audioEl.currentTime));
+        };
+        audioEl.onended = () => {
+          if (isLoopingRef.current) {
+            audioEl.currentTime = 0;
+            audioEl.play().catch(() => {});
+          } else {
+            setIsPlaying(false);
+          }
+        };
+
+        setUploadedAudioUrl(url);
+        setTrackTitle(node.name.replace(/\.[^/.]+$/, ''));
+        setTrackArtist('Music Library');
+        setCurrentTime(0);
+
+        await audioEl.play().catch(() => {
+          // Autoplay may be blocked; the transport button still works.
+        });
+        if (!cancelled) setIsPlaying(true);
+      } catch (err) {
+        NotificationService.send({
+          title: 'Could not open track',
+          message: err?.message || String(err),
+          type: 'error',
+        });
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filePath]);
 
   // Sleep Timer countdown
   useEffect(() => {

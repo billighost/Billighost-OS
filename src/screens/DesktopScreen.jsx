@@ -47,29 +47,8 @@ import {
   FileIcon, FilmIcon,
 } from '../components/Icons';
 
+import { appForFile } from '../services/fileRouting';
 import styles from './DesktopScreen.module.css';
-
-/**
- * Which app opens a given file.
- *
- * Previously inline in the File Explorer callback and text-biased: anything
- * unrecognised went to Notepad, so double-clicking a video opened a text
- * editor full of binary. Kept as a table so every caller routes alike.
- */
-const OPEN_WITH = {
-  gallery: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'avif', 'svg', 'bmp', 'ico'],
-  video: ['mp4', 'webm', 'mkv', 'mov', 'avi', 'm4v', 'ogv'],
-  media: ['mp3', 'wav', 'ogg', 'oga', 'flac', 'm4a', 'aac', 'opus', 'weba'],
-  code: ['js', 'jsx', 'ts', 'tsx', 'css', 'json', 'html', 'sh', 'py', 'rs', 'go', 'yml', 'yaml', 'xml'],
-};
-
-function appForFile(name = '') {
-  const ext = name.toLowerCase().split('.').pop();
-  for (const [app, exts] of Object.entries(OPEN_WITH)) {
-    if (exts.includes(ext)) return app;
-  }
-  return 'notepad';   // text and unknown types
-}
 
 function getFormattedTime(format = '24h') {
   const now = new Date();
@@ -815,6 +794,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             )}
             {win.appId === 'media' && (
               <AudioPlayerApp
+                filePath={win.props?.filePath || null}
                 playClick={playClick}
               />
             )}

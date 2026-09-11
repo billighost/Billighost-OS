@@ -326,32 +326,52 @@
 }
 
 /* Custom CSS Icons */
+/*
+ * The shell (border) and the fill track are separate boxes.
+ *
+ * Previously the fill lived directly inside a 20px border-box shell whose
+ * 1.5px border and 1px padding left only 14px of content, so a "100%" fill
+ * visibly reached about 80% of the icon — the bar never agreed with the
+ * number beside it. An explicit inner track makes 100% mean full.
+ */
 .batteryIcon {
-  width: 20px;
-  height: 10px;
+  width: 22px;
+  height: 11px;
   border: 1.5px solid rgba(255, 255, 255, 0.6);
-  border-radius: 2px;
-  padding: 1px;
+  border-radius: 3px;
+  padding: 1.5px;
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: stretch;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .batteryIcon::after {
   content: '';
   position: absolute;
   right: -3.5px;
-  top: 2px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 2px;
-  height: 4px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 0 1px 1px 0;
 }
 
 .batteryFill {
-  height: 100%;
+  /*
+   * Absolutely positioned inside the padding box, so `width: N%` resolves
+   * against exactly the track the user sees. As a flex child it was being
+   * measured against a different box, and a "100%" battery painted ~70% of
+   * the icon — the bar never agreed with the number next to it.
+   */
+  position: absolute;
+  inset: 1.5px;
+  right: auto;
+  min-width: 1px;            /* 1% still shows a sliver rather than nothing */
   border-radius: 1px;
-  transition: width 0.3s ease;
+  transition: width 0.3s ease, background 0.3s ease;
 }
 
 .wifiIcon {

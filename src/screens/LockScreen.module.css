@@ -144,15 +144,19 @@
 }
 
 /* Battery icon — CSS drawn */
+/* Same box-model fix as the taskbar icon: border + padding were eating the
+   track, so a full battery never looked full. */
 .batteryIcon {
-  width: 18px;
-  height: 10px;
+  width: 20px;
+  height: 11px;
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 2px;
+  border-radius: 3px;
   position: relative;
   display: flex;
-  align-items: center;
-  padding: 1px;
+  align-items: stretch;
+  padding: 1.5px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .batteryIcon::after {
@@ -168,11 +172,22 @@
 }
 
 .batteryFill {
-  width: 87%;
-  height: 100%;
+  /*
+   * No hardcoded width here — it was 87%, a fixed value that painted a
+   * near-full battery regardless of the real level whenever the inline
+   * style had not been applied yet. The component supplies the width.
+   *
+   * Absolute inside the padding box so the percentage resolves against the
+   * visible track rather than the bordered outer box.
+   */
+  position: absolute;
+  inset: 1.5px;
+  right: auto;
+  min-width: 1px;
   background: var(--accent-success);
   border-radius: 1px;
-  opacity: 0.7;
+  opacity: 0.85;
+  transition: width 0.3s ease, background 0.3s ease;
 }
 
 /* Wi-Fi icon — CSS drawn concentric arcs */

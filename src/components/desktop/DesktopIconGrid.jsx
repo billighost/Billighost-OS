@@ -7,6 +7,7 @@ import {
   FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
   CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon, FilmIcon,
 } from '../Icons';
+import { appForFile } from '../../services/fileRouting';
 import styles from './DesktopIconGrid.module.css';
 
 export default function DesktopIconGrid({
@@ -265,10 +266,11 @@ export default function DesktopIconGrid({
               playClick();
               if (node.type === 'dir') {
                 onLaunchApp('files', node.name, null, { initialPath: node.path });
-              } else if (node.name.endsWith('.svg') || node.name.endsWith('.png') || node.name.endsWith('.jpg')) {
-                onLaunchApp('gallery', node.name, null, { filePath: node.path });
               } else {
-                onLaunchApp('notepad', node.name, null, { filePath: node.path });
+                // Same routing table File Explorer uses, so a file opens in
+                // the same app from either place. The old inline check knew
+                // only about images and sent everything else to Notepad.
+                onLaunchApp(appForFile(node.name), node.name, null, { filePath: node.path });
               }
             }}
           >
