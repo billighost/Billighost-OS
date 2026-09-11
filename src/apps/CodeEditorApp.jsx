@@ -12,44 +12,98 @@ import styles from './CodeEditorApp.module.css';
 function highlightCode(code, lang) {
   if (!code) return '';
 
-  // Escape HTML characters first
-  let escaped = code
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  const escapeHtml = (str) =>
+    str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
   if (lang === 'javascript' || lang === 'json' || lang === 'html') {
-    // Comments
-    escaped = escaped.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g, '<span class="token-comment">$1</span>');
-    // Strings
-    escaped = escaped.replace(/(&quot;[^&]*?&quot;|'[^']*?'|`[^`]*?`)/g, '<span class="token-string">$1</span>');
-    // Keywords
-    escaped = escaped.replace(/\b(const|let|var|function|return|if|else|for|while|import|export|from|as|default|class|extends|new|this|typeof|async|await|try|catch|throw|switch|case|break)\b/g, '<span class="token-keyword">$1</span>');
-    // Booleans & Null
-    escaped = escaped.replace(/\b(true|false|null|undefined)\b/g, '<span class="token-boolean">$1</span>');
-    // Numbers
-    escaped = escaped.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="token-number">$1</span>');
-  } else if (lang === 'css') {
-    // Comments
-    escaped = escaped.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="token-comment">$1</span>');
-    // Properties
-    escaped = escaped.replace(/([a-zA-Z-]+)(?=\s*:)/g, '<span class="token-property">$1</span>');
-    // Values & Strings
-    escaped = escaped.replace(/(&quot;[^&]*?&quot;|'[^']*?')/g, '<span class="token-string">$1</span>');
-    // Units & Numbers
-    escaped = escaped.replace(/\b(\d+(?:px|rem|em|%|vh|vw|ms|s)?)\b/g, '<span class="token-number">$1</span>');
-    // Keywords
-    escaped = escaped.replace(/\b(var|calc|rgba?|hsl|linear-gradient|important)\b/g, '<span class="token-keyword">$1</span>');
-  } else if (lang === 'markdown') {
-    // Headers
-    escaped = escaped.replace(/^(#{1,6}\s+[^\n]+)/gm, '<span class="token-keyword">$1</span>');
-    // Bold / italic
-    escaped = escaped.replace(/(\*\*[^*]+?\*\*)/g, '<span class="token-property">$1</span>');
-    // Inline code
-    escaped = escaped.replace(/(`[^`]+?`)/g, '<span class="token-string">$1</span>');
+    const tokenRegex = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(\b(?:const|let|var|function|return|if|else|for|while|import|export|from|as|default|class|extends|new|this|typeof|async|await|try|catch|throw|switch|case|break)\b)|(\b(?:true|false|null|undefined)\b)|(\b\d+(?:\.\d+)?\b)/g;
+
+    let result = '';
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tokenRegex.exec(code)) !== null) {
+      result += escapeHtml(code.slice(lastIndex, match.index));
+      lastIndex = tokenRegex.lastIndex;
+
+      const [full, comment, string, keyword, bool, number] = match;
+      if (comment) {
+        result += `<span class="token-comment">${escapeHtml(comment)}</span>`;
+      } else if (string) {
+        result += `<span class="token-string">${escapeHtml(string)}</span>`;
+      } else if (keyword) {
+        result += `<span class="token-keyword">${escapeHtml(keyword)}</span>`;
+      } else if (bool) {
+        result += `<span class="token-boolean">${escapeHtml(bool)}</span>`;
+      } else if (number) {
+        result += `<span class="token-number">${escapeHtml(number)}</span>`;
+      } else {
+        result += escapeHtml(full);
+      }
+    }
+    result += escapeHtml(code.slice(lastIndex));
+    return result;
   }
 
-  return escaped;
+  if (lang === 'css') {
+    const tokenRegex = /(\/\*[\s\S]*?\*\/)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|([a-zA-Z-]+(?=\s*:))|(\b\d+(?:px|rem|em|%|vh|vw|ms|s)?\b)|(\b(?:var|calc|rgba?|hsl|linear-gradient|important)\b)/g;
+
+    let result = '';
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tokenRegex.exec(code)) !== null) {
+      result += escapeHtml(code.slice(lastIndex, match.index));
+      lastIndex = tokenRegex.lastIndex;
+
+      const [full, comment, string, property, number, keyword] = match;
+      if (comment) {
+        result += `<span class="token-comment">${escapeHtml(comment)}</span>`;
+      } else if (string) {
+        result += `<span class="token-string">${escapeHtml(string)}</span>`;
+      } else if (property) {
+        result += `<span class="token-property">${escapeHtml(property)}</span>`;
+      } else if (number) {
+        result += `<span class="token-number">${escapeHtml(number)}</span>`;
+      } else if (keyword) {
+        result += `<span class="token-keyword">${escapeHtml(keyword)}</span>`;
+      } else {
+        result += escapeHtml(full);
+      }
+    }
+    result += escapeHtml(code.slice(lastIndex));
+    return result;
+  }
+
+  if (lang === 'markdown') {
+    const tokenRegex = /(^#{1,6}\s+[^\n]+)|(\*\*[^*]+?\*\*)|(`[^`]+?`)/gm;
+    let result = '';
+    let lastIndex = 0;
+    let match;
+
+    while ((match = tokenRegex.exec(code)) !== null) {
+      result += escapeHtml(code.slice(lastIndex, match.index));
+      lastIndex = tokenRegex.lastIndex;
+
+      const [full, heading, bold, inlineCode] = match;
+      if (heading) {
+        result += `<span class="token-keyword">${escapeHtml(heading)}</span>`;
+      } else if (bold) {
+        result += `<span class="token-property">${escapeHtml(bold)}</span>`;
+      } else if (inlineCode) {
+        result += `<span class="token-string">${escapeHtml(inlineCode)}</span>`;
+      } else {
+        result += escapeHtml(full);
+      }
+    }
+    result += escapeHtml(code.slice(lastIndex));
+    return result;
+  }
+
+  return escapeHtml(code);
 }
 
 function detectLanguage(filePath) {
