@@ -6,6 +6,7 @@ import LockScreen from './screens/LockScreen';
 import PinScreen from './screens/PinScreen';
 import SigningInScreen from './screens/SigningInScreen';
 import DesktopScreen from './screens/DesktopScreen';
+import MobileGate from './components/MobileGate';
 import styles from './App.module.css';
 
 export default function App() {
@@ -54,6 +55,7 @@ export default function App() {
   }, [wallpaperSrc]);
 
   return (
+    <MobileGate>
     <div className={styles.appContainer}>
       {screen === 'boot' && (
         <div className={styles.screenWrapper}>
@@ -105,5 +107,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </MobileGate>
   );
 }

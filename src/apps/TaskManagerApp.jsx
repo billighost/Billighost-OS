@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStorageQuota } from '../hooks/useStorageQuota';
 import { useBattery } from '../hooks/useBattery';
+import { PackageIcon } from '../components/Icons';
 import styles from './TaskManagerApp.module.css';
 
 export default function TaskManagerApp({
@@ -56,7 +57,7 @@ export default function TaskManagerApp({
           {windows.map((win) => (
             <div key={win.id} className={styles.tableRow}>
               <div className={styles.procIdentity}>
-                <span className={styles.procIcon}>{win.icon || '📦'}</span>
+                <span className={styles.procIcon}><PackageIcon size={14} /></span>
                 <span className={styles.procName}>{win.title}</span>
               </div>
               <div className={styles.procStatus}>

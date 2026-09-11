@@ -1,20 +1,33 @@
 .startMenuContainer {
   position: absolute;
-  bottom: 60px;
+  bottom: 64px;
   left: 16px;
   width: 380px;
-  background: rgba(13, 13, 20, 0.88);
-  backdrop-filter: blur(40px) saturate(1.5);
-  -webkit-backdrop-filter: blur(40px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: min(620px, calc(100vh - 80px));
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(126, 184, 255, 0.12);
+  box-shadow: var(--glass-fresnel), var(--glass-shadow);
   z-index: 1000;
   animation: startSlideUp 0.22s var(--ease-spring);
   overflow: hidden;
   user-select: none;
   display: flex;
   flex-direction: column;
+}
+
+.startMenuContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: var(--glass-specular);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .profileHeader {
@@ -259,3 +272,21 @@
     transform: translateY(0) scale(1);
   }
 }
+
+@media (max-height: 600px) {
+  .startMenuContainer {
+    bottom: 48px;
+    width: 340px;
+    max-height: calc(100vh - 54px);
+    overflow-y: auto;
+  }
+  .appsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 2px 12px 6px 12px;
+  }
+  .appCard {
+    padding: 8px 4px;
+  }
+}
+

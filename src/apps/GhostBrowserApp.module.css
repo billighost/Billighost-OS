@@ -206,6 +206,51 @@
   line-height: 1.6;
 }
 
+.docCard + .docCard {
+  margin-top: 16px;
+}
+
+.errorExtBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-glow);
+  color: #050505;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.errorExtBtn:hover {
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.errorRetryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.errorRetryBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
 @keyframes loadingSlide {
   0% { transform: translateX(-100%); }
   50% { transform: translateX(100%); }

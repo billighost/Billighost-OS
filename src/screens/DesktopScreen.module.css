@@ -42,11 +42,12 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  height: calc(100% - 56px);
+  height: calc(100% - 52px);
   padding: 32px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  overflow: hidden;
 }
 
 .welcomeCard {
@@ -96,7 +97,7 @@
   margin-top: 4px;
 }
 
-/* Bottom Taskbar */
+/* Bottom Taskbar — Liquid Glass */
 .taskbar {
   position: absolute;
   bottom: 0;
@@ -108,11 +109,27 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: rgba(10, 10, 15, 0.65);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  border-top: 1px solid var(--glass-border);
+  box-shadow: var(--glass-fresnel), 0 -4px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Specular highlight overlay on taskbar */
+.taskbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--glass-specular);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.startBtnActive {
+  background: rgba(126, 184, 255, 0.15) !important;
+  border-color: rgba(126, 184, 255, 0.3) !important;
+  color: var(--accent-glow) !important;
 }
 
 .taskbarLeft {
@@ -421,4 +438,49 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.taskViewBtnActive {
+  background: rgba(126, 184, 255, 0.15) !important;
+  border-color: rgba(126, 184, 255, 0.3) !important;
+  color: var(--accent-glow) !important;
+}
+
+/* Responsive height scaling */
+@media (max-height: 600px) {
+  .desktopArea {
+    padding: 16px;
+  }
+  .taskbar {
+    height: 42px;
+  }
+  .startBtn {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+  .appTab {
+    font-size: 0.68rem;
+    padding: 3px 8px;
+  }
+  .trayBtn {
+    font-size: 0.68rem;
+  }
+  .trayClock {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-height: 480px) {
+  .desktopArea {
+    padding: 8px;
+    height: calc(100% - 36px);
+  }
+  .taskbar {
+    height: 36px;
+  }
+}
+
+.trayClock {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
 }

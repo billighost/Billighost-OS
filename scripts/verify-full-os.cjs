@@ -4,6 +4,7 @@ const fs = require('fs');
 
 const ARTIFACTS_DIR = path.resolve('C:\\Users\\bb201\\.gemini\\antigravity-ide\\brain\\e4e13b57-d433-49b6-8e4b-ab1310784bc2');
 
+
 async function run() {
   console.log('🚀 Starting Billighost OS Full Environment Verification...');
 

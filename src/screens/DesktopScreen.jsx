@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useBattery } from '../hooks/useBattery';
 import { useNetwork } from '../hooks/useNetwork';
 import { useStorageQuota } from '../hooks/useStorageQuota';
+import { useOSModal } from '../hooks/useOSModal';
 import { LocalSettings } from '../services/storage/localStorage';
 import { VFS } from '../services/storage/indexedDB';
 import { NotificationService } from '../services/notificationService';
@@ -11,6 +12,7 @@ import Window from '../components/desktop/Window';
 import StartMenu from '../components/desktop/StartMenu';
 import TaskViewModal from '../components/desktop/TaskViewModal';
 import NotificationToasts from '../components/desktop/NotificationToasts';
+import OSModal from '../components/desktop/OSModal';
 import {
   NetworkFlyout,
   BatteryFlyout,
@@ -29,6 +31,10 @@ import ImageViewerApp from '../apps/ImageViewerApp';
 import CalculatorApp from '../apps/CalculatorApp';
 import RecycleBinApp from '../apps/RecycleBinApp';
 
+import {
+  GearIcon, WindowsIcon, FolderIcon, ImageIcon, PenIcon, BoltIcon,
+} from '../components/Icons';
+
 import styles from './DesktopScreen.module.css';
 
 function getFormattedTime(format = '24h') {
@@ -39,12 +45,31 @@ function getFormattedTime(format = '24h') {
   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
+/** SVG icon component for app tabs in the taskbar */
+function AppTabSvgIcon({ appId }) {
+  const iconMap = {
+    settings: <GearIcon size={14} />,
+    files: <FolderIcon size={14} />,
+    terminal: <BoltIcon size={14} />,
+    notepad: <PenIcon size={14} />,
+    browser: null, // will use GlobeIcon below
+    gallery: <ImageIcon size={14} />,
+  };
+  if (iconMap[appId] !== undefined) {
+    return iconMap[appId] || <span className={styles.appTabIcon} />;
+  }
+  return null;
+}
+
 export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock, playClick = () => {} }) {
   // --- Persistent Settings State ---
   const [profile, setProfile] = useState(() => LocalSettings.getProfile());
   const [appearance, setAppearance] = useState(() => LocalSettings.getAppearance());
   const [sound, setSound] = useState(() => LocalSettings.getSound());
   const [security, setSecurity] = useState(() => LocalSettings.getSecurity());
+
+  // --- OS Modal System ---
+  const osModal = useOSModal();
 
   // --- Virtual Desktops / Workspaces ---
   const [workspaces, setWorkspaces] = useState([
@@ -118,7 +143,6 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             NotificationService.send({
               title: 'Session Auto-Locked',
               message: `Inactivity timeout of ${timeoutMinutes} min reached`,
-              icon: '🔒',
               type: 'info',
             });
           }
@@ -143,14 +167,12 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         NotificationService.send({
           title: 'Network Connected',
           message: `Connected via ${network.effectiveType.toUpperCase()} (${network.downlink} Mbps)`,
-          icon: '🌐',
           type: 'success',
         });
       } else {
         NotificationService.send({
           title: 'Network Disconnected',
           message: 'System is now in offline mode',
-          icon: '⚠️',
           type: 'warning',
         });
       }
@@ -166,7 +188,6 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
       NotificationService.send({
         title: 'Virtual Desktop',
         message: `Switched to ${ws.name}`,
-        icon: '🖥️',
         type: 'info',
       });
     }
@@ -182,7 +203,6 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     NotificationService.send({
       title: 'New Desktop',
       message: `${newName} created and active`,
-      icon: '🖥️',
       type: 'success',
     });
   }, [workspaces.length]);
@@ -198,7 +218,6 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     NotificationService.send({
       title: 'Desktop Removed',
       message: `Closed ${targetWs?.name || 'desktop'}. Windows moved to Desktop 1.`,
-      icon: '🖥️',
       type: 'info',
     });
   }, [workspaces, activeWorkspaceId]);
@@ -283,7 +302,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         id: `win-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         appId,
         title,
-        icon,
+        icon, // now null for SVG — Window component handles icon rendering
         props,
         workspaceId: activeWorkspaceId,
         isMinimized: false,
@@ -439,6 +458,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
               <SettingsApp
                 initialTab={win.props?.activeTab || 'profile'}
                 playClick={playClick}
+                osModal={osModal}
               />
             )}
             {win.appId === 'files' && (
@@ -446,12 +466,13 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 initialPath={win.props?.initialPath || '/Users/User'}
                 onOpenFile={(path, name) => {
                   if (name.endsWith('.svg') || name.endsWith('.png') || name.endsWith('.jpg')) {
-                    handleLaunchApp('gallery', name, '🖼️', { filePath: path });
+                    handleLaunchApp('gallery', name, null, { filePath: path });
                   } else {
-                    handleLaunchApp('notepad', name, '📝', { filePath: path });
+                    handleLaunchApp('notepad', name, null, { filePath: path });
                   }
                 }}
                 playClick={playClick}
+                osModal={osModal}
               />
             )}
             {win.appId === 'terminal' && (
@@ -464,6 +485,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
               <NotepadApp
                 filePath={win.props?.filePath || null}
                 playClick={playClick}
+                osModal={osModal}
               />
             )}
             {win.appId === 'monitor' && (
@@ -497,6 +519,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             {win.appId === 'trash' && (
               <RecycleBinApp
                 playClick={playClick}
+                osModal={osModal}
               />
             )}
           </Window>
@@ -505,6 +528,9 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
 
       {/* Real-time Notification Toasts */}
       <NotificationToasts playClick={playClick} />
+
+      {/* OS Modal Dialogs */}
+      <OSModal {...osModal.modalProps} />
 
       {/* Task View / Alt+Tab Exposé Switcher */}
       {showTaskView && (
@@ -566,7 +592,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
           onUpdateSound={LocalSettings.setSound.bind(LocalSettings)}
           appearance={appearance}
           onUpdateAppearance={LocalSettings.setAppearance.bind(LocalSettings)}
-          onOpenSettings={() => handleLaunchApp('settings', 'Settings', '⚙️')}
+          onOpenSettings={() => handleLaunchApp('settings', 'Settings', null)}
           onClose={closeAllFlyouts}
           playClick={playClick}
         />
@@ -593,7 +619,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             }}
             title="Task View (Alt+Tab)"
           >
-            ⧉
+            <WindowsIcon size={16} />
           </button>
         </div>
 
@@ -617,7 +643,9 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 }}
                 title={win.title}
               >
-                <span className={styles.appTabIcon}>{win.icon || '📁'}</span>
+                <span className={styles.appTabIcon}>
+                  <AppTabSvgIcon appId={win.appId} />
+                </span>
                 <span className={styles.appTabTitle}>{win.title}</span>
               </button>
             );
@@ -644,7 +672,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
           <button
             className={`${styles.trayBtn} ${activeFlyout === 'battery' ? styles.trayBtnActive : ''}`}
             onClick={() => toggleFlyout('battery')}
-            title={`Battery: ${battery.level}% • ${battery.statusText}`}
+            title={`Battery: ${battery.supported ? `${battery.level}%` : 'AC'} \u2022 ${battery.statusText}`}
           >
             <div className={styles.batteryIcon}>
               <div
@@ -655,7 +683,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 }}
               />
             </div>
-            <span>{battery.charging ? `⚡${battery.level}%` : `${battery.level}%`}</span>
+            <span>{battery.supported ? `${battery.level}%` : 'AC'}</span>
           </button>
 
           {/* Real Local Clock & Date */}
@@ -673,7 +701,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             onClick={() => toggleFlyout('control')}
             title="Open Control Center"
           >
-            ⚙️
+            <GearIcon size={16} />
           </button>
 
           {/* Lock Button */}

@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { VFS } from '../../services/storage/indexedDB';
 import { NotificationService } from '../../services/notificationService';
+import {
+  MonitorIcon, FolderIcon, FolderOpenIcon, TrashIcon, BoltIcon, GlobeIcon,
+  PenIcon, MusicNoteIcon, ImageIcon, GridHashIcon, GearIcon,
+  FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
+} from '../Icons';
 import styles from './DesktopIconGrid.module.css';
 
 export default function DesktopIconGrid({
@@ -30,21 +35,21 @@ export default function DesktopIconGrid({
   }, [loadDesktopFiles]);
 
   const SYSTEM_SHORTCUTS = [
-    { id: 'shortcut-pc', name: 'This PC', icon: '💻', action: () => onLaunchApp('files', 'Files', '📁', { initialPath: '/' }) },
-    { id: 'shortcut-files', name: 'File Explorer', icon: '📁', action: () => onLaunchApp('files', 'Files', '📁', { initialPath: '/Users/User' }) },
-    { id: 'shortcut-trash', name: 'Recycle Bin', icon: '🗑️', action: () => onLaunchApp('trash', 'Recycle Bin', '🗑️') },
-    { id: 'shortcut-terminal', name: 'Terminal', icon: '⚡', action: () => onLaunchApp('terminal', 'Terminal', '⚡') },
-    { id: 'shortcut-browser', name: 'Browser', icon: '🌐', action: () => onLaunchApp('browser', 'Ghost Browser', '🌐') },
-    { id: 'shortcut-notepad', name: 'Notepad', icon: '📝', action: () => onLaunchApp('notepad', 'Notepad', '📝') },
-    { id: 'shortcut-music', name: 'Music', icon: '🎵', action: () => onLaunchApp('media', 'Audio Player', '🎵') },
-    { id: 'shortcut-gallery', name: 'Gallery', icon: '🖼️', action: () => onLaunchApp('gallery', 'Image Viewer', '🖼️') },
-    { id: 'shortcut-calc', name: 'Calculator', icon: '🔢', action: () => onLaunchApp('calculator', 'Calculator', '🔢') },
-    { id: 'shortcut-settings', name: 'Settings', icon: '⚙️', action: () => onLaunchApp('settings', 'Settings', '⚙️') },
+    { id: 'shortcut-pc', name: 'This PC', icon: <MonitorIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/' }) },
+    { id: 'shortcut-files', name: 'File Explorer', icon: <FolderIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/Users/User' }) },
+    { id: 'shortcut-trash', name: 'Recycle Bin', icon: <TrashIcon size={28} />, action: () => onLaunchApp('trash', 'Recycle Bin', null) },
+    { id: 'shortcut-terminal', name: 'Terminal', icon: <BoltIcon size={28} />, action: () => onLaunchApp('terminal', 'Terminal', null) },
+    { id: 'shortcut-browser', name: 'Browser', icon: <GlobeIcon size={28} />, action: () => onLaunchApp('browser', 'Ghost Browser', null) },
+    { id: 'shortcut-notepad', name: 'Notepad', icon: <PenIcon size={28} />, action: () => onLaunchApp('notepad', 'Notepad', null) },
+    { id: 'shortcut-music', name: 'Music', icon: <MusicNoteIcon size={28} />, action: () => onLaunchApp('media', 'Audio Player', null) },
+    { id: 'shortcut-gallery', name: 'Gallery', icon: <ImageIcon size={28} />, action: () => onLaunchApp('gallery', 'Image Viewer', null) },
+    { id: 'shortcut-calc', name: 'Calculator', icon: <GridHashIcon size={28} />, action: () => onLaunchApp('calculator', 'Calculator', null) },
+    { id: 'shortcut-settings', name: 'Settings', icon: <GearIcon size={28} />, action: () => onLaunchApp('settings', 'Settings', null) },
   ];
 
   // Marquee Selection Logic
   const handleMouseDown = (e) => {
-    if (e.target.closest(`.${styles.iconItem}`)) return;
+    if (e.target.closest(`.${styles.iconItem}`) || e.target.closest(`.${styles.contextMenu}`)) return;
     if (e.button !== 0) return; // only left click
 
     setSelectedIds(new Set());
@@ -114,7 +119,6 @@ export default function DesktopIconGrid({
               NotificationService.send({
                 title: 'Moved to Recycle Bin',
                 message: `"${fileName}" was moved to the Recycle Bin`,
-                icon: '🗑️',
                 type: 'info',
               });
             } catch (err) {
@@ -173,13 +177,19 @@ export default function DesktopIconGrid({
       NotificationService.send({
         title: 'Moved to Recycle Bin',
         message: `"${node.name}" was moved to the Recycle Bin`,
-        icon: '🗑️',
         type: 'info',
       });
     } catch (err) {
-      alert(`Error moving to trash: ${err.message}`);
+      console.error('Error moving to trash:', err.message);
     }
   };
+
+  function getFileIcon(node) {
+    if (node.type === 'dir') return <FolderIcon size={28} />;
+    if (node.name.endsWith('.svg') || node.name.endsWith('.png') || node.name.endsWith('.jpg')) return <ImageIcon size={28} />;
+    if (node.name.endsWith('.md')) return <FileTextIcon size={28} />;
+    return <FileIcon size={28} />;
+  }
 
   // Compute Marquee box styling
   let marqueeStyle = null;
@@ -249,22 +259,16 @@ export default function DesktopIconGrid({
               e.stopPropagation();
               playClick();
               if (node.type === 'dir') {
-                onLaunchApp('files', node.name, '📁', { initialPath: node.path });
+                onLaunchApp('files', node.name, null, { initialPath: node.path });
               } else if (node.name.endsWith('.svg') || node.name.endsWith('.png') || node.name.endsWith('.jpg')) {
-                onLaunchApp('gallery', node.name, '🖼️', { filePath: node.path });
+                onLaunchApp('gallery', node.name, null, { filePath: node.path });
               } else {
-                onLaunchApp('notepad', node.name, '📝', { filePath: node.path });
+                onLaunchApp('notepad', node.name, null, { filePath: node.path });
               }
             }}
           >
             <div className={styles.iconGraphic}>
-              {node.type === 'dir'
-                ? '📁'
-                : node.name.endsWith('.svg') || node.name.endsWith('.png') || node.name.endsWith('.jpg')
-                ? '🖼️'
-                : node.name.endsWith('.md')
-                ? '📑'
-                : '📄'}
+              {getFileIcon(node)}
             </div>
             <span className={styles.iconLabel}>{node.name}</span>
           </div>
@@ -287,22 +291,22 @@ export default function DesktopIconGrid({
                   const node = contextMenu.targetNode;
                   closeContextMenu();
                   if (node.type === 'dir') {
-                    onLaunchApp('files', node.name, '📁', { initialPath: node.path });
+                    onLaunchApp('files', node.name, null, { initialPath: node.path });
                   } else if (node.name.endsWith('.svg') || node.name.endsWith('.png') || node.name.endsWith('.jpg')) {
-                    onLaunchApp('gallery', node.name, '🖼️', { filePath: node.path });
+                    onLaunchApp('gallery', node.name, null, { filePath: node.path });
                   } else {
-                    onLaunchApp('notepad', node.name, '📝', { filePath: node.path });
+                    onLaunchApp('notepad', node.name, null, { filePath: node.path });
                   }
                 }}
               >
-                <span>📂</span> Open
+                <FolderOpenIcon size={14} /> Open
               </button>
               <button
                 className={styles.menuItem}
                 data-testid="menu-move-to-trash"
                 onClick={() => handleTrashItem(contextMenu.targetNode)}
               >
-                <span>🗑️</span> Move to Recycle Bin
+                <TrashIcon size={14} /> Move to Recycle Bin
               </button>
               {contextMenu.targetNode.type === 'file' && (
                 <button
@@ -313,58 +317,58 @@ export default function DesktopIconGrid({
                     closeContextMenu();
                   }}
                 >
-                  <span>📤</span> Export to PC
+                  <UploadIcon size={14} /> Export to PC
                 </button>
               )}
             </>
           ) : (
             <>
               <button className={styles.menuItem} onClick={handleCreateFile}>
-                <span>📝</span> New Text File
+                <PenIcon size={14} /> New Text File
               </button>
               <button className={styles.menuItem} onClick={handleCreateFolder}>
-                <span>📁</span> New Folder
+                <FolderIcon size={14} /> New Folder
               </button>
               <div className={styles.menuDivider} />
               <button
                 className={styles.menuItem}
                 onClick={() => {
                   playClick();
-                  onLaunchApp('terminal', 'Terminal', '⚡');
+                  onLaunchApp('terminal', 'Terminal', null);
                   closeContextMenu();
                 }}
               >
-                <span>⚡</span> Open Terminal
+                <BoltIcon size={14} /> Open Terminal
               </button>
               <button
                 className={styles.menuItem}
                 onClick={() => {
                   playClick();
-                  onLaunchApp('browser', 'Ghost Browser', '🌐');
+                  onLaunchApp('browser', 'Ghost Browser', null);
                   closeContextMenu();
                 }}
               >
-                <span>🌐</span> Open Browser
+                <GlobeIcon size={14} /> Open Browser
               </button>
               <button
                 className={styles.menuItem}
                 onClick={() => {
                   playClick();
-                  onLaunchApp('settings', 'Settings', '⚙️', { activeTab: 'wallpaper' });
+                  onLaunchApp('settings', 'Settings', null, { activeTab: 'wallpaper' });
                   closeContextMenu();
                 }}
               >
-                <span>🖼️</span> Personalize Wallpaper
+                <ImageIcon size={14} /> Personalize Wallpaper
               </button>
               <button
                 className={styles.menuItem}
                 onClick={() => {
                   playClick();
-                  onLaunchApp('settings', 'Settings', '⚙️', { activeTab: 'about' });
+                  onLaunchApp('settings', 'Settings', null, { activeTab: 'about' });
                   closeContextMenu();
                 }}
               >
-                <span>ℹ️</span> System Specs
+                <InfoIcon size={14} /> System Specs
               </button>
               <div className={styles.menuDivider} />
               <button
@@ -375,7 +379,7 @@ export default function DesktopIconGrid({
                   closeContextMenu();
                 }}
               >
-                <span>🔄</span> Refresh
+                <RefreshIcon size={14} /> Refresh
               </button>
             </>
           )}

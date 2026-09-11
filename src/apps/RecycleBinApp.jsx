@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { VFS } from '../services/storage/indexedDB';
 import { NotificationService } from '../services/notificationService';
+import {
+  TrashIcon, RecycleIcon, CloseIcon, RefreshIcon,
+  FolderIcon, FileTextIcon, FileIcon,
+} from '../components/Icons';
 import styles from './RecycleBinApp.module.css';
 
-export default function RecycleBinApp({ playClick = () => {} }) {
+export default function RecycleBinApp({ playClick = () => {}, osModal = null }) {
   const [items, setItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,12 +37,15 @@ export default function RecycleBinApp({ playClick = () => {} }) {
   const handleEmptyTrash = async () => {
     if (items.length === 0) return;
     playClick();
-    if (confirm('Permanently delete all items in the Recycle Bin? This action cannot be undone.')) {
+    let doEmpty = true;
+    if (osModal) {
+      doEmpty = await osModal.showConfirm('Permanently delete all items in the Recycle Bin? This action cannot be undone.', 'Empty Recycle Bin');
+    }
+    if (doEmpty) {
       await VFS.emptyTrash();
       NotificationService.send({
         title: 'Recycle Bin Emptied',
         message: 'All items permanently removed from disk',
-        icon: '🗑️',
         type: 'info',
       });
       setSelectedItem(null);
@@ -53,24 +60,28 @@ export default function RecycleBinApp({ playClick = () => {} }) {
       NotificationService.send({
         title: 'Item Restored',
         message: `Restored "${restored.name}" to ${restored.parentPath}`,
-        icon: '♻️',
         type: 'success',
       });
       setSelectedItem(null);
     } catch (err) {
-      alert(`Could not restore: ${err.message}`);
+      if (osModal) {
+        await osModal.showAlert(`Could not restore: ${err.message}`, 'Error');
+      }
     }
   };
 
   const handleDeletePermanently = async () => {
     if (!selectedItem) return;
     playClick();
-    if (confirm(`Permanently delete "${selectedItem.name}"?`)) {
+    let doDelete = true;
+    if (osModal) {
+      doDelete = await osModal.showConfirm(`Permanently delete "${selectedItem.name}"?`, 'Delete Forever');
+    }
+    if (doDelete) {
       await VFS.deleteNode(selectedItem.path);
       NotificationService.send({
         title: 'Permanently Deleted',
         message: `Removed "${selectedItem.name}" forever`,
-        icon: '🗑️',
         type: 'warning',
       });
       setSelectedItem(null);
@@ -91,7 +102,7 @@ export default function RecycleBinApp({ playClick = () => {} }) {
             disabled={items.length === 0}
             title="Permanently remove all items"
           >
-            <span>🗑️</span> Empty Recycle Bin
+            <TrashIcon size={13} /> Empty Recycle Bin
           </button>
           <button
             data-testid="btn-restore-trash"
@@ -100,7 +111,7 @@ export default function RecycleBinApp({ playClick = () => {} }) {
             disabled={!selectedItem}
             title="Restore selected item to original folder"
           >
-            <span>♻️</span> Restore Selected
+            <RecycleIcon size={13} /> Restore Selected
           </button>
           <button
             data-testid="btn-delete-perm"
@@ -109,7 +120,7 @@ export default function RecycleBinApp({ playClick = () => {} }) {
             disabled={!selectedItem}
             title="Delete selected item permanently"
           >
-            <span>✕</span> Delete
+            <CloseIcon size={13} /> Delete
           </button>
         </div>
 
@@ -119,7 +130,7 @@ export default function RecycleBinApp({ playClick = () => {} }) {
             onClick={() => { playClick(); loadTrash(); }}
             title="Refresh Recycle Bin"
           >
-            <span>🔄</span> Refresh
+            <RefreshIcon size={13} /> Refresh
           </button>
         </div>
       </div>
@@ -132,7 +143,7 @@ export default function RecycleBinApp({ playClick = () => {} }) {
           </div>
         ) : items.length === 0 ? (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>🗑️</div>
+            <div className={styles.emptyIcon}><TrashIcon size={48} color="var(--text-ghost)" /></div>
             <div className={styles.emptyTitle}>Recycle Bin is Empty</div>
             <div className={styles.emptySubtitle}>
               Deleted files and folders from your Desktop and File Explorer will be safely kept here until emptied.
@@ -175,7 +186,7 @@ export default function RecycleBinApp({ playClick = () => {} }) {
                   >
                     <div className={styles.itemNameCol}>
                       <span className={styles.itemIcon}>
-                        {item.type === 'dir' ? '📁' : item.name.endsWith('.md') ? '📑' : '📄'}
+                        {item.type === 'dir' ? <FolderIcon size={16} /> : item.name.endsWith('.md') ? <FileTextIcon size={16} /> : <FileIcon size={16} />}
                       </span>
                       <span>{item.name}</span>
                     </div>

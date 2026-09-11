@@ -1,11 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { LocalSettings, DEFAULT_USER_PROFILE, DEFAULT_APPEARANCE, DEFAULT_SECURITY } from '../services/storage/localStorage';
+import { useState, useRef } from 'react';
+import { LocalSettings, DEFAULT_APPEARANCE } from '../services/storage/localStorage';
 import { NotificationService } from '../services/notificationService';
 import { VFS } from '../services/storage/indexedDB';
 import { CacheStorageService } from '../services/storage/cacheStorage';
 import { useStorageQuota } from '../hooks/useStorageQuota';
 import { useBattery } from '../hooks/useBattery';
 import { useNetwork } from '../hooks/useNetwork';
+import {
+  GearIcon, UserIcon, ImageIcon, PaletteIcon, SaveIcon,
+  SpeakerIcon, LockIcon, InfoIcon, ShieldIcon, BellIcon,
+  UploadIcon, RefreshIcon,
+} from '../components/Icons';
 import styles from './SettingsApp.module.css';
 
 const WALLPAPER_PRESETS = [
@@ -48,12 +53,12 @@ const WALLPAPER_PRESETS = [
 ];
 
 const AVATAR_PRESETS = [
-  { id: 'av1', label: '👻 Ghost', bg: 'linear-gradient(135deg, #7eb8ff, #a78bfa)' },
-  { id: 'av2', label: '⚡ Pulse', bg: 'linear-gradient(135deg, #34d399, #059669)' },
-  { id: 'av3', label: '🪐 Cosmos', bg: 'linear-gradient(135deg, #f43f5e, #be123c)' },
-  { id: 'av4', label: '🛡️ Cyber', bg: 'linear-gradient(135deg, #fbbf24, #d97706)' },
-  { id: 'av5', label: '🔮 Void', bg: 'linear-gradient(135deg, #818cf8, #4338ca)' },
-  { id: 'av6', label: '💠 Quantum', bg: 'linear-gradient(135deg, #2dd4bf, #0e7490)' },
+  { id: 'av1', label: 'Ghost', bg: 'linear-gradient(135deg, #7eb8ff, #a78bfa)' },
+  { id: 'av2', label: 'Pulse', bg: 'linear-gradient(135deg, #34d399, #059669)' },
+  { id: 'av3', label: 'Cosmos', bg: 'linear-gradient(135deg, #f43f5e, #be123c)' },
+  { id: 'av4', label: 'Cyber', bg: 'linear-gradient(135deg, #fbbf24, #d97706)' },
+  { id: 'av5', label: 'Void', bg: 'linear-gradient(135deg, #818cf8, #4338ca)' },
+  { id: 'av6', label: 'Quantum', bg: 'linear-gradient(135deg, #2dd4bf, #0e7490)' },
 ];
 
 const ACCENT_COLORS = [
@@ -64,7 +69,7 @@ const ACCENT_COLORS = [
   { name: 'Rose', hex: '#ff4d6a', glow: 'rgba(255, 77, 106, 0.4)' },
 ];
 
-export default function SettingsApp({ initialTab = 'profile', playClick = () => {} }) {
+export default function SettingsApp({ initialTab = 'profile', playClick = () => {}, osModal = null }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [profile, setProfile] = useState(() => LocalSettings.getProfile());
   const [appearance, setAppearance] = useState(() => LocalSettings.getAppearance());
@@ -89,19 +94,19 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
   };
 
   // --- Security PIN Operations ---
-  const handleChangePin = (e) => {
+  const handleChangePin = async (e) => {
     e.preventDefault();
     playClick();
     if (curPin !== security.pin) {
-      alert('Current PIN is incorrect.');
+      if (osModal) await osModal.showAlert('Current PIN is incorrect.', 'Security Error');
       return;
     }
     if (newPin.length !== 4 || isNaN(newPin)) {
-      alert('New PIN must be exactly 4 digits.');
+      if (osModal) await osModal.showAlert('New PIN must be exactly 4 digits.', 'Validation Error');
       return;
     }
     if (newPin !== confirmPin) {
-      alert('New PIN and Confirm PIN do not match.');
+      if (osModal) await osModal.showAlert('New PIN and Confirm PIN do not match.', 'Validation Error');
       return;
     }
     const updated = LocalSettings.setSecurity({ pin: newPin });
@@ -112,21 +117,23 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
     NotificationService.send({
       title: 'Security PIN Updated',
       message: 'Your OS login PIN has been updated.',
-      icon: '🔒',
       type: 'success',
     });
     showSavedMessage('Security PIN updated successfully!');
   };
 
-  const handleResetPin = () => {
+  const handleResetPin = async () => {
     playClick();
-    if (confirm('Reset security PIN to factory default (0813)?')) {
+    let doReset = true;
+    if (osModal) {
+      doReset = await osModal.showConfirm('Reset security PIN to factory default (0813)?', 'Reset PIN');
+    }
+    if (doReset) {
       const reset = LocalSettings.resetSecurity();
       setSecurity(reset);
       NotificationService.send({
         title: 'Security PIN Reset',
         message: 'Login PIN reset to default (0813).',
-        icon: '🛡️',
         type: 'info',
       });
       showSavedMessage('PIN restored to default (0813)!');
@@ -156,15 +163,18 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
 
   const handleSelectPresetAvatar = (preset) => {
     playClick();
-    // Generate an SVG or CSS avatar representation
     const updated = LocalSettings.setProfile({ avatar: null, avatarPreset: preset.id });
     setProfile(updated);
     showSavedMessage(`Avatar updated to ${preset.label}`);
   };
 
-  const handleResetProfile = () => {
+  const handleResetProfile = async () => {
     playClick();
-    if (confirm('Reset profile picture and user info to factory defaults?')) {
+    let doReset = true;
+    if (osModal) {
+      doReset = await osModal.showConfirm('Reset profile picture and user info to factory defaults?', 'Reset Profile');
+    }
+    if (doReset) {
       const reset = LocalSettings.resetProfile();
       setProfile(reset);
       showSavedMessage('Profile reset to defaults!');
@@ -223,16 +233,13 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
     showSavedMessage(`Accent color set to ${accent.name}`);
   };
 
-  const handleSelectTheme = (themeId) => {
+  const handleResetAppearance = async () => {
     playClick();
-    const updated = LocalSettings.setAppearance({ theme: themeId });
-    setAppearance(updated);
-    showSavedMessage(`Theme switched to ${themeId}`);
-  };
-
-  const handleResetAppearance = () => {
-    playClick();
-    if (confirm('Reset all appearance settings (theme, wallpaper, colors) to defaults?')) {
+    let doReset = true;
+    if (osModal) {
+      doReset = await osModal.showConfirm('Reset all appearance settings (theme, wallpaper, colors) to defaults?', 'Reset Appearance');
+    }
+    if (doReset) {
       const reset = LocalSettings.resetAppearance();
       setAppearance(reset);
       document.documentElement.style.setProperty('--accent-glow', DEFAULT_APPEARANCE.accentColor);
@@ -263,7 +270,11 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
 
   const handleResetVFS = async () => {
     playClick();
-    if (confirm('WARNING: Format virtual disk and restore default files? All custom documents in IndexedDB will be erased.')) {
+    let doReset = true;
+    if (osModal) {
+      doReset = await osModal.showConfirm('WARNING: Format virtual disk and restore default files? All custom documents in IndexedDB will be erased.', 'Format Disk');
+    }
+    if (doReset) {
       await VFS.resetToDefaults();
       await storageQuota.refresh();
       showSavedMessage('Virtual File System formatted to factory defaults!');
@@ -275,7 +286,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
       {/* Sidebar Navigation */}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <span className={styles.sidebarLogo}>⚙️</span>
+          <span className={styles.sidebarLogo}><GearIcon size={18} /></span>
           <span>Settings</span>
         </div>
 
@@ -284,49 +295,49 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
             className={`${styles.navItem} ${activeTab === 'profile' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('profile'); }}
           >
-            <span className={styles.navIcon}>👤</span> Profile & Account
+            <span className={styles.navIcon}><UserIcon size={15} /></span> Profile & Account
           </button>
 
           <button
             className={`${styles.navItem} ${activeTab === 'wallpaper' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('wallpaper'); }}
           >
-            <span className={styles.navIcon}>🖼️</span> Wallpaper
+            <span className={styles.navIcon}><ImageIcon size={15} /></span> Wallpaper
           </button>
 
           <button
             className={`${styles.navItem} ${activeTab === 'appearance' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('appearance'); }}
           >
-            <span className={styles.navIcon}>🎨</span> Theme & Colors
+            <span className={styles.navIcon}><PaletteIcon size={15} /></span> Theme & Colors
           </button>
 
           <button
             className={`${styles.navItem} ${activeTab === 'storage' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('storage'); }}
           >
-            <span className={styles.navIcon}>💾</span> Storage & Quota
+            <span className={styles.navIcon}><SaveIcon size={15} /></span> Storage & Quota
           </button>
 
           <button
             className={`${styles.navItem} ${activeTab === 'sound' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('sound'); }}
           >
-            <span className={styles.navIcon}>🔊</span> Sound & Audio
+            <span className={styles.navIcon}><SpeakerIcon size={15} /></span> Sound & Audio
           </button>
 
           <button
             className={`${styles.navItem} ${activeTab === 'security' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('security'); }}
           >
-            <span className={styles.navIcon}>🔒</span> Security & PIN
+            <span className={styles.navIcon}><LockIcon size={15} /></span> Security & PIN
           </button>
 
           <button
             className={`${styles.navItem} ${activeTab === 'about' ? styles.navItemActive : ''}`}
             onClick={() => { playClick(); setActiveTab('about'); }}
           >
-            <span className={styles.navIcon}>ℹ️</span> System Specs
+            <span className={styles.navIcon}><InfoIcon size={15} /></span> System Specs
           </button>
         </nav>
       </div>
@@ -447,13 +458,13 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                   className={styles.btnPrimary}
                   onClick={() => wallpaperInputRef.current?.click()}
                 >
-                  📤 Upload Custom Wallpaper
+                  <UploadIcon size={14} /> Upload Custom Wallpaper
                 </button>
                 <button
                   className={styles.btnSecondary}
                   onClick={handleResetWallpaper}
                 >
-                  🔄 Reset to Default Wallpaper
+                  <RefreshIcon size={14} /> Reset to Default Wallpaper
                 </button>
               </div>
 
@@ -612,7 +623,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                     showSavedMessage('Audio chime tested!');
                   }}
                 >
-                  🔔 Test Sound Effect
+                  <BellIcon size={14} /> Test Sound Effect
                 </button>
                 <button className={styles.btnDanger} onClick={handleResetSound}>
                   Reset Sound Settings
@@ -646,7 +657,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Display Resolution</span>
-                  <span className={styles.specValue}>{typeof window !== 'undefined' ? `${window.screen.width} × ${window.screen.height}` : '1920 × 1080'}</span>
+                  <span className={styles.specValue}>{typeof window !== 'undefined' ? `${window.screen.width} \u00d7 ${window.screen.height}` : '1920 \u00d7 1080'}</span>
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Real Battery Status</span>
@@ -654,7 +665,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>Real Network Bandwidth</span>
-                  <span className={styles.specValue}>{network.isOnline ? `${network.effectiveType.toUpperCase()} • ${network.downlink} Mbps (${network.rtt}ms)` : 'Offline'}</span>
+                  <span className={styles.specValue}>{network.isOnline ? `${network.effectiveType.toUpperCase()} \u2022 ${network.downlink} Mbps (${network.rtt}ms)` : 'Offline'}</span>
                 </div>
                 <div className={styles.specItem}>
                   <span className={styles.specLabel}>IndexedDB Engine</span>

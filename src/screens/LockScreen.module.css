@@ -40,87 +40,114 @@
               radial-gradient(circle at 50% 90%, rgba(52, 211, 153, 0.03) 0%, transparent 30%);
 }
 
+/* Full-screen transparent overlay — no card, no border */
 .overlay {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 40px 56px;
-  border-radius: var(--radius-xl);
-  background: var(--bg-glass);
-  border: 1px solid var(--bg-glass-border);
-  box-shadow: var(--shadow-inner-highlight), var(--shadow-ambient);
-  backdrop-filter: blur(40px) saturate(1.4);
-  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  padding: 48px;
   opacity: 1;
-  transform: scale(1);
   transition: all 0.6s var(--ease-spring);
   will-change: transform, opacity, filter;
+  /* Subtle dark vignette for readability over any wallpaper */
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.35) 100%);
 }
 
 .overlayWashing {
   opacity: 0;
-  transform: scale(1.04);
   filter: blur(30px);
-  backdrop-filter: blur(60px) saturate(2);
-  -webkit-backdrop-filter: blur(60px) saturate(2);
+}
+
+/* Top-left: Time & Date */
+.topLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .time {
   font-family: var(--font-mono);
-  font-size: clamp(3.2rem, 8vw, 5.5rem);
+  font-size: clamp(4rem, 10vw, 7rem);
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.04em;
   line-height: 1;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
 }
 
 .date {
   font-family: var(--font-display);
-  font-size: clamp(0.85rem, 2vw, 1.05rem);
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
   font-weight: 400;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom-left: Status chips */
+.bottomLeft {
+  position: absolute;
+  bottom: 48px;
+  left: 48px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statusChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.75);
   letter-spacing: 0.02em;
 }
 
-.divider {
-  width: 48px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--bg-glass-border), transparent);
-  margin: 4px 0;
+/* Bottom-right: User email */
+.bottomRight {
+  position: absolute;
+  bottom: 48px;
+  right: 48px;
 }
 
 .email {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  color: var(--text-ghost);
+  color: rgba(255, 255, 255, 0.35);
   letter-spacing: 0.03em;
 }
 
-.statusRow {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 2px;
+/* Bottom-center: Prompt */
+.bottomCenter {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.statusItem {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: var(--text-ghost);
-  letter-spacing: 0.02em;
+.prompt {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.04em;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 /* Battery icon — CSS drawn */
 .batteryIcon {
   width: 18px;
   height: 10px;
-  border: 1px solid var(--text-ghost);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 2px;
   position: relative;
   display: flex;
@@ -136,7 +163,7 @@
   transform: translateY(-50%);
   width: 2px;
   height: 5px;
-  background: var(--text-ghost);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 0 1px 1px 0;
 }
 
@@ -162,7 +189,7 @@
   content: '';
   width: 3px;
   height: 3px;
-  background: var(--text-ghost);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 50%;
   position: absolute;
   bottom: 0;
@@ -176,7 +203,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  border: 1px solid var(--text-ghost);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-bottom: none;
   border-radius: 50% 50% 0 0;
 }
@@ -221,7 +248,7 @@
 .weatherCloud {
   width: 10px;
   height: 6px;
-  background: var(--text-ghost);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 6px;
   position: absolute;
   bottom: 0;
@@ -232,24 +259,14 @@
   content: '';
   width: 5px;
   height: 5px;
-  background: var(--text-ghost);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 50%;
   position: absolute;
   top: -3px;
   left: 2px;
 }
 
-.prompt {
-  margin-top: 12px;
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 400;
-  color: var(--text-ghost);
-  letter-spacing: 0.04em;
-  animation: pulse 3s ease-in-out infinite;
-}
-
-/* Circle wipe mask for liquid glass effect */
+/* Circle wipe mask for transition */
 .circleMask {
   position: absolute;
   inset: 0;
@@ -283,5 +300,26 @@
   }
   50% {
     opacity: 0.6;
+  }
+}
+
+/* Responsive: smaller screens */
+@media (max-height: 500px) {
+  .overlay {
+    padding: 24px;
+  }
+  .time {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+  }
+  .bottomLeft {
+    bottom: 24px;
+    left: 24px;
+  }
+  .bottomRight {
+    bottom: 24px;
+    right: 24px;
+  }
+  .bottomCenter {
+    bottom: 24px;
   }
 }

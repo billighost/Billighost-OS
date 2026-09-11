@@ -52,6 +52,36 @@
   --shadow-glow-lg: 0 0 48px rgba(126, 184, 255, 0.25);
   --shadow-inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --shadow-ambient: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Liquid Glass */
+  --glass-blur: 40px;
+  --glass-bg: rgba(18, 18, 28, 0.55);
+  --glass-bg-strong: rgba(18, 18, 28, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-highlight: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    transparent 60%
+  );
+  --glass-specular: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    transparent 30%
+  );
+  --glass-fresnel: 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -0.5px 0 rgba(0, 0, 0, 0.2);
+  --glass-shadow: 0 16px 64px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Liquid Glass SVG Displacement Filter */
+svg#liquid-glass-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
 }
 
 /* ---------- Reset ---------- */
@@ -262,3 +292,27 @@ body::after {
   0%, 60% { opacity: 0; }
   70%, 100% { opacity: 1; }
 }
+
+/* ─── Responsive Height-Based Scaling ─── */
+@media (max-height: 600px) {
+  #root {
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 480px) {
+  #root {
+    font-size: 12px;
+  }
+}
+
+/* Liquid Glass shimmer animation */
+@keyframes glassShimmer {
+  0%, 100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+

@@ -1,4 +1,10 @@
 import { useState } from 'react';
+import {
+  FolderIcon, BoltIcon, GlobeIcon, PenIcon, MusicNoteIcon,
+  ImageIcon, GridHashIcon, GearIcon, ChartBarIcon,
+  FileIcon, FileTextIcon, ScrollIcon,
+  LockIcon, RefreshIcon, PowerIcon, SearchIcon,
+} from '../Icons';
 import styles from './StartMenu.module.css';
 
 export default function StartMenu({
@@ -13,21 +19,21 @@ export default function StartMenu({
   const [searchQuery, setSearchQuery] = useState('');
 
   const APPS = [
-    { id: 'files', name: 'Files', icon: '📁', desc: 'Virtual File System & Explorer' },
-    { id: 'terminal', name: 'Terminal', icon: '⚡', desc: 'Billighost Command Shell' },
-    { id: 'browser', name: 'Browser', icon: '🌐', desc: 'Ghost Web Browser' },
-    { id: 'notepad', name: 'Notepad', icon: '📝', desc: 'Text & Markdown Editor' },
-    { id: 'media', name: 'Music', icon: '🎵', desc: 'Audio Player & Visualizer' },
-    { id: 'gallery', name: 'Gallery', icon: '🖼️', desc: 'Image Viewer' },
-    { id: 'calculator', name: 'Calculator', icon: '🔢', desc: 'Standard & Scientific Calculator' },
-    { id: 'settings', name: 'Settings', icon: '⚙️', desc: 'Personalization & Telemetry' },
-    { id: 'monitor', name: 'Task Manager', icon: '📊', desc: 'Processes & Storage Monitor' },
+    { id: 'files', name: 'Files', icon: <FolderIcon size={22} />, desc: 'Virtual File System & Explorer' },
+    { id: 'terminal', name: 'Terminal', icon: <BoltIcon size={22} />, desc: 'Billighost Command Shell' },
+    { id: 'browser', name: 'Browser', icon: <GlobeIcon size={22} />, desc: 'Ghost Web Browser' },
+    { id: 'notepad', name: 'Notepad', icon: <PenIcon size={22} />, desc: 'Text & Markdown Editor' },
+    { id: 'media', name: 'Music', icon: <MusicNoteIcon size={22} />, desc: 'Audio Player & Visualizer' },
+    { id: 'gallery', name: 'Gallery', icon: <ImageIcon size={22} />, desc: 'Image Viewer' },
+    { id: 'calculator', name: 'Calculator', icon: <GridHashIcon size={22} />, desc: 'Standard & Scientific Calculator' },
+    { id: 'settings', name: 'Settings', icon: <GearIcon size={22} />, desc: 'Personalization & Telemetry' },
+    { id: 'monitor', name: 'Task Manager', icon: <ChartBarIcon size={22} />, desc: 'Processes & Storage Monitor' },
   ];
 
   const RECENT_DOCS = [
-    { name: 'Welcome.txt', path: '/Users/User/Desktop/Welcome.txt', icon: '📄' },
-    { name: 'OS_Notes.md', path: '/Users/User/Desktop/OS_Notes.md', icon: '📑' },
-    { name: 'Terminal_Guide.txt', path: '/Users/User/Documents/Terminal_Guide.txt', icon: '📜' },
+    { name: 'Welcome.txt', path: '/Users/User/Desktop/Welcome.txt', icon: <FileIcon size={16} /> },
+    { name: 'OS_Notes.md', path: '/Users/User/Desktop/OS_Notes.md', icon: <FileTextIcon size={16} /> },
+    { name: 'Terminal_Guide.txt', path: '/Users/User/Documents/Terminal_Guide.txt', icon: <ScrollIcon size={16} /> },
   ];
 
   const filteredApps = APPS.filter(app =>
@@ -56,7 +62,7 @@ export default function StartMenu({
 
       {/* Search Bar */}
       <div className={styles.searchWrapper}>
-        <span className={styles.searchIcon}>🔍</span>
+        <span className={styles.searchIcon}><SearchIcon size={14} /></span>
         <input
           type="text"
           placeholder="Search apps, files, settings..."
@@ -66,7 +72,9 @@ export default function StartMenu({
           autoFocus
         />
         {searchQuery && (
-          <button className={styles.clearSearch} onClick={() => setSearchQuery('')}>✕</button>
+          <button className={styles.clearSearch} onClick={() => setSearchQuery('')}>
+            <span style={{ fontSize: '0.7rem' }}>&times;</span>
+          </button>
         )}
       </div>
 
@@ -79,7 +87,7 @@ export default function StartMenu({
             className={styles.appCard}
             onClick={() => {
               playClick();
-              onLaunchApp(app.id, app.name, app.icon);
+              onLaunchApp(app.id, app.name, null);
               onClose();
             }}
           >
@@ -101,7 +109,7 @@ export default function StartMenu({
             className={styles.recentItem}
             onClick={() => {
               playClick();
-              onLaunchApp('notepad', doc.name, '📝', { filePath: doc.path });
+              onLaunchApp('notepad', doc.name, null, { filePath: doc.path });
               onClose();
             }}
           >
@@ -124,7 +132,7 @@ export default function StartMenu({
             }}
             title="Lock session"
           >
-            🔒 Lock
+            <LockIcon size={13} /> Lock
           </button>
           <button
             className={styles.powerBtn}
@@ -135,7 +143,7 @@ export default function StartMenu({
             }}
             title="Restart OS"
           >
-            🔄 Restart
+            <RefreshIcon size={13} /> Restart
           </button>
           <button
             className={`${styles.powerBtn} ${styles.powerBtnDanger}`}
@@ -146,7 +154,7 @@ export default function StartMenu({
             }}
             title="Power off to boot screen"
           >
-            ⏻ Power
+            <PowerIcon size={13} /> Power
           </button>
         </div>
       </div>

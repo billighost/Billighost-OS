@@ -17,7 +17,7 @@ export function useBattery() {
 
     const updateBattery = (battery) => {
       if (!isMounted) return;
-      const level = Math.round((battery.level || 1) * 100);
+      const level = Math.round((battery.level ?? 1) * 100);
       const charging = battery.charging ?? true;
       let statusText = charging ? 'Charging' : 'Discharging';
       if (charging && level === 100) statusText = 'Fully Charged';

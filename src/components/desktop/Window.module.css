@@ -2,12 +2,12 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  background: rgba(13, 13, 20, 0.82);
-  backdrop-filter: blur(32px) saturate(1.4);
-  -webkit-backdrop-filter: blur(32px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: var(--glass-fresnel), var(--glass-shadow);
   overflow: hidden;
   user-select: none;
   animation: windowOpen 0.22s var(--ease-spring);
@@ -15,8 +15,8 @@
 }
 
 .windowActive {
-  border-color: rgba(126, 184, 255, 0.35);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.45);
+  box-shadow: var(--glass-fresnel), 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 28px rgba(126, 184, 255, 0.2);
 }
 
 .windowSnapped {

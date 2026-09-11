@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { VFS } from '../services/storage/indexedDB';
+import { PenIcon } from '../components/Icons';
 import styles from './NotepadApp.module.css';
 
 export default function NotepadApp({
   filePath: initialFilePath = null,
   initialContent = '',
   playClick = () => {},
+  osModal = null,
 }) {
   const [filePath, setFilePath] = useState(initialFilePath);
   const [content, setContent] = useState(initialContent);
@@ -39,7 +41,11 @@ export default function NotepadApp({
     playClick();
     let targetPath = filePath;
     if (!targetPath) {
-      targetPath = prompt('Enter path to save file:', '/Users/User/Desktop/untitled.txt');
+      if (osModal) {
+        targetPath = await osModal.showPrompt('Enter path to save file:', '/Users/User/Desktop/untitled.txt', 'Save File');
+      } else {
+        targetPath = '/Users/User/Desktop/untitled.txt';
+      }
       if (!targetPath) return;
       setFilePath(targetPath);
     }
@@ -49,13 +55,20 @@ export default function NotepadApp({
       setIsSaved(true);
       setSaveStatus('Saved');
     } catch (err) {
-      alert(`Save failed: ${err.message}`);
+      if (osModal) {
+        await osModal.showAlert(`Save failed: ${err.message}`, 'Error');
+      }
     }
   };
 
   const handleSaveAs = async () => {
     playClick();
-    const newPath = prompt('Save As path:', filePath || '/Users/User/Documents/file.txt');
+    let newPath;
+    if (osModal) {
+      newPath = await osModal.showPrompt('Save As path:', filePath || '/Users/User/Documents/file.txt', 'Save As');
+    } else {
+      newPath = filePath || '/Users/User/Documents/file.txt';
+    }
     if (!newPath) return;
     try {
       await VFS.writeFile(newPath, content);
@@ -63,13 +76,20 @@ export default function NotepadApp({
       setIsSaved(true);
       setSaveStatus('Saved');
     } catch (err) {
-      alert(`Save failed: ${err.message}`);
+      if (osModal) {
+        await osModal.showAlert(`Save failed: ${err.message}`, 'Error');
+      }
     }
   };
 
-  const handleNew = () => {
+  const handleNew = async () => {
     playClick();
-    if (!isSaved && !confirm('Discard unsaved changes?')) return;
+    if (!isSaved) {
+      if (osModal) {
+        const discard = await osModal.showConfirm('Discard unsaved changes?', 'New Document');
+        if (!discard) return;
+      }
+    }
     setFilePath(null);
     setContent('');
     setIsSaved(true);
@@ -85,7 +105,7 @@ export default function NotepadApp({
       {/* Editor Menu Bar */}
       <div className={styles.menuBar}>
         <div className={styles.fileTitle}>
-          <span className={styles.fileIcon}>📝</span>
+          <span className={styles.fileIcon}><PenIcon size={14} /></span>
           <span className={styles.filePathDisplay}>
             {filePath || 'Untitled Document'} {!isSaved && '●'}
           </span>

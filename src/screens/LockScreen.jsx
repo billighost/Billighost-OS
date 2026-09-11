@@ -97,18 +97,18 @@ export default function LockScreen({ onUnlock, playUnlock, playClick, wallpaperS
         }}
       />
 
-      {/* Glass overlay panel */}
+      {/* Full-screen transparent overlay — no card */}
       <div className={`${styles.overlay} ${washing ? styles.overlayWashing : ''}`}>
-        <span className={styles.time}>{time}</span>
-        <span className={styles.date}>{date}</span>
+        {/* Top-left: Time & Date */}
+        <div className={styles.topLeft}>
+          <span className={styles.time}>{time}</span>
+          <span className={styles.date}>{date}</span>
+        </div>
 
-        <div className={styles.divider} />
-
-        <span className={styles.email}>{profile.email || 'bb2010ng@gmail.com'}</span>
-
-        <div className={styles.statusRow}>
-          {/* Real Battery */}
-          <div className={styles.statusItem} title={`Battery: ${battery.level}% (${battery.statusText})`}>
+        {/* Bottom-left: Status indicators */}
+        <div className={styles.bottomLeft}>
+          {/* Battery */}
+          <div className={styles.statusChip} title={`Battery: ${battery.level}% (${battery.statusText})`}>
             <div className={styles.batteryIcon}>
               <div
                 className={styles.batteryFill}
@@ -118,12 +118,12 @@ export default function LockScreen({ onUnlock, playUnlock, playClick, wallpaperS
                 }}
               />
             </div>
-            <span>{battery.charging ? `⚡${battery.level}%` : `${battery.level}%`}</span>
+            <span>{battery.supported ? `${battery.level}%` : 'AC'}</span>
           </div>
 
-          {/* Real Network */}
+          {/* Network */}
           <div
-            className={styles.statusItem}
+            className={styles.statusChip}
             title={network.isOnline ? `Network: ${network.effectiveType.toUpperCase()} (${network.downlink} Mbps)` : 'Network: Offline'}
           >
             <div className={styles.wifiIcon}>
@@ -134,8 +134,8 @@ export default function LockScreen({ onUnlock, playUnlock, playClick, wallpaperS
             <span>{network.isOnline ? (network.effectiveType ? network.effectiveType.toUpperCase() : 'Online') : 'Offline'}</span>
           </div>
 
-          {/* Real Weather */}
-          <div className={styles.statusItem} title={`${weather.city} • ${weather.label}`}>
+          {/* Weather */}
+          <div className={styles.statusChip} title={`${weather.city} \u2022 ${weather.label}`}>
             <div className={styles.weatherIcon}>
               <div className={styles.weatherSun} />
               <div className={styles.weatherCloud} />
@@ -144,7 +144,15 @@ export default function LockScreen({ onUnlock, playUnlock, playClick, wallpaperS
           </div>
         </div>
 
-        <span className={styles.prompt}>Tap anywhere or press any key</span>
+        {/* Bottom-right: User identity */}
+        <div className={styles.bottomRight}>
+          <span className={styles.email}>{profile.email || 'bb2010ng@gmail.com'}</span>
+        </div>
+
+        {/* Bottom-center: Prompt */}
+        <div className={styles.bottomCenter}>
+          <span className={styles.prompt}>Tap anywhere or press any key</span>
+        </div>
       </div>
     </div>
   );

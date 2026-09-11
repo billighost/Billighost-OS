@@ -1,14 +1,19 @@
 import { useState, useRef } from 'react';
+import {
+  ChevronLeftIcon, ChevronRightIcon, RefreshIcon, HomeIcon,
+  GlobeIcon, NewspaperIcon, DuckSearchIcon, BookIcon, GhostIcon,
+  ExternalLinkIcon, LockIcon, AlertTriangleIcon,
+} from '../components/Icons';
 import styles from './GhostBrowserApp.module.css';
 
 const DEFAULT_HOME = 'https://en.m.wikipedia.org';
 
 const BOOKMARKS = [
-  { name: 'Wikipedia', url: 'https://en.m.wikipedia.org', icon: '🌐' },
-  { name: 'Hacker News', url: 'https://news.ycombinator.com', icon: '📰' },
-  { name: 'DuckDuckGo', url: 'https://duckduckgo.com', icon: '🦆' },
-  { name: 'MDN Web', url: 'https://developer.mozilla.org', icon: '📚' },
-  { name: 'OS Guide', url: 'about:billighost', icon: '👻' },
+  { name: 'Wikipedia', url: 'https://en.m.wikipedia.org', icon: <GlobeIcon size={13} /> },
+  { name: 'Hacker News', url: 'https://news.ycombinator.com', icon: <NewspaperIcon size={13} /> },
+  { name: 'DuckDuckGo', url: 'https://lite.duckduckgo.com/lite/', icon: <DuckSearchIcon size={13} /> },
+  { name: 'MDN Web', url: 'https://developer.mozilla.org', icon: <BookIcon size={13} /> },
+  { name: 'OS Guide', url: 'about:billighost', icon: <GhostIcon size={13} /> },
 ];
 
 export default function GhostBrowserApp({ playClick = () => {} }) {
@@ -17,7 +22,9 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
   const [history, setHistory] = useState([DEFAULT_HOME]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const iframeRef = useRef(null);
+  const loadTimeoutRef = useRef(null);
 
   const navigateTo = (url) => {
     playClick();
@@ -27,6 +34,7 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
     if (target === 'about:billighost') {
       setCurrentUrl('about:billighost');
       setInputUrl('about:billighost');
+      setLoadError(false);
       return;
     }
 
@@ -34,17 +42,26 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
       if (target.includes('.') && !target.includes(' ')) {
         target = 'https://' + target;
       } else {
-        // Search query
-        target = `https://duckduckgo.com/?q=${encodeURIComponent(target)}`;
+        // Search query — use DuckDuckGo lite for better iframe compatibility
+        target = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(target)}`;
       }
     }
 
     setIsLoading(true);
+    setLoadError(false);
     setCurrentUrl(target);
     setInputUrl(target);
 
     setHistory(prev => [...prev.slice(0, historyIndex + 1), target]);
     setHistoryIndex(prev => prev + 1);
+
+    // Set a timeout to detect if the iframe fails to load
+    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+    loadTimeoutRef.current = setTimeout(() => {
+      // If still loading after 8 seconds, show error state
+      setIsLoading(false);
+      setLoadError(true);
+    }, 8000);
   };
 
   const handleBack = () => {
@@ -54,6 +71,7 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
       setHistoryIndex(historyIndex - 1);
       setCurrentUrl(prevUrl);
       setInputUrl(prevUrl);
+      setLoadError(false);
     }
   };
 
@@ -64,12 +82,14 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
       setHistoryIndex(historyIndex + 1);
       setCurrentUrl(nextUrl);
       setInputUrl(nextUrl);
+      setLoadError(false);
     }
   };
 
   const handleRefresh = () => {
     playClick();
     setIsLoading(true);
+    setLoadError(false);
     if (iframeRef.current) {
       iframeRef.current.src = currentUrl;
     }
@@ -78,6 +98,12 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     navigateTo(inputUrl);
+  };
+
+  const handleIframeLoad = () => {
+    setIsLoading(false);
+    setLoadError(false);
+    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
   };
 
   return (
@@ -91,7 +117,7 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
             disabled={historyIndex === 0}
             title="Back"
           >
-            ◀
+            <ChevronLeftIcon size={14} />
           </button>
           <button
             className={styles.navBtn}
@@ -99,19 +125,19 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
             disabled={historyIndex >= history.length - 1}
             title="Forward"
           >
-            ▶
+            <ChevronRightIcon size={14} />
           </button>
           <button className={styles.navBtn} onClick={handleRefresh} title="Reload">
-            🔄
+            <RefreshIcon size={14} />
           </button>
           <button className={styles.navBtn} onClick={() => navigateTo(DEFAULT_HOME)} title="Home">
-            🏠
+            <HomeIcon size={14} />
           </button>
         </div>
 
         {/* Omnibox / URL Bar */}
         <form onSubmit={handleSubmit} className={styles.omniboxForm}>
-          <span className={styles.lockIcon}>🔒</span>
+          <span className={styles.lockIcon}><LockIcon size={12} /></span>
           <input
             type="text"
             value={inputUrl}
@@ -129,7 +155,7 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
           className={styles.externalBtn}
           title="Open in new browser tab"
         >
-          ↗
+          <ExternalLinkIcon size={14} />
         </a>
       </div>
 
@@ -141,7 +167,7 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
             className={styles.bookmarkBtn}
             onClick={() => navigateTo(b.url)}
           >
-            <span>{b.icon}</span> {b.name}
+            {b.icon} {b.name}
           </button>
         ))}
       </div>
@@ -156,15 +182,50 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
 
         {currentUrl === 'about:billighost' ? (
           <div className={styles.internalDoc}>
-            <h1>👻 Billighost OS — Ghost Browser</h1>
+            <h1><GhostIcon size={28} /> Billighost OS — Ghost Browser</h1>
             <p>Welcome to the built-in browser operating inside Billighost OS sandbox.</p>
             <div className={styles.docCard}>
               <h3>Features:</h3>
               <ul>
-                <li>Integrated web search powered by DuckDuckGo</li>
+                <li>Integrated web search powered by DuckDuckGo Lite</li>
                 <li>Quick bookmarks for Wikipedia, MDN Web Docs, and Hacker News</li>
                 <li>Live iframe renderer with instant external tab launch for frame-restricted sites</li>
               </ul>
+            </div>
+            <div className={styles.docCard}>
+              <h3><AlertTriangleIcon size={16} /> Iframe Limitation Notice</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Most websites block being embedded in iframes for security (X-Frame-Options headers).
+                If a site appears blank, use the <strong>external link button</strong> in the toolbar to open it in a new browser tab.
+                Wikipedia, DuckDuckGo Lite, Hacker News, and MDN are confirmed to work within the iframe.
+              </p>
+            </div>
+          </div>
+        ) : loadError ? (
+          <div className={styles.internalDoc}>
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <AlertTriangleIcon size={48} color="var(--accent-warning)" />
+              <h2 style={{ marginTop: '16px', fontSize: '1.1rem' }}>Page Could Not Load</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '8px', lineHeight: 1.6 }}>
+                This website blocks being embedded in the browser frame (X-Frame-Options).
+                <br />This is a security restriction and cannot be bypassed.
+              </p>
+              <div style={{ marginTop: '20px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <a
+                  href={currentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.errorExtBtn}
+                >
+                  <ExternalLinkIcon size={14} /> Open in New Tab
+                </a>
+                <button
+                  className={styles.errorRetryBtn}
+                  onClick={handleRefresh}
+                >
+                  <RefreshIcon size={14} /> Retry
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -174,7 +235,7 @@ export default function GhostBrowserApp({ playClick = () => {} }) {
             title="Ghost Browser Frame"
             className={styles.browserFrame}
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            onLoad={() => setIsLoading(false)}
+            onLoad={handleIframeLoad}
           />
         )}
       </div>

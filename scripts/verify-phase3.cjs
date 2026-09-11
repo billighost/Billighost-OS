@@ -195,14 +195,11 @@ async function run() {
 
   // Update PIN to 1234
   console.log('Changing PIN from 0813 to 1234...');
-  const inputs = await page.$$('input[type="password"]');
-  if (inputs.length >= 3) {
-    await inputs[0].fill('0813');
-    await inputs[1].fill('1234');
-    await inputs[2].fill('1234');
-    await page.click('button:has-text("Update Security PIN")');
-    await page.waitForTimeout(600);
-  }
+  await page.fill('input[placeholder="Enter current 4-digit PIN"]', '0813');
+  await page.fill('input[placeholder="Enter new 4-digit PIN"]', '1234');
+  await page.fill('input[placeholder="Repeat new 4-digit PIN"]', '1234');
+  await page.click('button:has-text("Update Security PIN")');
+  await page.waitForTimeout(600);
 
   const secShot = path.join(ARTIFACTS_DIR, '22_settings_security_pin.png');
   await page.screenshot({ path: secShot });

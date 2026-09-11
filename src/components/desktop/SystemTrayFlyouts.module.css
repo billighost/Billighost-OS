@@ -1,18 +1,31 @@
 .flyoutContainer {
   position: absolute;
-  bottom: 60px;
+  bottom: 64px;
   right: 16px;
   width: 320px;
-  background: rgba(13, 13, 20, 0.88);
-  backdrop-filter: blur(40px) saturate(1.5);
-  -webkit-backdrop-filter: blur(40px) saturate(1.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: min(580px, calc(100vh - 80px));
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(126, 184, 255, 0.12);
+  box-shadow: var(--glass-fresnel), var(--glass-shadow);
   z-index: 1000;
   animation: flyoutSlideUp 0.22s var(--ease-spring);
   overflow: hidden;
   user-select: none;
+}
+
+.flyoutContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 35%;
+  background: var(--glass-specular);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .flyoutHeader {
@@ -321,3 +334,13 @@
     transform: translateY(0) scale(1);
   }
 }
+
+@media (max-height: 600px) {
+  .flyoutContainer {
+    bottom: 48px;
+    width: 290px;
+    max-height: calc(100vh - 54px);
+    overflow-y: auto;
+  }
+}
+

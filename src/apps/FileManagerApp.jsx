@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { VFS } from '../services/storage/indexedDB';
 import { NotificationService } from '../services/notificationService';
+import {
+  ArrowUpIcon, HomeIcon, TrashIcon, RefreshIcon,
+  FolderIcon, FileIcon, FileTextIcon,
+  PlusIcon, DownloadIcon, UploadIcon, RecycleIcon,
+} from '../components/Icons';
 import styles from './FileManagerApp.module.css';
 
 export default function FileManagerApp({
   initialPath = '/Users/User',
   onOpenFile,
   playClick = () => {},
+  osModal = null,
 }) {
   const [currentPath, setCurrentPath] = useState(initialPath);
   const [items, setItems] = useState([]);
@@ -56,7 +62,12 @@ export default function FileManagerApp({
 
   const handleCreateNewFile = async () => {
     playClick();
-    const fileName = prompt('Enter new file name:', 'untitled.txt');
+    let fileName;
+    if (osModal) {
+      fileName = await osModal.showPrompt('Enter new file name:', 'untitled.txt', 'New File');
+    } else {
+      fileName = 'untitled.txt';
+    }
     if (!fileName) return;
     const targetPath = currentPath === '/' ? `/${fileName}` : `${currentPath}/${fileName}`;
     await VFS.writeFile(targetPath, '');
@@ -64,7 +75,12 @@ export default function FileManagerApp({
 
   const handleCreateNewFolder = async () => {
     playClick();
-    const folderName = prompt('Enter new folder name:', 'New_Folder');
+    let folderName;
+    if (osModal) {
+      folderName = await osModal.showPrompt('Enter new folder name:', 'New_Folder', 'New Folder');
+    } else {
+      folderName = 'New_Folder';
+    }
     if (!folderName) return;
     const targetPath = currentPath === '/' ? `/${folderName}` : `${currentPath}/${folderName}`;
     await VFS.createDirectory(targetPath);
@@ -74,23 +90,29 @@ export default function FileManagerApp({
     if (!selectedItem) return;
     playClick();
     if (currentPath === '/Users/User/.trash') {
-      if (confirm(`Permanently delete ${selectedItem.name}?`)) {
+      let doDelete = true;
+      if (osModal) {
+        doDelete = await osModal.showConfirm(`Permanently delete ${selectedItem.name}?`, 'Delete Forever');
+      }
+      if (doDelete) {
         await VFS.deleteNode(selectedItem.path);
         NotificationService.send({
           title: 'Permanently Deleted',
           message: `Removed "${selectedItem.name}" forever`,
-          icon: '🗑️',
           type: 'warning',
         });
         setSelectedItem(null);
       }
     } else {
-      if (confirm(`Move ${selectedItem.name} to Recycle Bin?`)) {
+      let doTrash = true;
+      if (osModal) {
+        doTrash = await osModal.showConfirm(`Move ${selectedItem.name} to Recycle Bin?`, 'Move to Trash');
+      }
+      if (doTrash) {
         await VFS.moveToTrash(selectedItem.path);
         NotificationService.send({
           title: 'Moved to Recycle Bin',
           message: `"${selectedItem.name}" was moved to the Recycle Bin`,
-          icon: '🗑️',
           type: 'info',
         });
         setSelectedItem(null);
@@ -106,12 +128,13 @@ export default function FileManagerApp({
       NotificationService.send({
         title: 'Item Restored',
         message: `Restored "${restored.name}" to ${restored.parentPath}`,
-        icon: '♻️',
         type: 'success',
       });
       setSelectedItem(null);
     } catch (err) {
-      alert(`Could not restore: ${err.message}`);
+      if (osModal) {
+        await osModal.showAlert(`Could not restore: ${err.message}`, 'Error');
+      }
     }
   };
 
@@ -145,43 +168,45 @@ export default function FileManagerApp({
             disabled={currentPath === '/'}
             title="Up one folder"
           >
-            ⬆️
+            <ArrowUpIcon size={14} />
           </button>
           <button
             className={styles.toolBtn}
             onClick={() => { playClick(); setCurrentPath('/Users/User'); }}
             title="Go to Home"
           >
-            🏠
+            <HomeIcon size={14} />
           </button>
           <button
             className={styles.toolBtn}
             onClick={() => { playClick(); setCurrentPath('/Users/User/.trash'); }}
             title="Go to Recycle Bin"
           >
-            🗑️
+            <TrashIcon size={14} />
           </button>
           <button
             className={styles.toolBtn}
             onClick={() => loadDirectory(currentPath)}
             title="Refresh folder"
           >
-            🔄
+            <RefreshIcon size={14} />
           </button>
         </div>
 
         {/* Address Bar */}
         <div className={styles.addressBar}>
-          <span className={styles.addressIcon}>{currentPath === '/Users/User/.trash' ? '🗑️' : '📁'}</span>
+          <span className={styles.addressIcon}>
+            {currentPath === '/Users/User/.trash' ? <TrashIcon size={13} /> : <FolderIcon size={13} />}
+          </span>
           <span className={styles.addressText}>{currentPath}</span>
         </div>
 
         <div className={styles.actionControls}>
           <button className={styles.toolBtn} onClick={handleCreateNewFile} title="New File">
-            📄+
+            <FileIcon size={13} /><PlusIcon size={10} />
           </button>
           <button className={styles.toolBtn} onClick={handleCreateNewFolder} title="New Folder">
-            📁+
+            <FolderIcon size={13} /><PlusIcon size={10} />
           </button>
           <input
             type="file"
@@ -194,7 +219,7 @@ export default function FileManagerApp({
             onClick={() => fileInputRef.current?.click()}
             title="Import file from your PC to browser storage"
           >
-            📥 Import
+            <DownloadIcon size={13} /> Import
           </button>
           {selectedItem && currentPath === '/Users/User/.trash' && (
             <button
@@ -202,17 +227,17 @@ export default function FileManagerApp({
               onClick={handleRestoreSelected}
               title="Restore to original folder"
             >
-              ♻️ Restore
+              <RecycleIcon size={13} /> Restore
             </button>
           )}
           {selectedItem && selectedItem.type === 'file' && (
             <button className={styles.toolBtn} onClick={handleExportSelected} title="Download to PC">
-              📤 Export
+              <UploadIcon size={13} /> Export
             </button>
           )}
           {selectedItem && (
             <button className={`${styles.toolBtn} ${styles.btnDanger}`} onClick={handleDeleteSelected} title="Delete">
-              🗑️
+              <TrashIcon size={13} />
             </button>
           )}
         </div>
@@ -242,7 +267,7 @@ export default function FileManagerApp({
               }}
             >
               <div className={styles.itemIcon}>
-                {item.type === 'dir' ? '📁' : item.name.endsWith('.md') ? '📑' : '📄'}
+                {item.type === 'dir' ? <FolderIcon size={24} /> : item.name.endsWith('.md') ? <FileTextIcon size={24} /> : <FileIcon size={24} />}
               </div>
               <div className={styles.itemName} title={item.name}>{item.name}</div>
               <div className={styles.itemMeta}>

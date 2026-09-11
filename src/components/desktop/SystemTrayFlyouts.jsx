@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { NotificationService } from '../../services/notificationService';
+import {
+  SignalIcon, BatteryFullIcon, CalendarIcon, BoltIcon,
+  ExpandIcon, MoonIcon, VolumeIcon, VolumeMuteIcon, GearIcon,
+} from '../Icons';
 import styles from './SystemTrayFlyouts.module.css';
 
 // 1. Network Flyout Panel
 export function NetworkFlyout({ network, onClose, playClick = () => {} }) {
-  const [isSimulatingOffline, setIsSimulatingOffline] = useState(false);
   const [pingResult, setPingResult] = useState(null);
   const [testingPing, setTestingPing] = useState(false);
 
@@ -27,10 +30,10 @@ export function NetworkFlyout({ network, onClose, playClick = () => {} }) {
     <div className={styles.flyoutContainer} onClick={(e) => e.stopPropagation()}>
       <div className={styles.flyoutHeader}>
         <div className={styles.flyoutTitle}>
-          <span className={styles.iconIndicator}>📶</span>
+          <span className={styles.iconIndicator}><SignalIcon size={16} /></span>
           Network Information
         </div>
-        <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        <button className={styles.closeBtn} onClick={onClose}>&times;</button>
       </div>
 
       <div className={styles.flyoutContent}>
@@ -78,10 +81,10 @@ export function BatteryFlyout({ battery, onClose, playClick = () => {} }) {
     <div className={styles.flyoutContainer} onClick={(e) => e.stopPropagation()}>
       <div className={styles.flyoutHeader}>
         <div className={styles.flyoutTitle}>
-          <span className={styles.iconIndicator}>🔋</span>
+          <span className={styles.iconIndicator}><BatteryFullIcon size={16} /></span>
           Power & Battery
         </div>
-        <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        <button className={styles.closeBtn} onClick={onClose}>&times;</button>
       </div>
 
       <div className={styles.flyoutContent}>
@@ -163,10 +166,10 @@ export function CalendarFlyout({ onClose, playClick = () => {} }) {
     <div className={styles.flyoutContainer} onClick={(e) => e.stopPropagation()}>
       <div className={styles.flyoutHeader}>
         <div className={styles.flyoutTitle}>
-          <span className={styles.iconIndicator}>📅</span>
+          <span className={styles.iconIndicator}><CalendarIcon size={16} /></span>
           {monthName} {year}
         </div>
-        <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        <button className={styles.closeBtn} onClick={onClose}>&times;</button>
       </div>
 
       <div className={styles.flyoutContent}>
@@ -236,10 +239,10 @@ export function ActionCenterFlyout({
     <div className={styles.flyoutContainer} onClick={(e) => e.stopPropagation()}>
       <div className={styles.flyoutHeader}>
         <div className={styles.flyoutTitle}>
-          <span className={styles.iconIndicator}>⚡</span>
+          <span className={styles.iconIndicator}><BoltIcon size={16} /></span>
           Control Center
         </div>
-        <button className={styles.closeBtn} onClick={onClose}>✕</button>
+        <button className={styles.closeBtn} onClick={onClose}>&times;</button>
       </div>
 
       <div className={styles.flyoutContent}>
@@ -249,7 +252,7 @@ export function ActionCenterFlyout({
             className={`${styles.quickTile} ${isFullscreen ? styles.quickTileActive : ''}`}
             onClick={toggleFullscreen}
           >
-            <span className={styles.tileIcon}>⛶</span>
+            <span className={styles.tileIcon}><ExpandIcon size={18} /></span>
             <span className={styles.tileLabel}>Fullscreen</span>
           </button>
 
@@ -257,7 +260,7 @@ export function ActionCenterFlyout({
             className={`${styles.quickTile} ${appearance.nightLight ? styles.quickTileActive : ''}`}
             onClick={toggleNightLight}
           >
-            <span className={styles.tileIcon}>🌙</span>
+            <span className={styles.tileIcon}><MoonIcon size={18} /></span>
             <span className={styles.tileLabel}>Night Light</span>
           </button>
 
@@ -265,7 +268,9 @@ export function ActionCenterFlyout({
             className={`${styles.quickTile} ${!soundConfig.isMuted ? styles.quickTileActive : ''}`}
             onClick={toggleMute}
           >
-            <span className={styles.tileIcon}>{soundConfig.isMuted ? '🔇' : '🔊'}</span>
+            <span className={styles.tileIcon}>
+              {soundConfig.isMuted ? <VolumeMuteIcon size={18} /> : <VolumeIcon size={18} />}
+            </span>
             <span className={styles.tileLabel}>{soundConfig.isMuted ? 'Muted' : 'Sound'}</span>
           </button>
 
@@ -277,12 +282,11 @@ export function ActionCenterFlyout({
               onClose();
             }}
           >
-            <span className={styles.tileIcon}>⚙️</span>
+            <span className={styles.tileIcon}><GearIcon size={18} /></span>
             <span className={styles.tileLabel}>Settings</span>
           </button>
         </div>
 
-        {/* Volume Slider */}
         {/* Volume Slider */}
         <div className={styles.sliderCard}>
           <div className={styles.sliderHeader}>
@@ -364,7 +368,6 @@ function NotificationsList({ playClick }) {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
-            <span>{n.icon}</span>
             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
               {n.title}
             </span>

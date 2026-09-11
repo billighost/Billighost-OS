@@ -2,7 +2,7 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  bottom: 68px;
+  bottom: 60px;
   right: 16px;
   display: flex;
   flex-direction: column;
@@ -11,6 +11,9 @@
   gap: 16px 20px;
   pointer-events: auto;
   z-index: 2;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .marqueeBox {
@@ -136,3 +139,25 @@
     transform: scale(1);
   }
 }
+
+@media (max-height: 600px) {
+  .gridContainer {
+    top: 8px;
+    left: 8px;
+    bottom: 50px;
+    gap: 8px 12px;
+  }
+  .iconItem {
+    width: 68px;
+    height: 70px;
+    padding: 4px;
+  }
+  .iconGraphic {
+    font-size: 1.6rem;
+  }
+  .iconLabel {
+    font-size: 0.65rem;
+    max-width: 64px;
+  }
+}
+
