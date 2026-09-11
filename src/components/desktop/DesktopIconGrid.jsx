@@ -219,6 +219,7 @@ export default function DesktopIconGrid({
         <div
           key={item.id}
           data-testid={item.id}
+          data-desktop-icon
           className={`${styles.iconItem} ${selectedIds.has(item.id) ? styles.iconSelected : ''}`}
           onClick={(e) => {
             e.stopPropagation();
@@ -247,7 +248,8 @@ export default function DesktopIconGrid({
           <div
             key={node.path}
             data-testid={testId}
-            className={`${styles.iconItem} ${selectedIds.has(testId) ? styles.iconSelected : ''}`}
+            data-desktop-icon
+          className={`${styles.iconItem} ${selectedIds.has(testId) ? styles.iconSelected : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               if (e.ctrlKey || e.metaKey) {

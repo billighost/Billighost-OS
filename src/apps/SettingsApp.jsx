@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LocalSettings } from '../services/storage/localStorage';
 import { NotificationService } from '../services/notificationService';
+import { WALLPAPERS } from '../components/wallpapers/registry';
 import { VFS } from '../services/storage/indexedDB';
 import { CacheStorageService } from '../services/storage/cacheStorage';
 import { useStorageQuota } from '../hooks/useStorageQuota';
@@ -16,7 +17,21 @@ import {
 import styles from './SettingsApp.module.css';
 
 // --- Wallpapers Catalog (Static & Dynamic) ---
+/*
+ * Settings shows the shared registry FIRST (including the live wallpapers),
+ * then its own canvas-preview presets. Keeping one source for the live set
+ * means a wallpaper chosen at setup and one chosen here behave identically.
+ */
 const WALLPAPER_PRESETS = [
+  ...WALLPAPERS.map(w => ({
+    id: w.id,
+    name: w.name,
+    type: w.live ? 'live' : 'static',
+    live: w.live,
+    css: w.css,
+    description: w.description,
+  })),
+
   {
     id: 'matrix',
     name: 'Matrix Code Rain',
@@ -550,8 +565,13 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
       wallpaper: wp.id,
       customWallpaperData: null,
       wallpaperCss: wp.css,
+      // Carried through so the desktop knows whether to run a renderer.
+      // null clears a previously-active live effect.
+      liveWallpaper: wp.live || null,
     });
-    showSavedMessage(`Wallpaper set to "${wp.name}"`);
+    showSavedMessage(
+      wp.live ? `Live wallpaper "${wp.name}" enabled` : `Wallpaper set to "${wp.name}"`
+    );
   };
 
   const handleWallpaperUpload = (e) => {
@@ -564,6 +584,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
         wallpaper: 'custom',
         customWallpaperData: dataUrl,
         wallpaperCss: `url("${dataUrl}")`,
+        liveWallpaper: null,   // a still image has no effect attached
       });
       showSavedMessage('Custom wallpaper applied!');
     };
@@ -885,7 +906,9 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                   className={styles.btnSecondary}
                   onClick={() => {
                     playClick();
-                    handleSelectWallpaper(WALLPAPER_PRESETS[4]);
+                    // Looked up by id: an index breaks whenever the list is reordered.
+                    const def = WALLPAPER_PRESETS.find(w => w.id === 'default') || WALLPAPER_PRESETS[0];
+                    handleSelectWallpaper(def);
                   }}
                 >
                   <RefreshIcon size={14} /> Restore Default Wallpaper
@@ -901,7 +924,8 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                     onClick={() => handleSelectWallpaper(wp)}
                   >
                     <div className={styles.wallpaperThumb} style={{ background: wp.css }}>
-                      {wp.type === 'dynamic' && <span className={styles.wallpaperDynamicBadge}>LIVE 60FPS</span>}
+                      {wp.type === 'live' && <span className={styles.wallpaperDynamicBadge}>LIVE</span>}
+                      {wp.type === 'dynamic' && <span className={styles.wallpaperDynamicBadge}>ANIMATED</span>}
                     </div>
                     <span className={styles.wallpaperName}>{wp.name}</span>
                   </div>

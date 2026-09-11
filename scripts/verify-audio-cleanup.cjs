@@ -5,7 +5,7 @@
  *      closes the AudioContext
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 (async () => {
   const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });

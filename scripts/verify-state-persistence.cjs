@@ -6,7 +6,7 @@
  *   4. maximized windows actually reach the taskbar (no dead gap)
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 (async () => {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
@@ -25,6 +25,8 @@ const { bootToDesktop } = require('./harness.cjs');
   });
 
   await page.goto('http://localhost:5200/', { waitUntil: 'domcontentloaded' });
+  await seedProfile(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await bootToDesktop(page);
 
   // ── 1 & 2: audio + state across minimize ──

@@ -2,7 +2,7 @@
  * Shared harness: boots the OS and signs in to the desktop.
  * Reads the PIN from the hint the PinScreen renders rather than hardcoding.
  */
-async function bootToDesktop(page, { timeout = 30000 } = {}) {
+async function bootToDesktop(page, { timeout = 30000, pin = '1111' } = {}) {
   await page.waitForSelector('[data-testid="boot-screen"]', { timeout: 5000 }).catch(() => {});
   // Wait out the staged boot sequence.
   await page.waitForFunction(() => !document.querySelector('[data-testid="boot-screen"]'), null, { timeout });
@@ -12,13 +12,8 @@ async function bootToDesktop(page, { timeout = 30000 } = {}) {
   await page.mouse.click(700, 450);
   await page.waitForTimeout(900);
 
-  // PIN screen: lift the PIN out of the on-screen hint, e.g. "Enter PIN (0813)".
-  const hint = await page.evaluate(() => document.querySelector('#root')?.innerText || '');
-  const m = hint.match(/\((\d{4})\)/);
-  const pin = m ? m[1] : '0813';
-
-  // The PIN is four separate controlled <input>s driven by onChange, so
-  // keyboard.press() alone does not populate them — type into each box.
+  // The PIN is no longer printed on screen (it is chosen during setup), so
+  // the caller supplies it. Defaults to the value seedProfile() writes.
   const boxes = page.locator('input');
   const count = await boxes.count();
   if (count >= pin.length) {
@@ -35,4 +30,25 @@ async function bootToDesktop(page, { timeout = 30000 } = {}) {
   return pin;
 }
 
-module.exports = { bootToDesktop };
+/**
+ * Writes a completed setup into localStorage so tests skip the wizard.
+ * Call BEFORE the first navigation that should land on the lock screen.
+ */
+async function seedProfile(page, opts = {}) {
+  const {
+    pin = '1111',
+    name = 'Test User',
+    email = 'test@billighost.dev',
+    wallpaper = 'default',
+    liveWallpaper = null,
+  } = opts;
+
+  await page.evaluate(({ pin, name, email, wallpaper, liveWallpaper }) => {
+    localStorage.setItem('billighost_setup', 'complete');
+    localStorage.setItem('billighost_user_profile', JSON.stringify({ name, email }));
+    localStorage.setItem('billighost_security', JSON.stringify({ pin, autoLockMinutes: 0 }));
+    localStorage.setItem('billighost_appearance', JSON.stringify({ wallpaper, liveWallpaper }));
+  }, { pin, name, email, wallpaper, liveWallpaper });
+}
+
+module.exports = { bootToDesktop, seedProfile };

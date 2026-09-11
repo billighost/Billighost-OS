@@ -1,0 +1,505 @@
+/* ============================================
+   BILLIGHOST OS — First-run Setup
+   ============================================ */
+
+.container {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg-void);
+  overflow: hidden;
+  animation: setupIn 0.6s var(--ease-out-expo);
+}
+
+.leaving {
+  animation: setupOut 0.6s var(--ease-in-out-smooth) forwards;
+}
+
+/* ── Live wallpaper preview behind the card ── */
+
+.preview {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.previewCss,
+.previewImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease;
+}
+
+/* Darkens the backdrop so the card stays readable over any image. */
+.previewScrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(5, 5, 8, 0.55) 0%, rgba(5, 5, 8, 0.86) 70%);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+/* ── Card ──────────────────────────────────── */
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 30px 32px 24px;
+  border-radius: var(--radius-xl);
+
+  background: rgba(14, 16, 26, 0.72);
+  backdrop-filter: blur(30px) saturate(1.6);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 28px 80px rgba(0, 0, 0, 0.62);
+
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── Brand ─────────────────────────────────── */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex-shrink: 0;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.brandName {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: var(--text-primary);
+}
+
+.brandSub {
+  font-size: 0.7rem;
+  color: var(--text-ghost);
+  letter-spacing: 0.02em;
+}
+
+/* ── Step indicator ────────────────────────── */
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.stepDot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text-ghost);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
+}
+
+.stepActive {
+  background: rgba(126, 184, 255, 0.16);
+  border-color: rgba(126, 184, 255, 0.4);
+  color: #cfe4ff;
+}
+
+.stepDone {
+  color: var(--accent-success);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.stepIcon {
+  display: inline-flex;
+}
+
+/* ── Body ──────────────────────────────────── */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  animation: stepIn 0.34s var(--ease-out-expo);
+}
+
+.title {
+  font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.desc {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 46ch;
+}
+
+/* ── Fields ────────────────────────────────── */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-ghost);
+}
+
+.input {
+  width: 100%;
+  padding: 10px 13px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.24);
+}
+
+.input:focus {
+  border-color: rgba(126, 184, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(126, 184, 255, 0.12);
+}
+
+.hintError,
+.errorText {
+  font-size: 0.72rem;
+  color: var(--accent-error);
+}
+
+/* ── PIN ───────────────────────────────────── */
+
+.pinRow {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 6px 0;
+}
+
+.pinBox {
+  position: relative;
+  width: 56px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.pinBox:focus-within {
+  border-color: rgba(126, 184, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(126, 184, 255, 0.12);
+}
+
+.pinBoxError {
+  border-color: rgba(255, 77, 106, 0.55);
+  animation: shake 0.36s ease;
+}
+
+/*
+  The input is transparent and the dot below does the visual work — so the
+  field can be type="text" (no password-manager prompt, no Chrome warning)
+  while still reading as masked.
+*/
+.pinInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  font-size: 1.4rem;
+  color: transparent;
+  caret-color: transparent;
+}
+
+.pinDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  transition: background 0.18s ease, transform 0.22s var(--ease-out-back), box-shadow 0.18s ease;
+  pointer-events: none;
+}
+
+.pinDotFilled {
+  background: var(--accent-glow);
+  transform: scale(1.18);
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.55);
+}
+
+/* ── Wallpaper grid ────────────────────────── */
+
+.wallGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 10px;
+}
+
+.wallOption {
+  position: relative;
+  height: 82px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  transition: transform 0.18s var(--ease-out-expo), border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.wallOption:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.wallActive {
+  border-color: rgba(126, 184, 255, 0.65);
+  box-shadow: 0 0 0 2px rgba(126, 184, 255, 0.22), 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.wallName {
+  position: relative;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallBadge {
+  position: absolute;
+  top: 7px;
+  left: 8px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.22);
+  border: 1px solid rgba(52, 211, 153, 0.42);
+  color: #6ee7b7;
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.wallCheck {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: rgba(126, 184, 255, 0.9);
+  color: #05070d;
+  display: grid;
+  place-items: center;
+}
+
+.wallUpload {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-style: dashed;
+  color: var(--text-secondary);
+  background-position: center;
+}
+
+/* ── Summary ───────────────────────────────── */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.summaryRow:last-child {
+  border-bottom: none;
+}
+
+.summaryRow span:first-child {
+  color: var(--text-ghost);
+}
+
+.summaryRow span:last-child {
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+/* ── Footer ────────────────────────────────── */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 4px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.footerHint {
+  font-size: 0.68rem;
+  color: var(--text-ghost);
+  flex: 1 1 auto;
+  text-align: center;
+  min-width: 0;
+}
+
+.ghostBtn,
+.primaryBtn {
+  padding: 9px 18px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.14s ease, opacity 0.16s ease;
+}
+
+.ghostBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+}
+
+.ghostBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.primaryBtn {
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.32), rgba(167, 139, 250, 0.28));
+  border: 1px solid rgba(126, 184, 255, 0.5);
+  color: #eaf3ff;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.45), rgba(167, 139, 250, 0.4));
+  transform: translateY(-1px);
+}
+
+.ghostBtn:disabled,
+.primaryBtn:disabled {
+  opacity: 0.34;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Motion ────────────────────────────────── */
+
+@keyframes setupIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes setupOut {
+  from { opacity: 1; transform: scale(1); filter: blur(0); }
+  to   { opacity: 0; transform: scale(1.03); filter: blur(10px); }
+}
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .container,
+  .leaving,
+  .body {
+    animation: none;
+  }
+
+  .wallOption:hover,
+  .primaryBtn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ── Narrow viewports ──────────────────────── */
+
+@media (max-width: 520px), (max-height: 620px) {
+  .card {
+    padding: 20px 20px 16px;
+    gap: 16px;
+  }
+
+  .pinBox {
+    width: 48px;
+    height: 56px;
+  }
+
+  .stepLabel {
+    display: none;   /* dots only; the labels are the first thing to go */
+  }
+}

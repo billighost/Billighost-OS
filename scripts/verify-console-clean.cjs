@@ -3,7 +3,7 @@
  * reported issues are gone.
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 (async () => {
   const b = await chromium.launch();
@@ -15,6 +15,8 @@ const { bootToDesktop } = require('./harness.cjs');
   page.on('pageerror', e => msgs.push('PAGEERROR: ' + e.message));
 
   await page.goto('http://localhost:5200/', { waitUntil: 'domcontentloaded' });
+  await seedProfile(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await bootToDesktop(page);
   await page.waitForTimeout(2500);
 

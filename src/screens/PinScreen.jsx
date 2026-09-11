@@ -34,7 +34,25 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
 
   const evaluatePin = useCallback(
     (enteredPin) => {
-      const correctPin = security?.pin || '0813';
+      /*
+       * No fallback PIN.
+       *
+       * `security?.pin || '0813'` meant the shipped code kept working even
+       * after the user chose their own — a backdoor. Setup guarantees a PIN
+       * exists, so an empty stored value can only mean storage was cleared;
+       * that is handled by the guard below rather than by a default.
+       */
+      const correctPin = security?.pin || '';
+
+      if (!correctPin) {
+        // Storage was wiped after setup. Let the user through rather than
+        // locking them out of their own machine with no recovery path.
+        setIsSuccess(true);
+        playSuccess();
+        setTimeout(() => onSuccess(), 400);
+        return;
+      }
+
       if (enteredPin === correctPin) {
         setIsSuccess(true);
         playSuccess();
@@ -156,7 +174,7 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
           )}
         </div>
 
-        <div className={styles.username}>bb2010ng@gmail.com</div>
+        <div className={styles.username}>{profile.email || profile.name || 'Billighost'}</div>
 
         {/*
           Plain <div>, and the inputs are type="text" with the digits masked
@@ -207,7 +225,9 @@ export default function PinScreen({ onSuccess, wallpaperSrc, audio = {} }) {
           ))}
         </div>
 
-        <span className={styles.hint}>Enter PIN (0813)</span>
+        {/* The PIN is never displayed: it is chosen during setup and known
+            only to the user. */}
+        <span className={styles.hint}>Enter your PIN</span>
       </div>
     </div>
   );

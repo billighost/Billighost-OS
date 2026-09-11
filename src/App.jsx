@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAudio } from './hooks/useAudio';
 import { LocalSettings } from './services/storage/localStorage';
 import BootScreen from './screens/BootScreen';
+import SetupScreen from './screens/SetupScreen';
 import LockScreen from './screens/LockScreen';
 import PinScreen from './screens/PinScreen';
 import SigningInScreen from './screens/SigningInScreen';
@@ -10,7 +11,15 @@ import MobileGate from './components/MobileGate';
 import styles from './App.module.css';
 
 export default function App() {
-  const [screen, setScreen] = useState('boot'); // 'boot' | 'lock' | 'pin' | 'signingIn' | 'desktop'
+  // 'boot' | 'setup' | 'lock' | 'pin' | 'signingIn' | 'desktop'
+  const [screen, setScreen] = useState('boot');
+
+  /*
+   * First run goes through setup instead of straight to the lock screen, so
+   * the OS never presents a placeholder identity or a shipped PIN. Read once
+   * at mount: completing setup advances the screen explicitly.
+   */
+  const needsSetup = useRef(!LocalSettings.isSetupComplete());
   const [wallpaperSrc, setWallpaperSrc] = useState(() => {
     const app = LocalSettings.getAppearance();
     return app.customWallpaperData || null;
@@ -60,8 +69,21 @@ export default function App() {
       {screen === 'boot' && (
         <div className={styles.screenWrapper}>
           <BootScreen
-            onComplete={() => setScreen('lock')}
+            onComplete={() => setScreen(needsSetup.current ? 'setup' : 'lock')}
             playBootAmbient={audio.playBootAmbient}
+          />
+        </div>
+      )}
+
+      {screen === 'setup' && (
+        <div className={styles.screenWrapper}>
+          <SetupScreen
+            onComplete={() => {
+              needsSetup.current = false;
+              setScreen('lock');
+            }}
+            playClick={audio.playClick}
+            playSuccess={audio.playSuccess}
           />
         </div>
       )}

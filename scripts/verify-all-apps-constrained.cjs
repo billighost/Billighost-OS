@@ -3,7 +3,7 @@
  * element escapes the window frame.
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 const APPS = [
   ['shortcut-files',    'files'],
@@ -26,6 +26,8 @@ const APPS = [
   const errs = [];
   page.on('pageerror', e => errs.push(e.message));
   await page.goto('http://localhost:5200/', { waitUntil: 'domcontentloaded' });
+  await seedProfile(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await bootToDesktop(page);
 
   let pass = 0, fail = 0;

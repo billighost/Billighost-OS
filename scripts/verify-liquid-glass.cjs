@@ -3,7 +3,7 @@
  * specular animating, and the window chrome still legible above them.
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 (async () => {
   const b = await chromium.launch();
@@ -11,6 +11,8 @@ const { bootToDesktop } = require('./harness.cjs');
   const errs = [];
   page.on('pageerror', e => errs.push(e.message));
   await page.goto('http://localhost:5200/', { waitUntil: 'domcontentloaded' });
+  await seedProfile(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await bootToDesktop(page);
 
   await page.dblclick('[data-testid="shortcut-settings"]');

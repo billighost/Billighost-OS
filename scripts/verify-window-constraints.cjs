@@ -5,7 +5,7 @@
  *   3. shrinking the BROWSER reflows windows back inside
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 const TASKBAR_H = 52;
 
@@ -16,6 +16,8 @@ const TASKBAR_H = 52;
   page.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
 
   await page.goto('http://localhost:5200/', { waitUntil: 'domcontentloaded' });
+  await seedProfile(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await bootToDesktop(page);
   console.log('desktop ready\n');
 

@@ -1,8 +1,10 @@
 // LocalStorage Management for Billighost OS Configurations & Preferences
 
 export const DEFAULT_USER_PROFILE = {
-  name: 'Billighost User',
-  email: 'bb2010ng@gmail.com',
+  // Empty, not a fake identity. First-run setup fills these in; anything
+  // hardcoded here would ship as someone else's name and address.
+  name: '',
+  email: '',
   avatar: null, // null means generate sleek neon geometric avatar / icon
   role: 'Administrator',
 };
@@ -26,11 +28,14 @@ export const DEFAULT_SOUND_CONFIG = {
 };
 
 export const DEFAULT_SECURITY = {
-  pin: '0813',
+  // No default PIN: a shipped one is either a backdoor or a hint printed on
+  // the lock screen. Setup requires the user to choose theirs.
+  pin: '',
   autoLockMinutes: 0, // 0 = disabled
 };
 
 const STORAGE_KEYS = {
+  SETUP: 'billighost_setup',
   USER_PROFILE: 'billighost_user_profile',
   APPEARANCE: 'billighost_appearance',
   SOUND: 'billighost_sound_config',
@@ -39,6 +44,29 @@ const STORAGE_KEYS = {
 };
 
 export const LocalSettings = {
+  // --- First-run setup ---
+
+  /** True once the setup wizard has been completed. */
+  isSetupComplete() {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.SETUP) === 'complete';
+    } catch {
+      return false;   // private mode: treat as unconfigured rather than crash
+    }
+  },
+
+  markSetupComplete() {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SETUP, 'complete');
+    } catch { /* storage unavailable */ }
+  },
+
+  resetSetup() {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.SETUP);
+    } catch { /* storage unavailable */ }
+  },
+
   // --- Profile ---
   getProfile() {
     try {

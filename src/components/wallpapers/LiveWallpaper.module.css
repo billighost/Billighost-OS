@@ -1,0 +1,14 @@
+/*
+  Sits above the static wallpaper gradient but below every UI layer, so
+  effects read as weather over the desktop rather than an overlay on the
+  chrome. pointer-events: none keeps it entirely non-interactive.
+*/
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+}

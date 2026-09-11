@@ -17,6 +17,8 @@ import OSModal from '../components/desktop/OSModal';
 import SpotlightSearchModal from '../components/desktop/SpotlightSearchModal';
 import WidgetsPanel from '../components/desktop/WidgetsPanel';
 import GlobalContextMenu from '../components/desktop/GlobalContextMenu';
+import LiveWallpaper from '../components/wallpapers/LiveWallpaper';
+import { getWallpaper } from '../components/wallpapers/registry';
 import {
   NetworkFlyout,
   BatteryFlyout,
@@ -677,8 +679,27 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     if (appearance.wallpaperCss) {
       return { background: appearance.wallpaperCss };
     }
+    // Fall back to the registry, so a wallpaper chosen by id still renders
+    // even if its CSS was never copied into settings.
+    const fromRegistry = getWallpaper(appearance.wallpaper);
+    if (fromRegistry?.css) {
+      return { background: fromRegistry.css };
+    }
     return null;
-  }, [appearance.customWallpaperData, appearance.wallpaperCss]);
+  }, [appearance.customWallpaperData, appearance.wallpaperCss, appearance.wallpaper]);
+
+  /*
+   * Which live effect is running, if any.
+   *
+   * A custom uploaded image has no effect attached, and an explicitly stored
+   * liveWallpaper wins over the id lookup so an older saved setting still
+   * resolves correctly.
+   */
+  const liveEffect = useMemo(() => {
+    if (appearance.customWallpaperData) return null;
+    if (appearance.liveWallpaper) return appearance.liveWallpaper;
+    return getWallpaper(appearance.wallpaper)?.live || null;
+  }, [appearance.customWallpaperData, appearance.liveWallpaper, appearance.wallpaper]);
 
   // Filter windows by active virtual desktop workspace
   const visibleWindows = useMemo(() => {
@@ -700,6 +721,13 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
       ) : (
         <div className={styles.wallpaperFallback} />
       )}
+
+      {/*
+        Live effect, above the static backdrop and below every UI layer.
+        It measures window and icon rects itself, which is how rain lands on
+        open windows rather than behind them.
+      */}
+      <LiveWallpaper effect={liveEffect} />
 
       {/* Snap Preview Ghost Outlines */}
       {snapPreview === 'full' && <div className={styles.snapPreviewFull} />}
@@ -907,7 +935,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
       )}
 
       {/* Glass Taskbar */}
-      <div className={styles.taskbar} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.taskbar} data-taskbar onClick={(e) => e.stopPropagation()}>
         {/* Left: Start Button + Spotlight + Widgets + Task View */}
         <div className={styles.taskbarLeft}>
           <button

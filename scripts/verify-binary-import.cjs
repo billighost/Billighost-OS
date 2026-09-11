@@ -5,7 +5,7 @@
  *   • it routes to the right library folder
  */
 const { chromium } = require('playwright');
-const { bootToDesktop } = require('./harness.cjs');
+const { bootToDesktop, seedProfile } = require('./harness.cjs');
 const path = require('path');
 
 (async () => {
@@ -16,6 +16,8 @@ const path = require('path');
   page.on('console', m => { if (m.type() === 'error') errs.push('CONSOLE: ' + m.text()); });
 
   await page.goto('http://localhost:5200/', { waitUntil: 'domcontentloaded' });
+  await seedProfile(page);
+  await page.reload({ waitUntil: 'domcontentloaded' });
   await bootToDesktop(page);
 
   await page.dblclick('[data-testid="shortcut-files"]');
