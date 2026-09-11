@@ -4,6 +4,7 @@ import {
   ImageIcon, GridHashIcon, GearIcon, ChartBarIcon,
   FileIcon, FileTextIcon, ScrollIcon,
   LockIcon, RefreshIcon, PowerIcon, SearchIcon,
+  CodeIcon, BrushIcon,
 } from '../Icons';
 import styles from './StartMenu.module.css';
 
@@ -20,6 +21,8 @@ export default function StartMenu({
 
   const APPS = [
     { id: 'files', name: 'Files', icon: <FolderIcon size={22} />, desc: 'Virtual File System & Explorer' },
+    { id: 'code', name: 'Code Studio', icon: <CodeIcon size={22} />, desc: 'Syntax-Highlighted Code Editor' },
+    { id: 'paint', name: 'Paint Studio', icon: <BrushIcon size={22} />, desc: 'Canvas Art & Graphics Studio' },
     { id: 'terminal', name: 'Terminal', icon: <BoltIcon size={22} />, desc: 'Billighost Command Shell' },
     { id: 'browser', name: 'Browser', icon: <GlobeIcon size={22} />, desc: 'Ghost Web Browser' },
     { id: 'notepad', name: 'Notepad', icon: <PenIcon size={22} />, desc: 'Text & Markdown Editor' },

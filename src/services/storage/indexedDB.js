@@ -86,6 +86,22 @@ const DEFAULT_FILES = [
     content: `Track: Billighost Ambient Synth (Procedural)\nGenre: Cyberpunk Chillwave\nEngine: Web Audio Oscillator Synthesizer`,
     mimeType: 'text/plain',
   },
+  {
+    path: '/Users/User/Documents/system_script.js',
+    name: 'system_script.js',
+    parentPath: '/Users/User/Documents',
+    type: 'file',
+    content: `// Billighost OS — Runtime Diagnostic Script\nexport function runDiagnostic() {\n  const telemetry = {\n    kernel: "WebBrowser-v1.0",\n    uptime: Math.round(performance.now()),\n    status: "OPTIMAL"\n  };\n  console.log("System Online:", telemetry);\n  return telemetry;\n}\n\nrunDiagnostic();`,
+    mimeType: 'application/javascript',
+  },
+  {
+    path: '/Users/User/Documents/cyber_theme.css',
+    name: 'cyber_theme.css',
+    parentPath: '/Users/User/Documents',
+    type: 'file',
+    content: `/* Custom Cyber Theme Stylesheet */\n:root {\n  --neon-cyan: #00f3ff;\n  --neon-magenta: #ff007f;\n  --glass-tint: rgba(10, 15, 30, 0.75);\n}\n\n.cyber-card {\n  background: var(--glass-tint);\n  border: 1px solid var(--neon-cyan);\n  box-shadow: 0 0 16px rgba(0, 243, 255, 0.25);\n}`,
+    mimeType: 'text/css',
+  },
 ];
 
 export const VFS = {
@@ -105,6 +121,11 @@ export const VFS = {
       const trash = await this.getNode('/Users/User/.trash');
       if (!trash) {
         await this.createDirectory('/Users/User/.trash');
+      }
+      // Ensure sample script exists for existing installations
+      const sampleScript = await this.getNode('/Users/User/Documents/system_script.js');
+      if (!sampleScript) {
+        await this.writeFile('/Users/User/Documents/system_script.js', DEFAULT_FILES[4].content, 'application/javascript');
       }
     }
   },
@@ -428,6 +449,29 @@ export const VFS = {
         resolve(true);
       };
       req.onerror = () => reject(req.error);
+    });
+  },
+
+  async search(query) {
+    if (!query || !query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NODES, 'readonly');
+      const store = tx.objectStore(STORE_NODES);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const nodes = req.result || [];
+        const matches = nodes.filter(node => {
+          if (!node.path || node.path.startsWith('/Users/User/.trash')) return false;
+          if (node.name && node.name.toLowerCase().includes(q)) return true;
+          if (node.path && node.path.toLowerCase().includes(q)) return true;
+          if (node.type === 'file' && typeof node.content === 'string' && node.content.toLowerCase().includes(q)) return true;
+          return false;
+        });
+        resolve(matches);
+      };
+      req.onerror = () => resolve([]);
     });
   },
 };

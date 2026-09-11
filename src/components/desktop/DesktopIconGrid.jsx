@@ -5,6 +5,7 @@ import {
   MonitorIcon, FolderIcon, FolderOpenIcon, TrashIcon, BoltIcon, GlobeIcon,
   PenIcon, MusicNoteIcon, ImageIcon, GridHashIcon, GearIcon,
   FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
+  CodeIcon, BrushIcon,
 } from '../Icons';
 import styles from './DesktopIconGrid.module.css';
 
@@ -37,6 +38,8 @@ export default function DesktopIconGrid({
   const SYSTEM_SHORTCUTS = [
     { id: 'shortcut-pc', name: 'This PC', icon: <MonitorIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/' }) },
     { id: 'shortcut-files', name: 'File Explorer', icon: <FolderIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/Users/User' }) },
+    { id: 'shortcut-code', name: 'Code Studio', icon: <CodeIcon size={28} />, action: () => onLaunchApp('code', 'Code Studio', null) },
+    { id: 'shortcut-paint', name: 'Paint Studio', icon: <BrushIcon size={28} />, action: () => onLaunchApp('paint', 'Paint Studio', null) },
     { id: 'shortcut-trash', name: 'Recycle Bin', icon: <TrashIcon size={28} />, action: () => onLaunchApp('trash', 'Recycle Bin', null) },
     { id: 'shortcut-terminal', name: 'Terminal', icon: <BoltIcon size={28} />, action: () => onLaunchApp('terminal', 'Terminal', null) },
     { id: 'shortcut-browser', name: 'Browser', icon: <GlobeIcon size={28} />, action: () => onLaunchApp('browser', 'Ghost Browser', null) },

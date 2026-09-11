@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useBattery } from '../hooks/useBattery';
 import { useNetwork } from '../hooks/useNetwork';
+import { useWeather } from '../hooks/useWeather';
 import { useStorageQuota } from '../hooks/useStorageQuota';
 import { useOSModal } from '../hooks/useOSModal';
 import { LocalSettings } from '../services/storage/localStorage';
@@ -13,6 +14,8 @@ import StartMenu from '../components/desktop/StartMenu';
 import TaskViewModal from '../components/desktop/TaskViewModal';
 import NotificationToasts from '../components/desktop/NotificationToasts';
 import OSModal from '../components/desktop/OSModal';
+import SpotlightSearchModal from '../components/desktop/SpotlightSearchModal';
+import WidgetsPanel from '../components/desktop/WidgetsPanel';
 import {
   NetworkFlyout,
   BatteryFlyout,
@@ -24,6 +27,8 @@ import SettingsApp from '../apps/SettingsApp';
 import FileManagerApp from '../apps/FileManagerApp';
 import TerminalApp from '../apps/TerminalApp';
 import NotepadApp from '../apps/NotepadApp';
+import CodeEditorApp from '../apps/CodeEditorApp';
+import PaintStudioApp from '../apps/PaintStudioApp';
 import TaskManagerApp from '../apps/TaskManagerApp';
 import GhostBrowserApp from '../apps/GhostBrowserApp';
 import AudioPlayerApp from '../apps/AudioPlayerApp';
@@ -33,6 +38,7 @@ import RecycleBinApp from '../apps/RecycleBinApp';
 
 import {
   GearIcon, WindowsIcon, FolderIcon, ImageIcon, PenIcon, BoltIcon,
+  CodeIcon, BrushIcon, SearchIcon, WidgetsIcon,
 } from '../components/Icons';
 
 import styles from './DesktopScreen.module.css';
@@ -52,6 +58,8 @@ function AppTabSvgIcon({ appId }) {
     files: <FolderIcon size={14} />,
     terminal: <BoltIcon size={14} />,
     notepad: <PenIcon size={14} />,
+    code: <CodeIcon size={14} />,
+    paint: <BrushIcon size={14} />,
     browser: null, // will use GlobeIcon below
     gallery: <ImageIcon size={14} />,
   };
@@ -83,13 +91,16 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   const battery = useBattery();
   const network = useNetwork();
   const storage = useStorageQuota();
+  const weather = useWeather();
 
   // --- Clock ---
   const [time, setTime] = useState(() => getFormattedTime(appearance.clockFormat));
 
-  // --- UI Flyouts & Task View ---
+  // --- UI Flyouts, Overlays & Task View ---
   const [activeFlyout, setActiveFlyout] = useState(null); // 'start' | 'network' | 'battery' | 'calendar' | 'control' | null
   const [showTaskView, setShowTaskView] = useState(false);
+  const [showSpotlight, setShowSpotlight] = useState(false);
+  const [showWidgets, setShowWidgets] = useState(false);
   const [snapPreview, setSnapPreview] = useState(null); // 'full' | 'left' | 'right' | null
 
   // --- Window Manager State ---
@@ -237,13 +248,31 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     }
   }, [appearance.accentColor]);
 
-  // Keyboard Shortcuts: Alt+Tab (Task View) & Ctrl+Alt+Arrows (Workspace Switch)
+  // Keyboard Shortcuts: Alt+Tab (Task View), Ctrl+Alt+Arrows (Workspace), Ctrl+Space (Spotlight), Alt+W (Widgets)
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Spotlight Search: Ctrl+Space, Cmd+Space, or Alt+Space
+      if ((e.ctrlKey || e.metaKey || e.altKey) && e.code === 'Space') {
+        e.preventDefault();
+        setShowSpotlight(prev => !prev);
+        return;
+      }
+
+      // Widgets Board: Alt+W
+      if (e.altKey && (e.key === 'w' || e.key === 'W')) {
+        e.preventDefault();
+        setShowWidgets(prev => !prev);
+        return;
+      }
+
+      // Task View / Exposé
       if ((e.altKey || e.metaKey) && (e.key === 'Tab' || e.key === 'q')) {
         e.preventDefault();
         setShowTaskView(prev => !prev);
+        return;
       }
+
+      // Virtual Desktops Switcher
       if (e.ctrlKey && e.altKey) {
         if (e.key === 'ArrowRight') {
           e.preventDefault();
@@ -289,6 +318,8 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         files: { w: 680, h: 440 },
         terminal: { w: 640, h: 400 },
         notepad: { w: 600, h: 420 },
+        code: { w: 780, h: 500 },
+        paint: { w: 840, h: 540 },
         monitor: { w: 540, h: 380 },
         browser: { w: 780, h: 500 },
         media: { w: 460, h: 320 },
@@ -337,6 +368,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   }, [activeWindowId, playClick]);
 
   const handleMinimizeWindow = useCallback((id) => {
+    window.dispatchEvent(new CustomEvent('billighost:play-sound', { detail: 'minimize' }));
     setWindows(prev =>
       prev.map(w => (w.id === id ? { ...w, isMinimized: true } : w))
     );
@@ -346,6 +378,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   }, [activeWindowId]);
 
   const handleMaximizeWindow = useCallback((id) => {
+    window.dispatchEvent(new CustomEvent('billighost:play-sound', { detail: 'maximize' }));
     setWindows(prev =>
       prev.map(w => {
         if (w.id !== id) return w;
@@ -360,6 +393,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
   }, []);
 
   const handleSnap = useCallback((id, snapType) => {
+    window.dispatchEvent(new CustomEvent('billighost:play-sound', { detail: 'snap' }));
     setWindows(prev =>
       prev.map(w => {
         if (w.id !== id) return w;
@@ -467,6 +501,8 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 onOpenFile={(path, name) => {
                   if (name.endsWith('.svg') || name.endsWith('.png') || name.endsWith('.jpg')) {
                     handleLaunchApp('gallery', name, null, { filePath: path });
+                  } else if (name.endsWith('.js') || name.endsWith('.css') || name.endsWith('.json') || name.endsWith('.html') || name.endsWith('.sh')) {
+                    handleLaunchApp('code', name, null, { filePath: path });
                   } else {
                     handleLaunchApp('notepad', name, null, { filePath: path });
                   }
@@ -484,6 +520,19 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             {win.appId === 'notepad' && (
               <NotepadApp
                 filePath={win.props?.filePath || null}
+                playClick={playClick}
+                osModal={osModal}
+              />
+            )}
+            {win.appId === 'code' && (
+              <CodeEditorApp
+                filePath={win.props?.filePath || null}
+                playClick={playClick}
+                osModal={osModal}
+              />
+            )}
+            {win.appId === 'paint' && (
+              <PaintStudioApp
                 playClick={playClick}
                 osModal={osModal}
               />
@@ -531,6 +580,22 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
 
       {/* OS Modal Dialogs */}
       <OSModal {...osModal.modalProps} />
+
+      {/* Universal Spotlight Search Modal */}
+      <SpotlightSearchModal
+        isOpen={showSpotlight}
+        onClose={() => setShowSpotlight(false)}
+        onLaunchApp={handleLaunchApp}
+        playClick={playClick}
+      />
+
+      {/* Widgets Board Side Panel */}
+      <WidgetsPanel
+        isOpen={showWidgets}
+        onClose={() => setShowWidgets(false)}
+        onOpenSettings={() => handleLaunchApp('settings', 'Settings', null)}
+        playClick={playClick}
+      />
 
       {/* Task View / Alt+Tab Exposé Switcher */}
       {showTaskView && (
@@ -600,15 +665,41 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
 
       {/* Glass Taskbar */}
       <div className={styles.taskbar} onClick={(e) => e.stopPropagation()}>
-        {/* Left: Start Button + Task View */}
+        {/* Left: Start Button + Spotlight + Widgets + Task View */}
         <div className={styles.taskbarLeft}>
           <button
             className={`${styles.startBtn} ${activeFlyout === 'start' ? styles.startBtnActive : ''}`}
             onClick={() => toggleFlyout('start')}
             title="Open Start Menu"
+            data-testid="start-menu-btn"
           >
             <span className={styles.startLogoDot} />
             Billighost
+          </button>
+
+          <button
+            className={`${styles.spotlightBtn} ${showSpotlight ? styles.spotlightBtnActive : ''}`}
+            onClick={() => {
+              playClick();
+              setShowSpotlight(prev => !prev);
+            }}
+            title="Spotlight Search (Ctrl+Space)"
+            data-testid="taskbar-spotlight-btn"
+          >
+            <SearchIcon size={16} />
+          </button>
+
+          <button
+            className={`${styles.widgetTaskbarBtn} ${showWidgets ? styles.widgetTaskbarBtnActive : ''}`}
+            onClick={() => {
+              playClick();
+              setShowWidgets(prev => !prev);
+            }}
+            title="Widgets Board (Alt+W)"
+            data-testid="taskbar-widgets-btn"
+          >
+            <WidgetsIcon size={16} />
+            <span>{weather.tempText || '21°C'}</span>
           </button>
 
           <button
@@ -618,6 +709,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
               setShowTaskView(prev => !prev);
             }}
             title="Task View (Alt+Tab)"
+            data-testid="taskbar-taskview-btn"
           >
             <WindowsIcon size={16} />
           </button>

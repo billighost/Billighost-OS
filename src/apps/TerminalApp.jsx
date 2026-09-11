@@ -267,6 +267,17 @@ export default function TerminalApp({ onLock, onRestart }) {
         newHistory.push({ type: 'output', text: args.join(' ') });
         break;
 
+      case 'lock':
+        newHistory.push({ type: 'output', text: 'Locking session...' });
+        if (onLock) onLock();
+        break;
+
+      case 'reboot':
+      case 'restart':
+        newHistory.push({ type: 'output', text: 'Restarting system...' });
+        if (onRestart) onRestart();
+        break;
+
       default:
         newHistory.push({ type: 'error', text: `command not found: ${cmd}. Type "help" for a list of commands.` });
         break;

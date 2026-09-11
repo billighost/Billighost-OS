@@ -169,6 +169,41 @@
   box-shadow: 0 0 8px var(--accent-glow);
 }
 
+.taskViewBtn,
+.spotlightBtn,
+.widgetTaskbarBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  transition: all 0.2s var(--ease-spring);
+}
+
+.taskViewBtn:hover,
+.spotlightBtn:hover,
+.widgetTaskbarBtn:hover {
+  background: rgba(126, 184, 255, 0.12);
+  border-color: rgba(126, 184, 255, 0.3);
+  color: var(--text-primary);
+}
+
+.taskViewBtnActive,
+.spotlightBtnActive,
+.widgetTaskbarBtnActive {
+  background: rgba(126, 184, 255, 0.2) !important;
+  border-color: var(--accent-glow) !important;
+  color: var(--accent-glow) !important;
+}
+
 .taskbarCenter {
   display: flex;
   align-items: center;

@@ -57,10 +57,10 @@ async function verifyAll() {
   // Test OS Modal Dialog via FileManager
   console.log('Testing OS Modal via FileManager new file...');
   await page.dblclick('[data-testid="shortcut-files"]');
-  await page.waitForSelector('button:has-text("New File")', { timeout: 8000 });
+  await page.waitForSelector('button[title="New File"]', { timeout: 8000 });
   await page.waitForTimeout(500);
 
-  await page.click('button:has-text("New File")');
+  await page.click('button[title="New File"]');
   await page.waitForSelector('text=New File', { timeout: 5000 });
   await page.waitForTimeout(400);
 

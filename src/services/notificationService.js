@@ -32,7 +32,10 @@ export const NotificationService = {
       // ignore
     }
 
-    // Dispatch global toast event
+    // Dispatch global toast event and sound
+    window.dispatchEvent(
+      new CustomEvent('billighost:play-sound', { detail: 'notification' })
+    );
     window.dispatchEvent(
       new CustomEvent('billighost:notification-toast', { detail: newNotification })
     );

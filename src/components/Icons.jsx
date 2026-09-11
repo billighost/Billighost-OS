@@ -514,3 +514,69 @@ export const PlugIcon = icon(
     <path d="M18 8v5a6 6 0 0 1-12 0V8z" />
   </>
 );
+
+// Code / Developer Editor
+export const CodeIcon = icon(
+  <>
+    <polyline points="16 18 22 12 16 6" />
+    <polyline points="8 6 2 12 8 18" />
+    <line x1="14" y1="4" x2="10" y2="20" />
+  </>
+);
+
+// Brush & Creative Paint Studio
+export const BrushIcon = icon(
+  <>
+    <path d="M18 2a3 3 0 0 1 3 3c0 1.5-1 2.5-2 3.5l-9 9-4.5.5.5-4.5 9-9c1-1 2-2 3-2.5z" />
+    <path d="M7 17l-3 3a2 2 0 0 0 3 0l.5-.5" />
+  </>
+);
+
+// Widgets Board
+export const WidgetsIcon = icon(
+  <>
+    <rect x="3" y="3" width="7" height="9" rx="1.5" />
+    <rect x="14" y="3" width="7" height="5" rx="1.5" />
+    <rect x="14" y="12" width="7" height="9" rx="1.5" />
+    <rect x="3" y="16" width="7" height="5" rx="1.5" />
+  </>
+);
+
+// Undo Action
+export const UndoIcon = icon(
+  <>
+    <polyline points="9 14 4 9 9 4" />
+    <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+  </>
+);
+
+// Redo Action
+export const RedoIcon = icon(
+  <>
+    <polyline points="15 14 20 9 15 4" />
+    <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+  </>
+);
+
+// Sticky Note Scratchpad
+export const StickyNoteIcon = icon(
+  <>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="8" y1="13" x2="16" y2="13" />
+    <line x1="8" y1="17" x2="13" y2="17" />
+  </>
+);
+
+// Speedometer Gauge
+export const GaugeIcon = icon(
+  <>
+    <path d="M12 2v4" />
+    <path d="m4.93 4.93 2.83 2.83" />
+    <path d="M2 12h4" />
+    <path d="M20 12h2" />
+    <path d="m19.07 4.93-2.83 2.83" />
+    <path d="M12 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+    <path d="m13.4 10.6 2.6-2.6" />
+  </>
+);

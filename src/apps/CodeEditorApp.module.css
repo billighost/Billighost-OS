@@ -1,0 +1,296 @@
+/* ============================================
+   BILLIGHOST OS — Code Editor Pro CSS
+   ============================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: #0d1117;
+  color: #c9d1d9;
+  font-family: var(--font-mono);
+  overflow: hidden;
+  user-select: text;
+}
+
+/* Theme Variations */
+.themeCyberDark {
+  background: #080c14;
+  color: #d1e4ff;
+  --code-keyword: #00f3ff;
+  --code-string: #7ee787;
+  --code-comment: #6272a4;
+  --code-number: #ffb86c;
+  --code-func: #50fa7b;
+  --code-property: #8be9fd;
+  --code-gutter-bg: rgba(0, 0, 0, 0.35);
+  --code-gutter-text: #4c5d75;
+}
+
+.themeDracula {
+  background: #191622;
+  color: #f8f8f2;
+  --code-keyword: #ff79c6;
+  --code-string: #f1fa8c;
+  --code-comment: #6272a4;
+  --code-number: #bd93f9;
+  --code-func: #50fa7b;
+  --code-property: #8be9fd;
+  --code-gutter-bg: rgba(0, 0, 0, 0.4);
+  --code-gutter-text: #6272a4;
+}
+
+.themeMonokai {
+  background: #1e1f1c;
+  color: #f8f8f2;
+  --code-keyword: #f92672;
+  --code-string: #e6db74;
+  --code-comment: #75715e;
+  --code-number: #ae81ff;
+  --code-func: #a6e22e;
+  --code-property: #66d9ef;
+  --code-gutter-bg: rgba(0, 0, 0, 0.35);
+  --code-gutter-text: #75715e;
+}
+
+/* Header & Controls Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.leftGroup, .rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fileIndicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dirtyDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.toolBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.toolBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btnPrimary {
+  background: rgba(126, 184, 255, 0.2);
+  border-color: rgba(126, 184, 255, 0.4);
+  color: #bfe0ff;
+}
+
+.btnPrimary:hover {
+  background: rgba(126, 184, 255, 0.3);
+}
+
+.selectInput {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: var(--text-primary);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.selectInput option {
+  background: #0a0a0f;
+  color: #e8e8ed;
+}
+
+/* Search Bar in Editor */
+.findBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(0, 0, 0, 0.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.findInput {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: #fff;
+  padding: 3px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  width: 180px;
+  outline: none;
+}
+
+.matchBadge {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* Editor Main Workspace */
+.editorWorkspace {
+  flex: 1;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Line Numbers Gutter */
+.gutter {
+  width: 46px;
+  background: var(--code-gutter-bg, rgba(0, 0, 0, 0.35));
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 6px;
+  text-align: right;
+  color: var(--code-gutter-text, #4c5d75);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  user-select: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lineNumber {
+  height: 1.5em;
+  display: block;
+}
+
+.editorAreaWrapper {
+  flex: 1;
+  position: relative;
+  overflow: auto;
+}
+
+/* Stacked Textarea & Syntax Highlight Layer */
+.syntaxLayer,
+.codeTextarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+  box-sizing: border-box;
+}
+
+.syntaxLayer {
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+}
+
+.codeTextarea {
+  z-index: 2;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--accent-glow, #7eb8ff);
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: auto;
+}
+
+/* Syntax Highlighting Tokens */
+:global(.token-keyword) {
+  color: var(--code-keyword, #00f3ff);
+  font-weight: bold;
+}
+
+:global(.token-string) {
+  color: var(--code-string, #7ee787);
+}
+
+:global(.token-comment) {
+  color: var(--code-comment, #6272a4);
+  font-style: italic;
+}
+
+:global(.token-number) {
+  color: var(--code-number, #ffb86c);
+}
+
+:global(.token-func) {
+  color: var(--code-func, #50fa7b);
+}
+
+:global(.token-property) {
+  color: var(--code-property, #8be9fd);
+}
+
+:global(.token-boolean) {
+  color: #ff79c6;
+  font-weight: 600;
+}
+
+/* Status Bar */
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.statusLeft, .statusRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statusItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

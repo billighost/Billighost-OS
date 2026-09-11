@@ -43,6 +43,7 @@ export default function RecycleBinApp({ playClick = () => {}, osModal = null }) 
     }
     if (doEmpty) {
       await VFS.emptyTrash();
+      window.dispatchEvent(new CustomEvent('billighost:play-sound', { detail: 'trash-empty' }));
       NotificationService.send({
         title: 'Recycle Bin Emptied',
         message: 'All items permanently removed from disk',

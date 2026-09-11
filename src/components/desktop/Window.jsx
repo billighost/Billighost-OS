@@ -65,6 +65,8 @@ export default function Window({
     resizeStartRef.current = {
       x: e.clientX,
       y: e.clientY,
+      winX: win.position.x,
+      winY: win.position.y,
       winW: win.size.w,
       winH: win.size.h,
       edge,
@@ -95,11 +97,39 @@ export default function Window({
         currentSnapPreviewRef.current = snapType;
         onSnapPreview(snapType);
       } else if (isResizing) {
-        const dx = e.clientX - resizeStartRef.current.x;
-        const dy = e.clientY - resizeStartRef.current.y;
-        const newW = Math.max(340, resizeStartRef.current.winW + dx);
-        const newH = Math.max(220, resizeStartRef.current.winH + dy);
+        const { x: startX, y: startY, winX, winY, winW, winH, edge } = resizeStartRef.current;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        const minW = 340;
+        const minH = 220;
+
+        let newW = winW;
+        let newH = winH;
+        let newX = winX;
+        let newY = winY;
+
+        // Horizontal adjustment
+        if (edge.includes('e')) {
+          newW = Math.max(minW, winW + dx);
+        } else if (edge.includes('w')) {
+          const deltaW = Math.min(dx, winW - minW);
+          newW = winW - deltaW;
+          newX = winX + deltaW;
+        }
+
+        // Vertical adjustment
+        if (edge.includes('s')) {
+          newH = Math.max(minH, winH + dy);
+        } else if (edge.includes('n')) {
+          const deltaH = Math.min(dy, winH - minH);
+          newH = winH - deltaH;
+          newY = winY + deltaH;
+        }
+
         onUpdateSize(win.id, { w: newW, h: newH });
+        if (newX !== winX || newY !== winY) {
+          onUpdatePos(win.id, { x: newX, y: newY });
+        }
       }
     };
 
@@ -171,7 +201,9 @@ export default function Window({
 
   return (
     <div
-      className={`${styles.window} ${isActive ? styles.windowActive : ''} ${isDragging ? styles.windowDragging : ''} ${isSnapped ? styles.windowSnapped : ''}`}
+      data-testid="os-window"
+      data-app={win.appId}
+      className={`${styles.window} ${isActive ? styles.windowActive : ''} ${isDragging ? styles.windowDragging : ''} ${isResizing ? styles.windowResizing : ''} ${isSnapped ? styles.windowSnapped : ''}`}
       style={windowStyle}
       onMouseDown={onFocus}
     >
@@ -229,12 +261,58 @@ export default function Window({
         {children}
       </div>
 
-      {/* Resize Handle */}
+      {/* 8-Direction Resize Handles */}
       {!isSnapped && (
-        <div
-          className={styles.resizeHandle}
-          onMouseDown={(e) => handleMouseDownResize(e, 'se')}
-        />
+        <>
+          <div
+            className={`${styles.resizeHandle} ${styles.handleN}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'n')}
+            data-testid="resize-handle-n"
+            title="Resize Top"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleS}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 's')}
+            data-testid="resize-handle-s"
+            title="Resize Bottom"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleW}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'w')}
+            data-testid="resize-handle-w"
+            title="Resize Left"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleE}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'e')}
+            data-testid="resize-handle-e"
+            title="Resize Right"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleNW}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'nw')}
+            data-testid="resize-handle-nw"
+            title="Resize Top-Left"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleNE}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'ne')}
+            data-testid="resize-handle-ne"
+            title="Resize Top-Right"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleSW}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'sw')}
+            data-testid="resize-handle-sw"
+            title="Resize Bottom-Left"
+          />
+          <div
+            className={`${styles.resizeHandle} ${styles.handleSE}`}
+            onMouseDown={(e) => handleMouseDownResize(e, 'se')}
+            data-testid="resize-handle-se"
+            title="Resize Bottom-Right"
+          />
+        </>
       )}
     </div>
   );

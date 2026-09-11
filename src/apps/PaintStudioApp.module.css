@@ -1,0 +1,267 @@
+/* ============================================
+   BILLIGHOST OS — Paint & Canvas Studio CSS
+   ============================================ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: #0a0a0f;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Studio Header & Top Controls */
+.topToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.actionBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnAccent {
+  background: rgba(126, 184, 255, 0.2);
+  border-color: rgba(126, 184, 255, 0.4);
+  color: #bfe0ff;
+}
+
+.btnAccent:hover:not(:disabled) {
+  background: rgba(126, 184, 255, 0.3);
+}
+
+.btnDanger {
+  color: #ff6b81;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: rgba(255, 77, 106, 0.18);
+  border-color: rgba(255, 77, 106, 0.4);
+}
+
+/* Main Studio Layout: Left Sidebar + Canvas Area */
+.studioBody {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Side Tool Palette */
+.sidebar {
+  width: 210px;
+  background: rgba(18, 18, 28, 0.7);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.sectionTitle {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-ghost);
+  margin-bottom: 6px;
+}
+
+.toolsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.toolButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  gap: 4px;
+}
+
+.toolButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.toolButtonActive {
+  background: rgba(126, 184, 255, 0.25) !important;
+  border-color: var(--accent-glow) !important;
+  color: #fff !important;
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.3);
+}
+
+/* Color Presets Palette */
+.colorPalette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.colorSwatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.1);
+}
+
+.colorSwatchActive {
+  border-color: #fff !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+.customColorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.colorInput {
+  -webkit-appearance: none;
+  border: none;
+  width: 32px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.colorHex {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* Sliders */
+.sliderControl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.rangeInput {
+  width: 100%;
+  accent-color: var(--accent-glow);
+  cursor: pointer;
+}
+
+.brushPreviewContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brushPreviewDot {
+  border-radius: 50%;
+  transition: all 0.1s ease;
+}
+
+/* Canvas Viewport */
+.canvasViewport {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #121420 0%, #06070a 100%);
+  padding: 16px;
+  overflow: auto;
+  position: relative;
+}
+
+.canvasWrapper {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+  display: flex;
+  position: relative;
+}
+
+.drawingCanvas {
+  display: block;
+  cursor: crosshair;
+}
+
+/* Status Bar */
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px;
+  background: rgba(0, 0, 0, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
