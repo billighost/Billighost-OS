@@ -16,6 +16,7 @@ import NotificationToasts from '../components/desktop/NotificationToasts';
 import OSModal from '../components/desktop/OSModal';
 import SpotlightSearchModal from '../components/desktop/SpotlightSearchModal';
 import WidgetsPanel from '../components/desktop/WidgetsPanel';
+import GlobalContextMenu from '../components/desktop/GlobalContextMenu';
 import {
   NetworkFlyout,
   BatteryFlyout,
@@ -38,7 +39,9 @@ import RecycleBinApp from '../apps/RecycleBinApp';
 
 import {
   GearIcon, WindowsIcon, FolderIcon, ImageIcon, PenIcon, BoltIcon,
-  CodeIcon, BrushIcon, SearchIcon, WidgetsIcon,
+  CodeIcon, BrushIcon, SearchIcon, WidgetsIcon, TerminalIcon,
+  CalculatorIcon, GhostIcon, MusicNoteIcon, TrashIcon, GaugeIcon,
+  FileIcon,
 } from '../components/Icons';
 
 import styles from './DesktopScreen.module.css';
@@ -56,17 +59,37 @@ function AppTabSvgIcon({ appId }) {
   const iconMap = {
     settings: <GearIcon size={14} />,
     files: <FolderIcon size={14} />,
-    terminal: <BoltIcon size={14} />,
+    terminal: <TerminalIcon size={14} />,
     notepad: <PenIcon size={14} />,
     code: <CodeIcon size={14} />,
     paint: <BrushIcon size={14} />,
-    browser: null, // will use GlobeIcon below
+    browser: <GhostIcon size={14} />,
     gallery: <ImageIcon size={14} />,
+    media: <MusicNoteIcon size={14} />,
+    calculator: <CalculatorIcon size={14} />,
+    trash: <TrashIcon size={14} />,
+    monitor: <GaugeIcon size={14} />,
   };
-  if (iconMap[appId] !== undefined) {
-    return iconMap[appId] || <span className={styles.appTabIcon} />;
-  }
-  return null;
+  return iconMap[appId] || <FileIcon size={14} />;
+}
+
+/** Icon per app, for window titles and Task View cards. */
+export function AppIcon({ appId, size = 15 }) {
+  const map = {
+    settings: <GearIcon size={size} />,
+    files: <FolderIcon size={size} />,
+    terminal: <TerminalIcon size={size} />,
+    notepad: <PenIcon size={size} />,
+    code: <CodeIcon size={size} />,
+    paint: <BrushIcon size={size} />,
+    browser: <GhostIcon size={size} />,
+    gallery: <ImageIcon size={size} />,
+    media: <MusicNoteIcon size={size} />,
+    calculator: <CalculatorIcon size={size} />,
+    trash: <TrashIcon size={size} />,
+    monitor: <GaugeIcon size={size} />,
+  };
+  return map[appId] || <FileIcon size={size} />;
 }
 
 export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock, playClick = () => {} }) {
@@ -85,7 +108,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     { id: 'ws-2', name: 'Desktop 2' },
   ]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState('ws-1');
-  const lastActivityRef = useRef(Date.now());
+  const lastActivityRef = useRef(0);
 
   // --- Real Hardware Telemetry ---
   const battery = useBattery();
@@ -419,14 +442,206 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     );
   }, []);
 
+  // --- Global Context Menu & Taskbar State ---
+  const [globalContextMenu, setGlobalContextMenu] = useState(null);
+  const [taskbarLocked, setTaskbarLocked] = useState(true);
+
   const toggleFlyout = (flyoutName) => {
     playClick();
+    setGlobalContextMenu(null);
     setActiveFlyout(prev => (prev === flyoutName ? null : flyoutName));
   };
 
   const closeAllFlyouts = () => {
     setActiveFlyout(null);
+    setGlobalContextMenu(null);
   };
+
+  // Universal contextmenu interceptor across entire OS
+  useEffect(() => {
+    const handleUniversalContextMenu = (e) => {
+      e.preventDefault(); // SUPPRESS BROWSER DEFAULT CLICK EVERYWHERE!
+      setActiveFlyout(null);
+
+      const taskbarEl = e.target.closest(`.${styles.taskbar}`);
+      const windowHeaderEl = e.target.closest('[data-context="window-titlebar"]');
+
+      if (taskbarEl) {
+        setGlobalContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          type: 'taskbar',
+          taskbarLocked,
+        });
+      } else if (windowHeaderEl) {
+        const winId = windowHeaderEl.getAttribute('data-window-id');
+        const win = windows.find(w => w.id === winId);
+        setGlobalContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          type: 'window',
+          targetWindow: win,
+        });
+      } else {
+        setGlobalContextMenu({
+          x: e.clientX,
+          y: e.clientY,
+          type: 'desktop',
+        });
+      }
+    };
+
+    window.addEventListener('contextmenu', handleUniversalContextMenu);
+    return () => window.removeEventListener('contextmenu', handleUniversalContextMenu);
+  }, [windows, taskbarLocked]);
+
+  const handleGlobalContextAction = useCallback(async (actionId, payload = {}) => {
+    playClick();
+    switch (actionId) {
+      case 'open_task_manager':
+        handleLaunchApp('monitor', 'Task Manager', null);
+        break;
+      case 'show_desktop':
+        setWindows(prev => prev.map(w => ({ ...w, isMinimized: true })));
+        break;
+      case 'restore_all_windows':
+        setWindows(prev => prev.map(w => ({ ...w, isMinimized: false })));
+        break;
+      case 'cascade_windows':
+        setWindows(prev =>
+          prev.map((w, idx) => ({
+            ...w,
+            isMinimized: false,
+            isMaximized: false,
+            snapState: null,
+            position: {
+              x: Math.min(window.innerWidth - 480, 50 + (idx % 8) * 36),
+              y: Math.min(window.innerHeight - 360, 40 + (idx % 8) * 36),
+            },
+            zIndex: nextZIndex + idx + 1,
+          }))
+        );
+        setNextZIndex(z => z + windows.length + 1);
+        break;
+      case 'tile_windows_horiz': {
+        const openWins = windows.filter(w => !w.isMinimized);
+        const count = openWins.length || 1;
+        const tileW = Math.max(300, Math.floor((window.innerWidth - 40) / count));
+        setWindows(prev =>
+          prev.map((w) => {
+            const openIdx = openWins.findIndex(ow => ow.id === w.id);
+            if (openIdx === -1) return w;
+            return {
+              ...w,
+              isMinimized: false,
+              isMaximized: false,
+              snapState: null,
+              position: { x: 20 + openIdx * tileW, y: 40 },
+              size: { w: tileW - 10, h: window.innerHeight - 90 },
+            };
+          })
+        );
+        break;
+      }
+      case 'tile_windows_vert': {
+        const openWins = windows.filter(w => !w.isMinimized);
+        const count = openWins.length || 1;
+        const tileH = Math.max(200, Math.floor((window.innerHeight - 90) / count));
+        setWindows(prev =>
+          prev.map((w) => {
+            const openIdx = openWins.findIndex(ow => ow.id === w.id);
+            if (openIdx === -1) return w;
+            return {
+              ...w,
+              isMinimized: false,
+              isMaximized: false,
+              snapState: null,
+              position: { x: 30, y: 40 + openIdx * tileH },
+              size: { w: window.innerWidth - 60, h: tileH - 10 },
+            };
+          })
+        );
+        break;
+      }
+      case 'close_all_windows':
+        setWindows([]);
+        break;
+      case 'toggle_widgets':
+        setShowWidgets(prev => !prev);
+        break;
+      case 'toggle_task_view':
+        setShowTaskView(prev => !prev);
+        break;
+      case 'toggle_taskbar_lock':
+        setTaskbarLocked(prev => !prev);
+        break;
+      case 'open_settings_taskbar':
+        handleLaunchApp('settings', 'Settings', null, { activeTab: 'appearance' });
+        break;
+      case 'open_settings':
+        handleLaunchApp('settings', 'Settings', null);
+        break;
+      case 'open_terminal_here':
+        handleLaunchApp('terminal', 'Terminal', null);
+        break;
+      case 'open_spotlight':
+        setShowSpotlight(true);
+        break;
+      case 'desktop_change_wallpaper':
+        handleLaunchApp('settings', 'Settings', null, { activeTab: 'appearance' });
+        break;
+      case 'desktop_new_file': {
+        const fileName = `Document_${Date.now().toString().slice(-4)}.txt`;
+        await VFS.writeFile(`/Users/User/Desktop/${fileName}`, 'Created from Desktop context menu.\n');
+        break;
+      }
+      case 'desktop_new_folder': {
+        const folderName = `Folder_${Date.now().toString().slice(-4)}`;
+        await VFS.createDirectory(`/Users/User/Desktop/${folderName}`);
+        break;
+      }
+      case 'desktop_refresh':
+        window.dispatchEvent(new CustomEvent('billighost:vfs-update'));
+        break;
+      case 'toggle_fullscreen':
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+        break;
+      case 'window_minimize':
+        if (payload.windowId) handleMinimizeWindow(payload.windowId);
+        break;
+      case 'window_maximize':
+        if (payload.windowId) handleMaximizeWindow(payload.windowId);
+        break;
+      case 'window_snap_left':
+        if (payload.windowId) handleSnap(payload.windowId, 'left');
+        break;
+      case 'window_snap_right':
+        if (payload.windowId) handleSnap(payload.windowId, 'right');
+        break;
+      case 'window_center':
+        if (payload.windowId) {
+          const win = windows.find(w => w.id === payload.windowId);
+          if (win) {
+            const w = win.size?.w || 640;
+            const h = win.size?.h || 420;
+            handleUpdatePos(payload.windowId, {
+              x: Math.max(20, Math.floor((window.innerWidth - w) / 2)),
+              y: Math.max(40, Math.floor((window.innerHeight - h) / 2)),
+            });
+          }
+        }
+        break;
+      case 'window_close':
+        if (payload.windowId) handleCloseWindow(payload.windowId);
+        break;
+      default:
+        break;
+    }
+  }, [handleLaunchApp, handleMinimizeWindow, handleMaximizeWindow, handleSnap, handleCloseWindow, handleUpdatePos, nextZIndex, playClick, windows]);
 
   // Compute wallpaper style
   const wallpaperStyle = useMemo(() => {
@@ -493,6 +708,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
                 initialTab={win.props?.activeTab || 'profile'}
                 playClick={playClick}
                 osModal={osModal}
+                onLock={onLock}
               />
             )}
             {win.appId === 'files' && (
@@ -807,8 +1023,29 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
           >
             Lock
           </button>
+
+          {/* Far Right Peek: Show Desktop */}
+          <button
+            className={styles.showDesktopPeekBtn}
+            onClick={() => {
+              playClick();
+              const anyOpen = windows.some(w => !w.isMinimized);
+              setWindows(prev => prev.map(w => ({ ...w, isMinimized: anyOpen })));
+            }}
+            title="Show Desktop (Peek)"
+            data-testid="show-desktop-peek"
+          />
         </div>
       </div>
+
+      {/* Global Universal Context Menu */}
+      <GlobalContextMenu
+        menu={globalContextMenu}
+        onClose={() => setGlobalContextMenu(null)}
+        onAction={handleGlobalContextAction}
+        playClick={playClick}
+      />
     </div>
   );
 }
+

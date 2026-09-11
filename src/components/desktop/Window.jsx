@@ -1,5 +1,49 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './Window.module.css';
+
+/* Shell geometry — the taskbar owns the bottom strip of the viewport. */
+const TASKBAR_H = 52;
+
+/*
+ * Minimum window sizes.
+ *
+ * These are floors, not arbitrary numbers: an app with a sidebar, a toolbar
+ * and a content grid cannot lay out meaningfully below roughly 380x360 — the
+ * content pane gets crushed to a few pixels and its children spill past the
+ * frame. Stopping the resize at a size the app can actually render is how a
+ * real window manager behaves, and it is honest about the limit rather than
+ * silently clipping content.
+ */
+const MIN_W = 380;
+const MIN_H = 360;
+
+/** Usable desktop area: the viewport minus the taskbar. */
+function workArea() {
+  return {
+    w: window.innerWidth,
+    h: Math.max(MIN_H, window.innerHeight - TASKBAR_H),
+  };
+}
+
+/**
+ * Keeps a window fully inside the work area.
+ *
+ * Both size and position are clamped together: clamping position alone lets
+ * a window wider than the viewport hang off the right edge, and clamping
+ * size alone lets an already-offscreen window stay there.
+ */
+function clampToWorkArea(pos, size) {
+  const area = workArea();
+  const w = Math.min(Math.max(MIN_W, size.w), area.w);
+  const h = Math.min(Math.max(MIN_H, size.h), area.h);
+  return {
+    position: {
+      x: Math.round(Math.min(Math.max(0, pos.x), Math.max(0, area.w - w))),
+      y: Math.round(Math.min(Math.max(0, pos.y), Math.max(0, area.h - h))),
+    },
+    size: { w: Math.round(w), h: Math.round(h) },
+  };
+}
 
 export default function Window({
   window: win,
@@ -80,9 +124,14 @@ export default function Window({
       if (isDragging) {
         const dx = e.clientX - dragStartRef.current.x;
         const dy = e.clientY - dragStartRef.current.y;
-        const newX = Math.max(-100, Math.min(window.innerWidth - 100, dragStartRef.current.winX + dx));
-        const newY = Math.max(0, Math.min(window.innerHeight - 80, dragStartRef.current.winY + dy));
-        onUpdatePos(win.id, { x: newX, y: newY });
+
+        // Clamp so no part of the window can leave the work area — including
+        // sliding under the taskbar, which would strand the title bar.
+        const { position } = clampToWorkArea(
+          { x: dragStartRef.current.winX + dx, y: dragStartRef.current.winY + dy },
+          win.size
+        );
+        onUpdatePos(win.id, position);
 
         // Aero Snap Edge Detection
         let snapType = null;
@@ -100,35 +149,39 @@ export default function Window({
         const { x: startX, y: startY, winX, winY, winW, winH, edge } = resizeStartRef.current;
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
-        const minW = 340;
-        const minH = 220;
+        const area = workArea();
 
         let newW = winW;
         let newH = winH;
         let newX = winX;
         let newY = winY;
 
-        // Horizontal adjustment
+        // Horizontal: east grows to the right edge, west grows to x=0.
         if (edge.includes('e')) {
-          newW = Math.max(minW, winW + dx);
+          newW = Math.min(Math.max(MIN_W, winW + dx), area.w - winX);
         } else if (edge.includes('w')) {
-          const deltaW = Math.min(dx, winW - minW);
+          const maxDelta = winW - MIN_W;          // shrink limit
+          const minDelta = -winX;                 // left edge limit
+          const deltaW = Math.min(Math.max(dx, minDelta), maxDelta);
           newW = winW - deltaW;
           newX = winX + deltaW;
         }
 
-        // Vertical adjustment
+        // Vertical: south stops at the taskbar, north stops at y=0.
         if (edge.includes('s')) {
-          newH = Math.max(minH, winH + dy);
+          newH = Math.min(Math.max(MIN_H, winH + dy), area.h - winY);
         } else if (edge.includes('n')) {
-          const deltaH = Math.min(dy, winH - minH);
+          const maxDelta = winH - MIN_H;
+          const minDelta = -winY;
+          const deltaH = Math.min(Math.max(dy, minDelta), maxDelta);
           newH = winH - deltaH;
           newY = winY + deltaH;
         }
 
-        onUpdateSize(win.id, { w: newW, h: newH });
-        if (newX !== winX || newY !== winY) {
-          onUpdatePos(win.id, { x: newX, y: newY });
+        const clamped = clampToWorkArea({ x: newX, y: newY }, { w: newW, h: newH });
+        onUpdateSize(win.id, clamped.size);
+        if (clamped.position.x !== winX || clamped.position.y !== winY) {
+          onUpdatePos(win.id, clamped.position);
         }
       }
     };
@@ -155,7 +208,36 @@ export default function Window({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, isResizing, onMaximize, onSnap, onSnapPreview, onUpdatePos, onUpdateSize, win.id]);
+  }, [isDragging, isResizing, onMaximize, onSnap, onSnapPreview, onUpdatePos, onUpdateSize, win.id, win.size]);
+
+  /**
+   * Reflow when the browser viewport shrinks.
+   *
+   * Without this, making the browser smaller leaves windows sized for the old
+   * viewport — they overhang the right edge and slide under the taskbar with
+   * no way to drag them back.
+   */
+  const reflow = useCallback(() => {
+    if (win.isMaximized || win.snapState) return;   // CSS handles these
+    const clamped = clampToWorkArea(win.position, win.size);
+    if (clamped.size.w !== win.size.w || clamped.size.h !== win.size.h) {
+      onUpdateSize(win.id, clamped.size);
+    }
+    if (clamped.position.x !== win.position.x || clamped.position.y !== win.position.y) {
+      onUpdatePos(win.id, clamped.position);
+    }
+  }, [win.id, win.isMaximized, win.snapState, win.position, win.size, onUpdateSize, onUpdatePos]);
+
+  useEffect(() => {
+    window.addEventListener('resize', reflow);
+    return () => window.removeEventListener('resize', reflow);
+  }, [reflow]);
+
+  // Also correct a window opened at a stale/oversized geometry.
+  useEffect(() => {
+    reflow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (win.isMinimized) return null;
 
@@ -210,6 +292,8 @@ export default function Window({
       {/* Title Bar */}
       <div
         className={styles.titleBar}
+        data-context="window-titlebar"
+        data-window-id={win.id}
         onMouseDown={handleMouseDownHeader}
         onDoubleClick={() => onMaximize(win.id)}
       >

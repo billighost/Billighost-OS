@@ -1,0 +1,210 @@
+/* ============================================
+   BILLIGHOST OS — Liquid Glass
+   ============================================
+
+   Not glassmorphism. Glassmorphism is one blur plus one tint; it reads as
+   frosted plastic because nothing bends. Real glass has four separate
+   optical behaviours, and this builds each one:
+
+     1. BODY      — deep blur + saturation lift (the volume)
+     2. REFRACTION — an edge-only layer, blurred and displaced by an SVG
+                     turbulence filter, so the rim visibly warps light
+     3. DISPERSION — complementary warm/cool fringes at the rim (chromatic
+                     aberration where the glass is thinnest)
+     4. SPECULAR   — a travelling highlight that drifts as the surface
+                     catches light, plus a fixed overhead sheen
+
+   Honest limitation: no browser lets CSS filter the *composited backdrop*
+   (backdrop-filter accepts only blob()/url() in theory, url() in practice
+   resolves against the element's own content). True backdrop displacement
+   is therefore not reachable from CSS. This approximates it by masking the
+   refraction to the rim, where real glass actually bends light — the
+   centre of a thick pane barely distorts, which is why this reads right.
+
+   Usage:  <div className="bh-glass"> … </div>
+   Tune:   --glass-blur, --glass-tint, --glass-refract
+   Variants: .bh-glass--thin, .bh-glass--thick, .bh-glass--flat
+   ============================================ */
+
+.bh-glass {
+  --glass-blur: 22px;
+  --glass-tint: 0.42;
+  --glass-refract: 1;
+  --glass-tint-color: 12, 14, 24;
+  --glass-sat: 1.7;
+
+  position: relative;
+  isolation: isolate;
+  background: rgba(var(--glass-tint-color), var(--glass-tint));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.06);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.06);
+  overflow: hidden;
+}
+
+/* ── 2. REFRACTION RIM ───────────────────────
+   A transparent box whose only visible paint is a thick gradient border.
+   Blurring that alone would give a soft halo; displacing it through the
+   turbulence filter bends the gradient into the wavy, compressive rim
+   real thick glass shows at its edges.
+   ──────────────────────────────────────────── */
+
+.bh-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+
+  /*
+   * Thick border, transparent interior: the ring is the only thing painted,
+   * and it fades inward over ~2.5px so the warp dies out toward the centre.
+   */
+  border: 2.5px solid transparent;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0.06)) border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+
+  filter: url(#bh-glass-refract) blur(0.4px);
+  opacity: calc(0.55 * var(--glass-refract));
+}
+
+/* ── 3. DISPERSION + 4. SPECULAR ─────────────
+   Painted as a background stack on the surface itself: warm fringe on one
+   diagonal, cool on the other, with a travelling highlight over the top.
+   ──────────────────────────────────────────── */
+
+.bh-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  opacity: 0.9;
+
+  background-image:
+    /* travelling specular */
+    linear-gradient(
+      115deg,
+      transparent 28%,
+      rgba(255, 255, 255, 0.14) 44%,
+      rgba(255, 255, 255, 0.30) 50%,
+      rgba(255, 255, 255, 0.14) 56%,
+      transparent 72%
+    ),
+    /* dispersion — warm edge */
+    radial-gradient(
+      130% 130% at 0% 0%,
+      rgba(255, 180, 140, 0.16) 0%,
+      transparent 34%
+    ),
+    /* dispersion — cool edge */
+    radial-gradient(
+      130% 130% at 100% 100%,
+      rgba(140, 210, 255, 0.18) 0%,
+      transparent 34%
+    ),
+    /* overhead sheen */
+    linear-gradient(
+      170deg,
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.03) 28%,
+      transparent 46%
+    );
+
+  background-size: 260% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-position: -120% 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat;
+
+  animation: bhGlassDrift 9s var(--ease-in-out-smooth, cubic-bezier(0.65, 0, 0.35, 1)) infinite;
+}
+
+/* The specular drifts; the dispersion and sheen stay put. */
+@keyframes bhGlassDrift {
+  0%   { background-position: -120% 0, 0 0, 0 0, 0 0; }
+  55%  { background-position:  220% 0, 0 0, 0 0, 0 0; }
+  100% { background-position:  220% 0, 0 0, 0 0, 0 0; }
+}
+
+/* ── Inner bloom ─────────────────────────────
+   A faint light falloff just inside the rim. Painted via an inset shadow
+   so it needs no extra element.
+   ──────────────────────────────────────────── */
+
+.bh-glass {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    inset 0 0 22px rgba(255, 255, 255, 0.045),
+    0 18px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Variants ────────────────────────────────
+   --thin  chrome and tray surfaces: far less blur, negligible refraction
+   --thick window bodies: maximum depth
+   --flat  no rim work at all, for nested surfaces already inside glass
+   ──────────────────────────────────────────── */
+
+.bh-glass--thin {
+  --glass-blur: 14px;
+  --glass-tint: 0.30;
+  --glass-refract: 0.35;
+}
+
+.bh-glass--thin::after {
+  opacity: 0.55;
+}
+
+.bh-glass--thick {
+  --glass-blur: 34px;
+  --glass-tint: 0.5;
+  --glass-refract: 1.5;
+}
+
+.bh-glass--flat {
+  --glass-blur: 18px;
+  --glass-tint: 0.34;
+}
+
+/* Nested glass has nothing new to refract — it only adds blur cost. */
+.bh-glass--flat::before {
+  opacity: 0.3;
+}
+
+.bh-glass--flat::after {
+  opacity: 0.45;
+  animation: none;
+}
+
+/* ── Reduced motion & transparency ───────────
+   The drift is decorative; kill it, keep the material.
+   ──────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .bh-glass::after {
+    animation: none;
+    background-position: 60% 0, 0 0, 0 0, 0 0;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .bh-glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgba(var(--glass-tint-color), 0.96);
+  }
+
+  .bh-glass::before {
+    display: none;
+  }
+}

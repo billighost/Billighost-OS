@@ -3,9 +3,9 @@ import { VFS } from '../../services/storage/indexedDB';
 import { NotificationService } from '../../services/notificationService';
 import {
   MonitorIcon, FolderIcon, FolderOpenIcon, TrashIcon, BoltIcon, GlobeIcon,
-  PenIcon, MusicNoteIcon, ImageIcon, GridHashIcon, GearIcon,
+  PenIcon, MusicNoteIcon, ImageIcon, GearIcon,
   FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
-  CodeIcon, BrushIcon,
+  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon,
 } from '../Icons';
 import styles from './DesktopIconGrid.module.css';
 
@@ -41,12 +41,12 @@ export default function DesktopIconGrid({
     { id: 'shortcut-code', name: 'Code Studio', icon: <CodeIcon size={28} />, action: () => onLaunchApp('code', 'Code Studio', null) },
     { id: 'shortcut-paint', name: 'Paint Studio', icon: <BrushIcon size={28} />, action: () => onLaunchApp('paint', 'Paint Studio', null) },
     { id: 'shortcut-trash', name: 'Recycle Bin', icon: <TrashIcon size={28} />, action: () => onLaunchApp('trash', 'Recycle Bin', null) },
-    { id: 'shortcut-terminal', name: 'Terminal', icon: <BoltIcon size={28} />, action: () => onLaunchApp('terminal', 'Terminal', null) },
-    { id: 'shortcut-browser', name: 'Browser', icon: <GlobeIcon size={28} />, action: () => onLaunchApp('browser', 'Ghost Browser', null) },
+    { id: 'shortcut-terminal', name: 'Terminal', icon: <TerminalIcon size={28} />, action: () => onLaunchApp('terminal', 'Terminal', null) },
+    { id: 'shortcut-browser', name: 'Ghost Browser', icon: <GhostIcon size={28} ambient />, action: () => onLaunchApp('browser', 'Ghost Browser', null) },
     { id: 'shortcut-notepad', name: 'Notepad', icon: <PenIcon size={28} />, action: () => onLaunchApp('notepad', 'Notepad', null) },
     { id: 'shortcut-music', name: 'Music', icon: <MusicNoteIcon size={28} />, action: () => onLaunchApp('media', 'Audio Player', null) },
     { id: 'shortcut-gallery', name: 'Gallery', icon: <ImageIcon size={28} />, action: () => onLaunchApp('gallery', 'Image Viewer', null) },
-    { id: 'shortcut-calc', name: 'Calculator', icon: <GridHashIcon size={28} />, action: () => onLaunchApp('calculator', 'Calculator', null) },
+    { id: 'shortcut-calc', name: 'Calculator', icon: <CalculatorIcon size={28} />, action: () => onLaunchApp('calculator', 'Calculator', null) },
     { id: 'shortcut-settings', name: 'Settings', icon: <GearIcon size={28} />, action: () => onLaunchApp('settings', 'Settings', null) },
   ];
 
@@ -137,12 +137,11 @@ export default function DesktopIconGrid({
   }, [selectedIds]);
 
   const handleContextMenu = (e) => {
-    e.preventDefault();
-    setContextMenu({
-      x: Math.min(window.innerWidth - 190, e.clientX),
-      y: Math.min(window.innerHeight - 240, e.clientY),
-      targetNode: null,
-    });
+    // If clicking empty desktop space, let GlobalContextMenu handle it
+    if (!e.target.closest(`.${styles.iconItem}`)) {
+      setContextMenu(null);
+      return;
+    }
   };
 
   const handleItemContextMenu = (e, node) => {

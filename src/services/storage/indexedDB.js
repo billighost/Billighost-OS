@@ -173,32 +173,103 @@ export const VFS = {
     });
   },
 
-  async listDirectory(dirPath = '/Users/User/Desktop') {
-    const db = await openDB();
-    const cleanPath = dirPath.length > 1 && dirPath.endsWith('/') ? dirPath.slice(0, -1) : dirPath;
+  async resolvePath(rawPath, baseDir = '/') {
+    if (!rawPath) return null;
+    let target = rawPath.trim();
+    if (target === '~') target = '/Users/User';
+    else if (target.startsWith('~/')) target = '/Users/User/' + target.slice(2);
+    else if (!target.startsWith('/')) {
+      target = (baseDir === '/' ? '' : baseDir) + '/' + target;
+    }
 
+    const rawSegments = target.split('/').filter(Boolean);
+    const normalized = [];
+    for (const seg of rawSegments) {
+      if (seg === '.') continue;
+      if (seg === '..') {
+        normalized.pop();
+      } else {
+        normalized.push(seg);
+      }
+    }
+
+    if (normalized.length === 0) return '/';
+
+    // Walk segment by segment, case-insensitively
+    let currentParent = '/';
+    const resolvedParts = [];
+
+    for (const seg of normalized) {
+      const children = await this.listDirectoryRaw(currentParent);
+      const match = children.find(c => c.name.toLowerCase() === seg.toLowerCase());
+      if (match) {
+        resolvedParts.push(match.name);
+        currentParent = match.path;
+      } else {
+        resolvedParts.push(seg);
+        currentParent = currentParent === '/' ? '/' + seg : currentParent + '/' + seg;
+      }
+    }
+
+    return '/' + resolvedParts.join('/');
+  },
+
+  async listDirectoryRaw(cleanPath) {
+    const db = await openDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NODES, 'readonly');
       const store = tx.objectStore(STORE_NODES);
       const index = store.index('parentPath');
       const req = index.getAll(cleanPath);
 
-      req.onsuccess = () => {
-        resolve(req.result || []);
-      };
+      req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => reject(req.error);
     });
   },
 
+  async listDirectory(dirPath = '/Users/User/Desktop') {
+    const cleanPath = dirPath.length > 1 && dirPath.endsWith('/') ? dirPath.slice(0, -1) : dirPath;
+    let list = await this.listDirectoryRaw(cleanPath);
+    if (list.length === 0 && cleanPath !== '/') {
+      // Try resolving case-insensitively
+      const resolved = await this.resolvePath(cleanPath);
+      if (resolved && resolved !== cleanPath) {
+        list = await this.listDirectoryRaw(resolved);
+      }
+    }
+    return list;
+  },
+
   async getNode(path) {
     const db = await openDB();
-    return new Promise((resolve, reject) => {
+    const cleanPath = path && path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path;
+    const directResult = await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NODES, 'readonly');
       const store = tx.objectStore(STORE_NODES);
-      const req = store.get(path);
+      const req = store.get(cleanPath);
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => reject(req.error);
     });
+
+    if (directResult) return directResult;
+
+    // Fallback: Case-insensitive resolution
+    try {
+      const resolved = await this.resolvePath(cleanPath);
+      if (resolved && resolved !== cleanPath) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NODES, 'readonly');
+          const store = tx.objectStore(STORE_NODES);
+          const req = store.get(resolved);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+        });
+      }
+    } catch {
+      // Ignore
+    }
+
+    return null;
   },
 
   async readFile(path) {
@@ -472,6 +543,37 @@ export const VFS = {
         resolve(matches);
       };
       req.onerror = () => resolve([]);
+    });
+  },
+
+  async getAllNodes() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NODES, 'readonly');
+      const store = tx.objectStore(STORE_NODES);
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  },
+
+  async restoreAllNodes(nodes) {
+    if (!Array.isArray(nodes)) throw new Error('Nodes must be an array');
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NODES, 'readwrite');
+      const store = tx.objectStore(STORE_NODES);
+      store.clear();
+      for (const node of nodes) {
+        if (node && node.path) {
+          store.put(node);
+        }
+      }
+      tx.oncomplete = () => {
+        window.dispatchEvent(new CustomEvent('billighost:vfs-update', { detail: { action: 'restore-all' } }));
+        resolve(true);
+      };
+      tx.onerror = () => reject(tx.error);
     });
   },
 };

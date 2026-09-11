@@ -10,11 +10,36 @@
   </head>
   <body>
     <div id="root"></div>
-    <svg id="liquid-glass-filters" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;">
+    <!--
+      Liquid-glass filter definitions.
+
+      `bh-glass-refract` displaces the refraction rim. The turbulence is low
+      frequency and low amplitude on purpose: glass bends light smoothly, so
+      a high-octave noise reads as crumpled foil rather than a lens. The
+      result is composited back over the source so the warp keeps its
+      brightness instead of going grey at the edges.
+    -->
+    <svg id="liquid-glass-filters" aria-hidden="true" focusable="false"
+         style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;">
       <defs>
-        <filter id="liquid-glass-lens" x="0%" y="0%" width="100%" height="100%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.04 0.04" numOctaves="2" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+        <filter id="bh-glass-refract" x="-8%" y="-8%" width="116%" height="116%"
+                color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.014"
+                        numOctaves="2" seed="7" result="warp" />
+          <feDisplacementMap in="SourceGraphic" in2="warp" scale="7"
+                             xChannelSelector="R" yChannelSelector="G" result="bent" />
+          <feGaussianBlur in="bent" stdDeviation="0.35" result="soft" />
+          <feComposite in="soft" in2="SourceGraphic" operator="over" />
+        </filter>
+
+        <!-- A gentler variant for thin surfaces (tray, toolbars). -->
+        <filter id="bh-glass-refract-soft" x="-6%" y="-6%" width="112%" height="112%"
+                color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02"
+                        numOctaves="2" seed="3" result="warp" />
+          <feDisplacementMap in="SourceGraphic" in2="warp" scale="3.5"
+                             xChannelSelector="R" yChannelSelector="G" result="bent" />
+          <feGaussianBlur in="bent" stdDeviation="0.25" />
         </filter>
       </defs>
     </svg>

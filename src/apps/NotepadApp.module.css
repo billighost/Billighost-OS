@@ -1,32 +1,80 @@
+/* ============================================
+   BILLIGHOST OS — Notepad Deluxe Pro CSS
+   ============================================ */
+
 .notepadContainer {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 16, 0.85);
+  background: #090a10;
   color: var(--text-primary);
   font-family: var(--font-display);
+  overflow: hidden;
+  user-select: none;
 }
 
+/* Header Menu Bar */
 .menuBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 14px;
+  background: rgba(18, 20, 30, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
 }
 
 .fileTitle {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
+}
+
+.fileIcon {
+  color: #7eb8ff;
+  display: flex;
+  align-items: center;
 }
 
 .filePathDisplay {
   font-family: var(--font-mono);
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: #fff;
+}
+
+.modeTabs {
+  display: flex;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.modeBtn {
+  padding: 3px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.12s ease;
+}
+
+.modeBtn:hover {
+  color: #fff;
+}
+
+.modeBtnActive {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
 }
 
 .menuActions {
@@ -36,27 +84,187 @@
 }
 
 .menuBtn {
-  padding: 4px 10px;
+  padding: 4px 9px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: var(--font-display);
+  border-radius: 5px;
+  color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 500;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   transition: all 0.15s ease;
 }
 
 .menuBtn:hover {
-  background: rgba(126, 184, 255, 0.12);
-  border-color: rgba(126, 184, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
 }
 
 .btnHighlight {
-  background: rgba(126, 184, 255, 0.2);
-  border-color: var(--accent-glow);
-  color: var(--accent-glow);
+  background: rgba(126, 184, 255, 0.2) !important;
+  border-color: rgba(126, 184, 255, 0.4) !important;
+  color: #93c5fd !important;
+}
+
+.btnActive {
+  background: rgba(126, 184, 255, 0.2) !important;
+  border-color: #7eb8ff !important;
+  color: #fff !important;
+}
+
+/* Find & Replace Drawer */
+.findReplaceDrawer {
+  background: rgba(14, 15, 23, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 14px;
+}
+
+.findRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.findInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  outline: none;
+}
+
+.drawerBtn {
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.drawerBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.closeDrawerBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-ghost);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+/* Sub Toolbar (Typography & Transforms) */
+.subBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px;
+  background: rgba(12, 13, 20, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.subLeft, .subRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fontSelect {
+  background: #10121a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  padding: 3px 6px;
+  outline: none;
+}
+
+.sizeControl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sizeBtn {
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sizeBadge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+  min-width: 32px;
+  text-align: center;
+}
+
+.toggleBtn, .transformBtn {
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: var(--text-ghost);
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.toggleBtn:hover, .transformBtn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+/* Main Workspace */
+.editorWorkspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.editorPane {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  background: #08090f;
+}
+
+.lineGutter {
+  width: 42px;
+  padding: 16px 0;
+  background: rgba(0, 0, 0, 0.25);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  overflow: hidden;
+}
+
+.lineNumber {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-ghost);
+  text-align: right;
+  padding-right: 10px;
+  line-height: 1.6;
 }
 
 .textArea {
@@ -67,40 +275,131 @@
   border: none;
   outline: none;
   resize: none;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
+  color: #e2e8f0;
   line-height: 1.6;
   tab-size: 2;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-y: auto;
 }
 
-.textArea::placeholder {
+/* Markdown Preview Pane */
+.previewPane {
+  flex: 1;
+  background: #0c0d16;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.previewContent {
+  max-width: 680px;
+  margin: 0 auto;
+  color: #cbd5e1;
+  font-family: var(--font-display);
+  line-height: 1.6;
+}
+
+.mdH1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+
+.mdH2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 16px 0 8px 0;
+}
+
+.mdH3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #93c5fd;
+  margin: 12px 0 6px 0;
+}
+
+.mdQuote {
+  border-left: 3px solid #7eb8ff;
+  padding-left: 12px;
+  margin: 10px 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.mdLi {
+  margin-left: 20px;
+  margin-bottom: 4px;
+}
+
+.mdCodeBlock {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #34d399;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.mdEmptyLine {
+  height: 12px;
+}
+
+.mdP {
+  margin-bottom: 8px;
+}
+
+.emptyPreview {
+  text-align: center;
+  padding: 48px 16px;
+  font-size: 0.78rem;
   color: var(--text-ghost);
+  font-style: italic;
 }
 
+/* Status Bar */
 .statusBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 14px;
-  background: rgba(255, 255, 255, 0.02);
+  padding: 5px 14px;
+  background: rgba(10, 11, 16, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--text-ghost);
 }
 
+.statusLeft, .statusRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .statusSaved {
-  color: var(--accent-success);
+  color: #34d399;
+  font-weight: 600;
 }
 
 .statusUnsaved {
-  color: var(--accent-warning);
+  color: #fbbf24;
+  font-weight: 600;
 }
 
-.statusRight {
-  display: flex;
-  gap: 12px;
+.autoSaveToggle {
+  background: none;
+  border: none;
+  color: var(--text-ghost);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+}
+
+.autoSaveToggle:hover {
+  color: #fff;
 }

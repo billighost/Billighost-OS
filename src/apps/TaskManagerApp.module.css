@@ -1,109 +1,267 @@
+/* ============================================
+   BILLIGHOST OS — Task Manager Deluxe Pro CSS
+   ============================================ */
+
 .taskManagerContainer {
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 16, 0.85);
+  background: #090a10;
   color: var(--text-primary);
   font-family: var(--font-display);
+  overflow: hidden;
+  user-select: none;
 }
 
+/* Header Tabs */
 .headerTabs {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(18, 20, 30, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+}
+
+.tabsGroup {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .tabBtn {
-  padding: 6px 12px;
-  background: none;
+  padding: 5px 12px;
+  background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .tabBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .tabActive {
-  background: rgba(126, 184, 255, 0.12);
-  color: var(--accent-glow);
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.processesList {
+.headerTelemetry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.telemetryPill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #7eb8ff;
+}
+
+/* ====================================================
+   PROCESSES PANE
+   ==================================================== */
+.processesPane {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.filterStrip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(12, 13, 20, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filterInput {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 4px 8px;
+  outline: none;
+  width: 160px;
+}
+
+.statusFilters {
+  display: flex;
+  gap: 3px;
+}
+
+.filterBtn {
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  color: var(--text-ghost);
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.filterBtn:hover {
+  color: #fff;
+}
+
+.filterBtnActive {
+  background: rgba(126, 184, 255, 0.2) !important;
+  border-color: #7eb8ff !important;
+  color: #fff !important;
+}
+
+.closeAllBtn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(255, 77, 106, 0.15);
+  border: 1px solid rgba(255, 77, 106, 0.3);
+  color: #ff758f;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.closeAllBtn:hover {
+  background: rgba(255, 77, 106, 0.25);
 }
 
 .tableHeader {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2.2fr 0.8fr 1fr 1fr 1fr 1.4fr;
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
   color: var(--text-ghost);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
+.processesList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .tableRow {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2.2fr 0.8fr 1fr 1fr 1fr 1.4fr;
   align-items: center;
   padding: 8px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  font-size: 0.75rem;
+  font-size: 0.74rem;
+  transition: background 0.1s ease;
 }
 
 .tableRow:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .procIdentity {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.procIcon {
-  font-size: 0.9rem;
-}
-
-.procName {
-  font-weight: 500;
+  color: #fff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.procStatus {
+.procIcon {
+  color: #7eb8ff;
+  display: flex;
+  align-items: center;
+}
+
+.procName {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.procPid {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-ghost);
+}
+
+.badgeActive {
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #6ee7b7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+}
+
+.badgeMinimized {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: #fde68a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+}
+
+.procMetric {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-secondary);
+}
+
+.procActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.focusBtn {
+  padding: 3px 8px;
+  background: rgba(126, 184, 255, 0.15);
+  border: 1px solid rgba(126, 184, 255, 0.3);
+  border-radius: 4px;
+  color: #93c5fd;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.focusBtn:hover {
+  background: rgba(126, 184, 255, 0.25);
 }
 
 .killBtn {
   padding: 3px 8px;
   background: rgba(255, 77, 106, 0.12);
   border: 1px solid rgba(255, 77, 106, 0.25);
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
   color: #ff758f;
   font-size: 0.68rem;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 .killBtn:hover {
@@ -112,47 +270,120 @@
 
 .noProcMsg {
   text-align: center;
-  padding: 40px 0;
-  font-size: 0.8rem;
+  padding: 48px 16px;
+  font-size: 0.78rem;
   color: var(--text-ghost);
 }
 
-/* Performance */
+/* ====================================================
+   PERFORMANCE & GRAPHS PANE
+   ==================================================== */
 .perfPane {
   flex: 1;
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   overflow-y: auto;
 }
 
-.perfCard {
+.graphsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.graphCard {
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-md);
-  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.perfTitle {
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cardSubtitle {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-ghost);
+  margin-top: 1px;
+}
+
+.liveValueGlow {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #00f3ff;
+  text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+}
+
+.liveValuePurple {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #a78bfa;
+  text-shadow: 0 0 10px rgba(167, 139, 250, 0.4);
+}
+
+.canvasContainer {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sparkCanvas {
+  display: block;
+  width: 100%;
+  height: 100px;
+}
+
+/* Details grid */
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.detailCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detailTitle {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
 }
 
 .monoValue {
   font-family: var(--font-mono);
-  color: var(--text-primary);
+  color: #fff;
   font-weight: 600;
 }
 
 .progressBar {
   width: 100%;
-  height: 6px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   overflow: hidden;
@@ -165,6 +396,145 @@
 }
 
 .perfSub {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-ghost);
+}
+
+/* Benchmark Card */
+.benchCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 243, 255, 0.04);
+  border: 1px solid rgba(0, 243, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  gap: 14px;
+}
+
+.benchTitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #00f3ff;
+}
+
+.benchDesc {
+  font-size: 0.68rem;
+  color: var(--text-ghost);
+  margin-top: 2px;
+}
+
+.benchActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.benchResultBadge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.benchBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(0, 243, 255, 0.15);
+  border: 1px solid rgba(0, 243, 255, 0.35);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.benchBtn:hover:not(:disabled) {
+  background: rgba(0, 243, 255, 0.28);
+}
+
+.benchBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ====================================================
+   DIAGNOSTICS PANE
+   ==================================================== */
+.diagPane {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.diagHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diagTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.refreshDiagBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.diagGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.diagItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+
+.diagKey {
+  color: var(--text-ghost);
+  font-family: var(--font-mono);
+}
+
+.diagVal {
+  color: #fff;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+/* Status Bar */
+.statusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px;
+  background: rgba(10, 11, 16, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-family: var(--font-mono);
   font-size: 0.68rem;
   color: var(--text-ghost);

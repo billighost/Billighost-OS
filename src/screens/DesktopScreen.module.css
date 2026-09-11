@@ -519,3 +519,22 @@
   font-family: var(--font-mono);
   font-size: 0.75rem;
 }
+
+.showDesktopPeekBtn {
+  width: 8px;
+  height: 28px;
+  margin-left: 8px;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  cursor: pointer;
+  border-radius: 0 4px 4px 0;
+  transition: background 150ms ease;
+  padding: 0;
+}
+
+.showDesktopPeekBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 8px rgba(126, 184, 255, 0.4);
+}
+

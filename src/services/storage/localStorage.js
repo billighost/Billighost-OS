@@ -143,4 +143,25 @@ export const LocalSettings = {
     this.resetSecurity();
     localStorage.removeItem(STORAGE_KEYS.WINDOW_STATE);
   },
+
+  // --- Export / Import Entire Settings Suite ---
+  exportAll() {
+    return {
+      profile: this.getProfile(),
+      appearance: this.getAppearance(),
+      sound: this.getSound(),
+      security: this.getSecurity(),
+      exportedAt: Date.now(),
+      osVersion: '1.0',
+    };
+  },
+
+  importAll(backup) {
+    if (!backup || typeof backup !== 'object') return false;
+    if (backup.profile) this.setProfile(backup.profile);
+    if (backup.appearance) this.setAppearance(backup.appearance);
+    if (backup.sound) this.setSound(backup.sound);
+    if (backup.security) this.setSecurity(backup.security);
+    return true;
+  },
 };

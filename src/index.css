@@ -3,6 +3,7 @@
    ============================================ */
 
 /* ---------- Font Imports ---------- */
+@import './components/liquid-glass.css';
 @import '@fontsource-variable/plus-jakarta-sans/index.css';
 @import '@fontsource/space-mono/400.css';
 @import '@fontsource/space-mono/700.css';

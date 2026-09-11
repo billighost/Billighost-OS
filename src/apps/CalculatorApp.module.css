@@ -1,102 +1,222 @@
+/* ============================================
+   BILLIGHOST OS — Calculator Station Deluxe CSS
+   ============================================ */
+
 .calculatorLayout {
   display: flex;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 16, 0.88);
+  background: #090a10;
   color: var(--text-primary);
   font-family: var(--font-display);
   overflow: hidden;
   user-select: none;
+  flex-direction: column;
+}
+
+/* Header Mode Tabs */
+.headerBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(18, 20, 30, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modeTabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tabBtn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  color: #fff;
+}
+
+.tabBtnActive {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.angleToggleBtn {
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(126, 184, 255, 0.12);
+  border: 1px solid rgba(126, 184, 255, 0.3);
+  color: #7eb8ff;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Main Calculator Area Layout (Keypad + History) */
+.calculatorLayout {
+  position: relative;
 }
 
 .mainCalc {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  gap: 12px;
+  padding: 14px 16px;
+  gap: 10px;
+  overflow: hidden;
+  margin-right: 180px; /* Space for History Sidebar */
 }
 
+/* Display Screen */
 .screen {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: 16px 20px;
+  border-radius: 10px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   justify-content: center;
-  min-height: 80px;
+  min-height: 0;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.screenTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.memoryBadge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fbbf24;
+  min-width: 16px;
 }
 
 .equationLine {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.78rem;
+  color: var(--text-ghost);
+  text-align: right;
   min-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resultRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.copyBtn {
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.copyBtn:hover {
+  opacity: 1;
 }
 
 .resultLine {
   font-family: var(--font-mono);
-  font-size: 2rem;
+  font-size: 1.85rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  white-space: nowrap;
+  text-align: right;
 }
 
-.modeBar {
+/* Memory Row */
+.memoryRow {
   display: flex;
-  justify-content: flex-end;
+  gap: 6px;
 }
 
-.modeBtn {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 0.72rem;
-  padding: 3px 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.modeBtn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
-}
-
-.modeActive {
-  background: rgba(126, 184, 255, 0.15);
-  border-color: rgba(126, 184, 255, 0.35);
-  color: var(--accent-glow);
-}
-
-.keypad {
+.memBtn {
   flex: 1;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.memBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.memBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Keypad Grids */
+.keypad {
+  /* basis 0 + min-height 0 so the keypad yields height as the window
+     shrinks; `flex: 1` alone keeps each row at its intrinsic height and
+     the last row pushes out of the frame. */
+  flex: 1 1 0;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  /* minmax(0, 1fr) — grid tracks also default to min-content and refuse
+     to shrink without it. */
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 6px;
+  overflow: hidden;
 }
 
-.keypadScientific {
-  grid-template-columns: repeat(4, 1fr);
+.keypadSci {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .btn {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  transition: all 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 0;
 }
 
 .btn:hover {
@@ -115,43 +235,301 @@
 }
 
 .btnAction {
-  background: rgba(126, 184, 255, 0.1);
-  border-color: rgba(126, 184, 255, 0.25);
-  color: var(--accent-glow);
+  background: rgba(126, 184, 255, 0.12);
+  border-color: rgba(126, 184, 255, 0.3);
+  color: #7eb8ff;
+}
+
+.btnAction:hover {
+  background: rgba(126, 184, 255, 0.22);
 }
 
 .btnEqual {
-  background: rgba(52, 211, 153, 0.2);
-  border-color: rgba(52, 211, 153, 0.4);
-  color: var(--accent-success);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.3) 0%, rgba(16, 185, 129, 0.2) 100%);
+  border-color: rgba(52, 211, 153, 0.5);
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.btnEqual:hover {
+  background: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.3);
 }
 
 .btnZero {
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
 .sciBtn {
   background: rgba(167, 139, 250, 0.08);
   border: 1px solid rgba(167, 139, 250, 0.2);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   color: #c4b5fd;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 6px;
-  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s ease;
 }
 
 .sciBtn:hover {
-  background: rgba(167, 139, 250, 0.18);
+  background: rgba(167, 139, 250, 0.2);
 }
 
-/* History */
+/* ====================================================
+   PROGRAMMER MODE
+   ==================================================== */
+.programmerBases {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.baseRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.baseRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.baseRowActive {
+  background: rgba(0, 243, 255, 0.1) !important;
+  border-left: 2px solid #00f3ff;
+}
+
+.baseTag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-ghost);
+  width: 28px;
+}
+
+.baseVal {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #fff;
+}
+
+.baseValBin {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #00f3ff;
+  letter-spacing: 0.06em;
+}
+
+.progKeypad {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.progOpsRow {
+  display: flex;
+  gap: 4px;
+}
+
+.progOpBtn {
+  flex: 1;
+  padding: 6px 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #7eb8ff;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.progOpBtn:hover {
+  background: rgba(126, 184, 255, 0.15);
+}
+
+/* ====================================================
+   CONVERTER PANE
+   ==================================================== */
+.converterPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.convCategoryRow {
+  display: flex;
+  gap: 6px;
+}
+
+.catBtn {
+  flex: 1;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.catBtnActive {
+  background: rgba(126, 184, 255, 0.2) !important;
+  border-color: #7eb8ff !important;
+  color: #fff !important;
+}
+
+.converterBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.convField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.convLabel {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--text-ghost);
+  text-transform: uppercase;
+}
+
+.convInputField {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #fff;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  outline: none;
+}
+
+.convResultField {
+  background: rgba(0, 243, 255, 0.05);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-radius: 6px;
+  color: #00f3ff;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.convSelect {
+  background: #10121a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  outline: none;
+}
+
+.convArrow {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-ghost);
+}
+
+/* ====================================================
+   GRAPHER PANE
+   ==================================================== */
+.grapherPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grapherHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.grapherLabel {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #7eb8ff;
+}
+
+.graphButtons {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.graphBtn {
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.graphBtnActive {
+  background: rgba(0, 243, 255, 0.2) !important;
+  border-color: #00f3ff !important;
+  color: #00f3ff !important;
+}
+
+.canvasWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #08090f;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.graphCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ====================================================
+   HISTORY TAPE SIDEBAR
+   ==================================================== */
 .historySidebar {
-  width: 170px;
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.015);
+  position: absolute;
+  top: 48px; /* Below header */
+  right: 0;
+  bottom: 0;
+  width: 180px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 15, 23, 0.9);
+  backdrop-filter: blur(12px);
   display: flex;
   flex-direction: column;
 }
@@ -160,9 +538,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 0.75rem;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -171,12 +549,12 @@
   background: none;
   border: none;
   color: var(--text-ghost);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   cursor: pointer;
 }
 
 .clearHistoryBtn:hover {
-  color: var(--accent-error);
+  color: #ff6b81;
 }
 
 .historyList {
@@ -184,23 +562,24 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
+  gap: 6px;
+  padding: 8px;
 }
 
 .historyItem {
   padding: 6px 8px;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid transparent;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
   cursor: pointer;
   text-align: right;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
 .historyItem:hover {
   background: rgba(126, 184, 255, 0.08);
-  border-color: rgba(126, 184, 255, 0.2);
+  border-color: rgba(126, 184, 255, 0.25);
+  transform: translateX(-2px);
 }
 
 .historyExpr {
@@ -211,14 +590,14 @@
 
 .historyRes {
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff;
 }
 
 .emptyHistory {
   text-align: center;
-  padding: 30px 0;
-  font-size: 0.72rem;
+  padding: 36px 8px;
+  font-size: 0.7rem;
   color: var(--text-ghost);
 }

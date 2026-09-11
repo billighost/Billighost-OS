@@ -1,15 +1,13 @@
-/* ============================================
-   BILLIGHOST OS — Widgets Board Panel CSS
-   ============================================ */
-
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 1500;
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: flex-start;
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
@@ -18,102 +16,92 @@
 }
 
 .panel {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 400px;
-  max-width: 90vw;
-  height: calc(100vh - 52px);
-  background: var(--glass-bg-strong);
-  backdrop-filter: blur(36px) saturate(1.8);
-  -webkit-backdrop-filter: blur(36px) saturate(1.8);
-  border-right: 1px solid var(--glass-border);
-  box-shadow: 20px 0 60px rgba(0, 0, 0, 0.75);
+  width: 440px;
+  max-width: 95vw;
+  height: 100vh;
+  background: rgba(10, 14, 22, 0.88);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 16px 0 48px rgba(0, 0, 0, 0.75), inset 1px 0 0 rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  animation: slideIn 0.24s var(--ease-spring);
-  overflow: hidden;
+  animation: slideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0.8;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
 }
 
 .headerTitle {
-  font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-family: var(--font-display, inherit);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f8fafc;
+}
+
+.headerTitle svg {
+  color: var(--accent-glow, #7eb8ff);
 }
 
 .closeBtn {
   background: rgba(255, 255, 255, 0.06);
-  border: none;
-  border-radius: 6px;
-  width: 26px;
-  height: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .closeBtn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
-.content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-}
-
-/* Base Widget Card */
+/* Double-Bezel Card Container */
 .widgetCard {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(18, 24, 38, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: 14px;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  gap: 12px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.widgetCard:hover {
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
 .cardHeader {
@@ -121,27 +109,33 @@
   align-items: center;
   justify-content: space-between;
   font-size: 0.72rem;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono, monospace);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-ghost);
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-/* Clock & World Clocks Widget */
+.liveBadge {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Clock & World Clocks */
 .clockTime {
-  font-family: var(--font-display);
   font-size: 2.2rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.1;
-  background: linear-gradient(135deg, #ffffff 40%, var(--accent-glow) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #ffffff;
 }
 
 .clockDate {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.85rem;
+  color: var(--accent-glow, #7eb8ff);
   font-weight: 500;
 }
 
@@ -150,109 +144,491 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 8px;
 }
 
 .worldClockItem {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 8px 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 0.74rem;
 }
 
 .worldCity {
-  color: var(--text-secondary);
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .worldHour {
-  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-family: var(--font-mono, monospace);
+  color: #f1f5f9;
   font-weight: 600;
-  color: var(--text-primary);
 }
 
-/* Weather Widget */
-.weatherMain {
+.timeOffsetContainer {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.offsetHeader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.offsetValue {
+  color: var(--accent-glow, #7eb8ff);
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+
+.offsetSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  outline: none;
+}
+
+.offsetSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-glow, #7eb8ff);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--accent-glow, #7eb8ff);
+}
+
+/* Crypto & Markets */
+.tickerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tickerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tickerLeft {
+  display: flex;
+  flex-direction: column;
+  min-width: 70px;
+}
+
+.tickerSymbol {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #ffffff;
+}
+
+.tickerName {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.sparkline {
+  overflow: visible;
+}
+
+.tickerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.tickerPrice {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.tickerChange {
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+}
+
+.tickerUp {
+  color: #34d399;
+}
+
+.tickerDown {
+  color: #ff4d6a;
+}
+
+/* Pomodoro Timer */
+.pomoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.pomoTimeDisplay {
+  font-size: 2.8rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+}
+
+.pomoButtons {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.pomoBtn {
+  flex: 2;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pomoBtnStart {
+  background: var(--accent-glow, #7eb8ff);
+  color: #030712;
+}
+
+.pomoBtnPause {
+  background: #fbbf24;
+  color: #030712;
+}
+
+.pomoBtnSecondary {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* Circular Radial Speedometers */
+.gaugesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.radialGaugeItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.radialSvg {
+  width: 58px;
+  height: 58px;
+  transform: rotate(-90deg);
+}
+
+.radialTrack {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 3.5;
+}
+
+.radialFill {
+  fill: none;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.radialText {
+  fill: #ffffff;
+  font-size: 0.55rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  text-anchor: middle;
+  transform: rotate(90deg);
+  transform-origin: center;
+}
+
+.radialLabel {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Mini Audio Player */
+.audioWidgetBody {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.audioPlayBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent-glow, #7eb8ff);
+  color: #050505;
+  font-size: 1.1rem;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.audioPlayBtn:hover {
+  transform: scale(1.05);
+}
+
+.audioPlaying {
+  background: #34d399;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.4);
+}
+
+.audioMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.audioTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.audioSub {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.audioVolRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-mono, monospace);
+}
+
+.volSlider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.volSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-glow, #7eb8ff);
+  cursor: pointer;
+}
+
+/* Weather Strip */
+.weatherMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .weatherTemp {
-  font-family: var(--font-display);
-  font-size: 2.4rem;
-  font-weight: 800;
-  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: var(--font-mono, monospace);
   line-height: 1;
 }
 
 .weatherCity {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 0.85rem;
+  color: var(--accent-glow, #7eb8ff);
   margin-top: 4px;
 }
 
 .weatherCondition {
   font-size: 0.78rem;
-  color: var(--accent-glow);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .weatherIcon {
-  font-size: 2.4rem;
+  font-size: 2.6rem;
 }
 
 .weatherDetails {
   display: flex;
-  justify-content: space-between;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 8px;
-  font-size: 0.74rem;
-  color: var(--text-secondary);
+  gap: 14px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-mono, monospace);
 }
 
-/* Telemetry Gauges Widget */
-.gaugesGrid {
+.forecastRow {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
 }
 
-.gaugeItem {
+.forecastItem {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.gaugeLabel {
-  display: flex;
-  justify-content: space-between;
+.forecastDay {
   font-size: 0.7rem;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.5);
 }
 
-.gaugeTrack {
+.forecastIcon {
+  font-size: 1.2rem;
+}
+
+.forecastTemp {
+  font-size: 0.72rem;
+  font-family: var(--font-mono, monospace);
+  color: #f1f5f9;
+}
+
+/* Tasks & Agenda */
+.taskProgressBar {
   width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
   overflow: hidden;
 }
 
-.gaugeFill {
+.taskProgressFill {
   height: 100%;
-  border-radius: 3px;
+  background: #34d399;
   transition: width 0.3s ease;
 }
 
-/* Sticky Notes Widget */
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taskItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.taskCheck {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.taskChecked {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.taskText {
+  flex: 1;
+  font-size: 0.8rem;
+  color: #e2e8f0;
+}
+
+.taskTextDone {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.taskDeleteBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.taskDeleteBtn:hover {
+  color: #ff4d6a;
+}
+
+.taskAddRow {
+  display: flex;
+  gap: 6px;
+}
+
+.taskInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: #ffffff;
+  outline: none;
+}
+
+.taskAddBtn {
+  background: var(--accent-glow, #7eb8ff);
+  color: #030712;
+  border: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Sticky Notes */
 .notesHeader {
   display: flex;
   align-items: center;
@@ -260,19 +636,16 @@
 }
 
 .addNoteBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
-  color: var(--text-primary);
-  font-size: 0.7rem;
-  padding: 2px 8px;
+  color: #e2e8f0;
+  font-size: 0.72rem;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.addNoteBtn:hover {
-  background: rgba(126, 184, 255, 0.25);
-  border-color: var(--accent-glow);
 }
 
 .notesList {
@@ -282,78 +655,75 @@
 }
 
 .noteCard {
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px;
-  color: #111;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  position: relative;
 }
 
 .noteCardYellow {
-  background: #fef08a;
+  background: rgba(253, 224, 71, 0.12);
+  border: 1px solid rgba(253, 224, 71, 0.3);
 }
 
 .noteCardBlue {
-  background: #bae6fd;
+  background: rgba(125, 211, 252, 0.12);
+  border: 1px solid rgba(125, 211, 252, 0.3);
 }
 
 .noteCardPink {
-  background: #fbcfe8;
+  background: rgba(244, 114, 182, 0.12);
+  border: 1px solid rgba(244, 114, 182, 0.3);
 }
 
 .noteCardGreen {
-  background: #bbf7d0;
+  background: rgba(134, 239, 172, 0.12);
+  border: 1px solid rgba(134, 239, 172, 0.3);
 }
 
 .noteTextarea {
-  width: 100%;
-  min-height: 60px;
   background: transparent;
   border: none;
-  outline: none;
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  color: #1e293b;
+  color: #f1f5f9;
+  font-size: 0.8rem;
   resize: vertical;
+  min-height: 48px;
+  outline: none;
+  font-family: inherit;
 }
 
 .noteFooter {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding-top: 4px;
+  align-items: center;
 }
 
 .noteColorDots {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .noteColorDot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.2);
   cursor: pointer;
 }
 
 .deleteNoteBtn {
   background: transparent;
   border: none;
-  font-size: 0.7rem;
-  color: #64748b;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
   cursor: pointer;
 }
 
 .deleteNoteBtn:hover {
-  color: #dc2626;
+  color: #ff4d6a;
 }
 
-/* Quick Toggles Widget */
+/* Quick Actions Dock */
 .togglesRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -364,25 +734,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 10px 6px;
+  gap: 6px;
+  padding: 10px 8px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  color: var(--text-secondary);
+  border-radius: 10px;
+  color: #e2e8f0;
   font-size: 0.72rem;
   cursor: pointer;
-  transition: all 0.15s ease;
-  gap: 4px;
+  transition: all 0.2s ease;
 }
 
 .toggleBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .toggleBtnActive {
-  background: rgba(126, 184, 255, 0.2) !important;
-  border-color: var(--accent-glow) !important;
-  color: #fff !important;
+  background: rgba(126, 184, 255, 0.18);
+  border-color: var(--accent-glow, #7eb8ff);
+  color: #ffffff;
+}
+
+.toggleBtnActive svg {
+  color: var(--accent-glow, #7eb8ff);
 }

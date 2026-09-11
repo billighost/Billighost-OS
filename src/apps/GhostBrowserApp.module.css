@@ -1,35 +1,144 @@
 .browserContainer {
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100%;
-  background: rgba(10, 10, 16, 0.85);
-  color: var(--text-primary);
-  font-family: var(--font-display);
+  width: 100%;
+  background: var(--bg-surface, #0c101a);
+  color: var(--text-primary, #ffffff);
+  overflow: hidden;
+  position: relative;
 }
 
+.incognitoTheme {
+  background: #050505 !important;
+  color: #f1f5f9 !important;
+}
+
+.incognitoTheme .navBar,
+.incognitoTheme .tabBar {
+  background: #0f0f12 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 1. Multi-Tab Bar */
+.tabBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 10px;
+  background: rgba(0, 0, 0, 0.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tabList {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.75rem;
+  max-width: 160px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabActive {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+.tabIcon {
+  font-size: 0.8rem;
+}
+
+.tabTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.tabCloseBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0 2px;
+}
+
+.tabCloseBtn:hover {
+  color: #ff4d6a;
+}
+
+.addTabBtn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.topRightControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.browserTopBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border-radius: 5px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.incognitoActive {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: #f43f5e;
+  color: #f43f5e;
+}
+
+/* 2. Chrome Navbar */
 .navBar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .navButtons {
   display: flex;
+  align-items: center;
   gap: 4px;
 }
 
 .navBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  font-size: 0.72rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -38,118 +147,253 @@
 }
 
 .navBtn:hover:not(:disabled) {
-  background: rgba(126, 184, 255, 0.15);
-  border-color: rgba(126, 184, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
 .navBtn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+  opacity: 0.3;
+  cursor: default;
 }
 
 .omniboxForm {
   flex: 1;
   display: flex;
   align-items: center;
-  position: relative;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   padding: 0 8px;
+  height: 32px;
+  gap: 6px;
 }
 
 .lockIcon {
   font-size: 0.75rem;
-  margin-right: 6px;
-  opacity: 0.7;
+  color: var(--accent-success, #34d399);
 }
 
 .omniboxInput {
   flex: 1;
-  background: none;
+  background: transparent;
   border: none;
   outline: none;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  padding: 6px 0;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-family: inherit;
+}
+
+.starBtn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.starActive {
+  color: #fbbf24;
 }
 
 .goBtn {
-  background: rgba(126, 184, 255, 0.18);
-  border: 1px solid rgba(126, 184, 255, 0.3);
-  border-radius: 4px;
-  color: var(--accent-glow);
-  font-size: 0.7rem;
-  padding: 2px 8px;
+  background: var(--accent-glow, #7eb8ff);
+  color: #030712;
+  border: none;
+  border-radius: 5px;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
-.goBtn:hover {
-  background: rgba(126, 184, 255, 0.3);
+.rightActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actionPill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.actionPillActive {
+  background: var(--accent-glow, #7eb8ff);
+  color: #030712;
+}
+
+.zoomGroup {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.zoomBtn {
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.zoomLabel {
+  font-size: 0.68rem;
+  font-family: var(--font-mono, monospace);
+  padding: 0 4px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .externalBtn {
-  width: 28px;
-  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-secondary);
-  text-decoration: none;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.85rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
   transition: all 0.15s ease;
 }
 
 .externalBtn:hover {
-  color: var(--accent-glow);
-  background: rgba(126, 184, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
 }
 
+/* 3. Bookmarks Bar */
 .bookmarksBar {
   display: flex;
+  align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   overflow-x: auto;
 }
 
 .bookmarkBtn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: none;
+  gap: 5px;
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.65);
   font-size: 0.72rem;
-  padding: 3px 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
 }
 
 .bookmarkBtn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
+/* 4. History Drawer */
+.historyDrawer {
+  position: absolute;
+  top: 72px;
+  right: 12px;
+  bottom: 12px;
+  width: 320px;
+  background: rgba(15, 20, 32, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 8px;
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.drawerActions {
+  display: flex;
+  gap: 4px;
+}
+
+.historySearchInput {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: #ffffff;
+  font-size: 0.75rem;
+  outline: none;
+}
+
+.historyList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historyItem {
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.historyItem:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.historyItemTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.historyItemUrl {
+  font-size: 0.68rem;
+  color: var(--accent-glow, #7eb8ff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historyItemTime {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.emptyHistory {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 20px;
+}
+
+/* 5. Viewport Area */
 .viewportArea {
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #fff;
-}
-
-.browserFrame {
-  width: 100%;
-  height: 100%;
-  border: none;
 }
 
 .loadIndicator {
@@ -157,135 +401,203 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: rgba(126, 184, 255, 0.2);
+  height: 2px;
+  background: transparent;
   z-index: 10;
 }
 
 .loadBar {
   height: 100%;
-  width: 40%;
-  background: var(--accent-glow);
-  animation: loadingSlide 1.2s infinite ease-in-out;
+  background: var(--accent-glow, #7eb8ff);
+  animation: loadProgress 1.5s infinite linear;
 }
 
-.internalDoc {
-  padding: 40px;
-  background: #0a0a10;
-  color: #fff;
+@keyframes loadProgress {
+  0% { width: 0%; margin-left: 0%; }
+  50% { width: 50%; margin-left: 25%; }
+  100% { width: 100%; margin-left: 100%; }
+}
+
+.browserFrame {
+  width: 100%;
   height: 100%;
+  border: none;
+  background: #ffffff;
 }
 
-.internalDoc h1 {
-  font-size: 1.4rem;
-  margin-bottom: 8px;
+/* Speed Dial New Tab */
+.speedDialPage {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 24px;
 }
 
-.internalDoc p {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.85rem;
-  margin-bottom: 24px;
+.speedDialTime {
+  font-size: 3.5rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
 }
 
-.docCard {
+.speedDialGreeting {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+}
+
+.speedDialSearchRow {
+  width: 100%;
+  max-width: 540px;
+}
+
+.speedDialSearchForm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.speedDialSearchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+.speedDialTilesGrid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.speedTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 90px;
 }
 
-.docCard h3 {
-  font-size: 0.9rem;
-  margin-bottom: 8px;
+.speedTile:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.docCard ul {
-  padding-left: 20px;
+.tileIcon {
+  font-size: 1.8rem;
+}
+
+.tileLabel {
+  font-size: 0.75rem;
+  color: #e2e8f0;
+}
+
+/* Reader Mode */
+.readerContainer {
+  height: 100%;
+  overflow-y: auto;
+  background: #0d1117;
+  color: #e6edf3;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.font_serif {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.font_sans {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.readerBar {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+}
+
+.readerBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
 }
 
-.docCard + .docCard {
+.readerContent {
+  width: 100%;
+  max-width: 680px;
+  line-height: 1.7;
+}
+
+.readerTitle {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.readerSub {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 6px;
+}
+
+.readerDivider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 16px 0;
+}
+
+.readerParagraphs {
+  font-size: inherit;
   margin-top: 16px;
 }
 
-.errorExtBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  background: var(--accent-glow);
-  color: #050505;
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.15s ease;
-}
-
-.errorExtBtn:hover {
-  box-shadow: 0 0 16px rgba(126, 184, 255, 0.4);
-  transform: translateY(-1px);
-}
-
-.errorRetryBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.errorRetryBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-}
-
-@keyframes loadingSlide {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(300%); }
-}
-
-/* ─── In-OS Ghost Search Styles ─── */
+/* Search results area */
 .searchResultsArea {
-  height: 100%;
-  overflow-y: auto;
   padding: 24px;
-  background: #090910;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .searchHeaderRow {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  align-items: center;
+  margin-bottom: 20px;
 }
 
 .searchQueryTitle {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--text-primary);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 
 .searchEngineBadges {
@@ -294,126 +606,139 @@
 }
 
 .engineBadge {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(126, 184, 255, 0.1);
-  color: var(--accent-glow);
-  border: 1px solid rgba(126, 184, 255, 0.25);
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .instantAnswerCard {
-  background: rgba(126, 184, 255, 0.06);
-  border: 1px solid rgba(126, 184, 255, 0.2);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .instantAnswerHeading {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--accent-glow);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
 .instantAnswerText {
-  font-family: var(--font-display);
-  font-size: 0.82rem;
-  color: var(--text-primary);
+  font-size: 0.85rem;
   line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .resultsList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.resultCard {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  text-align: left;
-}
-
-.resultCard:hover {
-  background: rgba(126, 184, 255, 0.08);
-  border-color: rgba(126, 184, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.resultCardTitle {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--accent-glow);
-}
-
-.resultCardSnippet {
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.resultCardUrl {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-ghost);
-}
-
-.searchExternalBanner {
-  margin-top: 8px;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 12px;
 }
 
+.resultCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resultCard:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.resultCardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-glow, #7eb8ff);
+  margin-bottom: 4px;
+}
+
+.resultCardSnippet {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.resultCardUrl {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.searchExternalBanner {
+  margin-top: 24px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .searchExternalText {
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .searchExternalBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: var(--radius-sm);
-  background: rgba(222, 88, 51, 0.2);
-  border: 1px solid rgba(222, 88, 51, 0.4);
-  color: #ff9d7f;
-  font-family: var(--font-display);
+  padding: 6px 12px;
+  background: #ea580c;
+  color: #ffffff;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
   text-decoration: none;
 }
 
-.searchExternalBtn:hover {
-  background: rgba(222, 88, 51, 0.35);
-  box-shadow: 0 0 12px rgba(222, 88, 51, 0.3);
+.internalDoc {
+  padding: 30px;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
+.docCard {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.errorExtBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--accent-glow, #7eb8ff);
+  color: #030712;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.errorRetryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}

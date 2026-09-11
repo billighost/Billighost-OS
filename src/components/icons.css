@@ -1,0 +1,352 @@
+/* ============================================
+   BILLIGHOST OS — Animated Icon System
+   ============================================
+
+   Every icon is a multi-part SVG. Animatable parts carry a
+   `data-part` attribute naming their BEHAVIOUR rather than their
+   shape, so one shared vocabulary drives the whole icon set.
+
+   Animations trigger when:
+     • the icon itself is hovered
+     • ANY interactive ancestor is hovered — button, a, [role=button],
+       [data-icon-host] — which is why no call site needs editing
+     • a `.bh-anim-<name>` class is set on the icon root (programmatic,
+       for states to be driven later)
+
+   Press/click states ride on :active.
+   ============================================ */
+
+.bh-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  overflow: visible; /* glows and rings must not clip */
+}
+
+/* Parts rotate/scale about their own centre. Without transform-box,
+   SVG transforms use the user-space origin and gears orbit the corner. */
+.bh-icon [data-part] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Parts that must pivot on the icon's centre rather than their own bbox
+   (an orbiting dot's bbox is just the dot). */
+.bh-icon [data-part='orbit'],
+.bh-icon [data-part='needle'],
+.bh-icon [data-part='sweepArc'] {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+}
+
+.bh-icon [data-part='typeIn'],
+.bh-icon [data-part='grow'] {
+  transform-origin: left center;
+}
+
+/* Parts that only exist for the press state */
+.bh-icon [data-part='flash'],
+.bh-icon [data-part='ring'] {
+  opacity: 0;
+}
+
+/* Smooth the resting state so hover-out eases rather than snapping */
+.bh-icon [data-part='lift'],
+.bh-icon [data-part='lid'],
+.bh-icon [data-part='shackle'],
+.bh-icon [data-part='spread'],
+.bh-icon [data-part='spreadR'] {
+  transition: transform 0.34s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Motion vocabulary ───────────────────── */
+
+@keyframes bhSpin      { to { transform: rotate(360deg); } }
+@keyframes bhSpinRev   { to { transform: rotate(-360deg); } }
+
+@keyframes bhPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.75; }
+  50%      { transform: scale(1.22); opacity: 1; }
+}
+
+@keyframes bhBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.5px); }
+}
+
+@keyframes bhSwing {
+  0%, 100% { transform: rotate(0deg); }
+  28%      { transform: rotate(-15deg); }
+  62%      { transform: rotate(9deg); }
+}
+
+@keyframes bhJiggle {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25%      { transform: translate(-0.6px, 0) rotate(-7deg); }
+  75%      { transform: translate(0.6px, 0) rotate(7deg); }
+}
+
+@keyframes bhBlink {
+  0%, 44%  { opacity: 1; }
+  50%, 94% { opacity: 0; }
+  100%     { opacity: 1; }
+}
+
+@keyframes bhWave {
+  0%   { opacity: 0.15; transform: scale(0.82); }
+  45%  { opacity: 1;    transform: scale(1); }
+  100% { opacity: 0.15; transform: scale(1.1); }
+}
+
+/* Paired with pathLength="1", so 1 = hidden and 0 = fully drawn */
+@keyframes bhDraw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes bhSweep {
+  0%   { transform: translateX(-7px); opacity: 0; }
+  35%  { opacity: 0.9; }
+  100% { transform: translateX(7px);  opacity: 0; }
+}
+
+@keyframes bhScan {
+  0%   { transform: translateY(-5px); opacity: 0; }
+  40%  { opacity: 0.85; }
+  100% { transform: translateY(5px);  opacity: 0; }
+}
+
+@keyframes bhRise {
+  0%   { transform: translateY(2.5px); opacity: 0.35; }
+  100% { transform: translateY(-1px);  opacity: 1; }
+}
+
+@keyframes bhGlow {
+  0%, 100% { opacity: 0.28; }
+  50%      { opacity: 0.95; }
+}
+
+@keyframes bhTypeIn {
+  0%   { transform: scaleX(0);    opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: scaleX(1);    opacity: 1; }
+}
+
+@keyframes bhOrbitSpin { to { transform: rotate(360deg); } }
+
+@keyframes bhNeedleSweep {
+  0%, 100% { transform: rotate(-38deg); }
+  55%      { transform: rotate(44deg); }
+}
+
+@keyframes bhFlashOut {
+  0%   { opacity: 0.9; transform: scale(0.55); }
+  100% { opacity: 0;   transform: scale(1.9); }
+}
+
+@keyframes bhPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.42); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bhSnap {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(90deg); }
+}
+
+@keyframes bhShimmer {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+@keyframes bhDrip {
+  0%   { transform: translateY(-1px); opacity: 0; }
+  30%  { opacity: 1; }
+  100% { transform: translateY(4.5px); opacity: 0; }
+}
+
+/* ─── Hover wiring ─────────────────────────────
+   The repeated :is(...) prefix is what makes ancestor hover work,
+   so an icon inside any button animates without a per-site change.
+   ───────────────────────────────────────────── */
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part] {
+  will-change: transform, opacity;
+}
+
+/* rotation */
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='spin'],
+.bh-anim-spin [data-part='spin'] {
+  animation: bhSpin 3.4s linear infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='spinRev'],
+.bh-anim-spin [data-part='spinRev'] {
+  animation: bhSpinRev 2.5s linear infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='spinFast'],
+.bh-anim-spin [data-part='spinFast'] {
+  animation: bhSpin 1.5s linear infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='orbit'],
+.bh-anim-spin [data-part='orbit'] {
+  animation: bhOrbitSpin 3.6s linear infinite;
+}
+
+/* emphasis */
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='pulse'],
+.bh-anim-pulse [data-part='pulse'] {
+  animation: bhPulse 1.5s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='glow'],
+.bh-anim-pulse [data-part='glow'] {
+  animation: bhGlow 1.9s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='shimmer'] {
+  animation: bhShimmer 1.7s ease-in-out infinite;
+}
+
+/* displacement */
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='bob'] {
+  animation: bhBob 1.5s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='swing'] {
+  animation: bhSwing 1.5s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='jiggle'] {
+  animation: bhJiggle 0.5s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='blink'] {
+  animation: bhBlink 2.4s steps(1, end) infinite;
+}
+
+/* Hinged parts open on hover; the exact pivot is set inline per icon. */
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='lid'] {
+  transform: rotate(-19deg) translateY(-0.5px);
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='lift'] {
+  transform: translateY(-1.8px);
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='shackle'] {
+  transform: translateY(-1.6px);
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='spread'] {
+  transform: translateX(-1.5px);
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='spreadR'] {
+  transform: translateX(1.5px);
+}
+
+/* travelling light */
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='sweep'] {
+  animation: bhSweep 1.5s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='scan'] {
+  animation: bhScan 1.7s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='drip'] {
+  animation: bhDrip 1.6s ease-in infinite;
+}
+
+/* sequential reveal */
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='wave'],
+.bh-anim-wave [data-part='wave'] {
+  animation: bhWave 1.6s ease-in-out infinite;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='rise'] {
+  animation: bhRise 0.5s var(--ease-out-back, cubic-bezier(0.34, 1.56, 0.64, 1)) forwards;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='typeIn'] {
+  animation: bhTypeIn 0.5s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) forwards;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='draw'],
+.bh-anim-draw [data-part='draw'] {
+  animation: bhDraw 0.9s var(--ease-in-out-smooth, cubic-bezier(0.65, 0, 0.35, 1)) forwards;
+}
+
+:is(.bh-icon:hover, :is(button, a, [role='button'], label, [data-icon-host]):hover .bh-icon) [data-part='needle'] {
+  animation: bhNeedleSweep 2.1s ease-in-out infinite;
+}
+
+/* Stagger — one vocabulary, indexed by data-i */
+.bh-icon [data-i='1'] { animation-delay: 0.11s; }
+.bh-icon [data-i='2'] { animation-delay: 0.22s; }
+.bh-icon [data-i='3'] { animation-delay: 0.33s; }
+.bh-icon [data-i='4'] { animation-delay: 0.44s; }
+
+/* ─── Press / click wiring ─────────────────── */
+
+:is(.bh-icon:active, :is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon) [data-part='flash'],
+:is(.bh-icon:active, :is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon) [data-part='ring'],
+.bh-anim-press [data-part='flash'],
+.bh-anim-press [data-part='ring'] {
+  animation: bhFlashOut 0.52s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+:is(.bh-icon:active, :is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon) [data-part='pulse'],
+:is(.bh-icon:active, :is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon) [data-part='core'],
+.bh-anim-press [data-part='pulse'] {
+  animation: bhPop 0.4s var(--ease-out-back, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+/* Gears snap a quarter turn on press instead of free-spinning */
+:is(.bh-icon:active, :is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon) [data-part='spin'] {
+  animation: bhSnap 0.42s var(--ease-out-back, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+:is(.bh-icon:active, :is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon) [data-part='spinRev'] {
+  animation: bhSnap 0.42s var(--ease-out-back, cubic-bezier(0.34, 1.56, 0.64, 1)) reverse;
+}
+
+/* Whole-icon press feedback */
+:is(button, a, [role='button'], label, [data-icon-host]):active .bh-icon {
+  transform: scale(0.92);
+}
+
+.bh-icon {
+  transition: transform 0.16s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* ─── Ambient (opt-in) ─────────────────────────
+   Off by default: dozens of always-running animations on a desktop
+   full of icons is real compositing cost for no gain.
+   ───────────────────────────────────────────── */
+
+.bh-icon[data-ambient='true'] [data-part='glow']  { animation: bhGlow 3.4s ease-in-out infinite; }
+.bh-icon[data-ambient='true'] [data-part='blink'] { animation: bhBlink 4.2s steps(1, end) infinite; }
+.bh-icon[data-ambient='true'] [data-part='wave']  { animation: bhWave 2.6s ease-in-out infinite; }
+.bh-icon[data-ambient='true'] [data-part='pulse'] { animation: bhPulse 2.8s ease-in-out infinite; }
+
+/* ─── Reduced motion ──────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .bh-icon,
+  .bh-icon [data-part] {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  /* Keep press-only parts hidden rather than flashing them on */
+  .bh-icon [data-part='flash'],
+  .bh-icon [data-part='ring'] {
+    opacity: 0 !important;
+  }
+}

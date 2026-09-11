@@ -2,16 +2,112 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  background: var(--glass-bg-strong);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-  border: 1px solid var(--glass-border);
+
+  /*
+   * Real liquid glass. The body is deliberately lighter than the old flat
+   * rgba(18,18,28,0.75) — with the refraction rim doing the edge work, a
+   * heavy tint would hide the very thing that makes it read as glass.
+   */
+  --glass-blur: 30px;
+  --glass-tint: 0.46;
+  --glass-refract: 1.15;
+  --glass-tint-color: 14, 16, 26;
+  --glass-sat: 1.75;
+
+  background: rgba(var(--glass-tint-color), var(--glass-tint));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.05);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) brightness(1.05);
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: var(--radius-md);
-  box-shadow: var(--glass-fresnel), var(--glass-shadow);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    inset 0 0 26px rgba(255, 255, 255, 0.04),
+    0 18px 60px rgba(0, 0, 0, 0.55);
+
   overflow: hidden;
+  isolation: isolate;
   user-select: none;
   animation: windowOpen 0.22s var(--ease-spring);
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+/* ── Refraction rim ─────────────────────────
+   Edge-only, displaced through the SVG turbulence filter so the border
+   region physically bends. Masked to the rim: the centre of a thick pane
+   barely distorts, which is what sells it.
+   ──────────────────────────────────────────── */
+
+.window::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+
+  border: 2.5px solid transparent;
+  background: linear-gradient(rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.07)) border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+
+  filter: url(#bh-glass-refract) blur(0.35px);
+  opacity: calc(0.6 * var(--glass-refract));
+}
+
+/* ── Dispersion + travelling specular ─────── */
+
+.window::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+
+  background-image:
+    linear-gradient(
+      112deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.10) 45%,
+      rgba(255, 255, 255, 0.22) 50%,
+      rgba(255, 255, 255, 0.10) 55%,
+      transparent 70%
+    ),
+    radial-gradient(120% 120% at 0% 0%, rgba(255, 178, 138, 0.13) 0%, transparent 32%),
+    radial-gradient(120% 120% at 100% 100%, rgba(138, 208, 255, 0.15) 0%, transparent 32%),
+    linear-gradient(168deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.03) 26%, transparent 44%);
+
+  background-size: 280% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-position: -130% 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat;
+  animation: windowGlassDrift 11s var(--ease-in-out-smooth) infinite;
+}
+
+@keyframes windowGlassDrift {
+  0%   { background-position: -130% 0, 0 0, 0 0, 0 0; }
+  50%  { background-position:  230% 0, 0 0, 0 0, 0 0; }
+  100% { background-position:  230% 0, 0 0, 0 0, 0 0; }
+}
+
+/*
+ * Chrome sits above the glass overlays. The rim and specular are z-index 2/3,
+ * so the title bar and body need their own stacking context to stay legible.
+ */
+.titleBar,
+.windowBody {
+  position: relative;
+  z-index: 4;
 }
 
 .windowActive {
@@ -21,8 +117,22 @@
 
 .windowSnapped {
   border-radius: 0 !important;
-  box-shadow: none !important;
   border-top: none !important;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Rim and specular are pointless against a screen edge, and the cost of
+   two extra composited layers across a full-screen window is not free. */
+.windowSnapped::before,
+.windowSnapped::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window::after {
+    animation: none;
+    background-position: 65% 0, 0 0, 0 0, 0 0;
+  }
 }
 
 .windowDragging {
@@ -113,10 +223,93 @@
 
 .windowBody {
   flex: 1;
-  overflow: auto;
+  /*
+   * min-height/min-width: 0 is what actually constrains app content.
+   *
+   * A flex item's default `min-height: auto` refuses to shrink below its
+   * content's intrinsic size, so as the window narrows the app pushes past
+   * the frame instead of reflowing. Zeroing it lets the body track the
+   * window, and `overflow: hidden` makes the boundary authoritative —
+   * apps scroll internally rather than overflowing the chrome.
+   */
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/*
+ * App roots: zero both axes. These are the elements the apps set to
+ * width/height 100%, so they must be free to track the frame.
+ */
+.windowBody > * {
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/*
+ * Deeper descendants: zero both axes.
+ *
+ * The trap repeats at every level of a flex chain — one un-zeroed ancestor
+ * and the whole subtree stops shrinking, so content escapes the frame as the
+ * window narrows or shortens.
+ *
+ * Specificity is `.windowBody :global(*)` = (0,1,0), which outranks a plain
+ * app rule like `.sidebar` = (0,1,0)... equal, so import order would decide.
+ * The descendant form resolves to (0,2,0) here, so this rule wins outright
+ * and the outcome does not depend on stylesheet order.
+ *
+ * Intentionally fixed-width chrome is unaffected in practice: min-width only
+ * applies while shrinking, and such elements almost always set
+ * `flex-shrink: 0`, which opts them out of shrinking entirely.
+ */
+.windowBody :global(*) {
+  min-height: 0;
+  min-width: 0;
+}
+
+/*
+ * Horizontal containment for toolbars.
+ *
+ * Every app builds its chrome from non-wrapping flex rows, which force their
+ * full intrinsic width and punch through the frame as the window narrows.
+ * Rather than patching ~80 individual rules, toolbar-shaped containers are
+ * allowed to wrap here, scoped to the window body.
+ *
+ * `:where()` keeps specificity at zero, so any app rule that genuinely needs
+ * nowrap can still override this simply by declaring it.
+ */
+.windowBody :where([class*='toolbar'], [class*='Toolbar'],
+                   [class*='headerBar'], [class*='menuBar'],
+                   [class*='statusBar'], [class*='tabBar'],
+                   [class*='navBar'], [class*='actionStrip'],
+                   [class*='Tabs'], [class*='tabs'],
+                   [class*='Switcher'], [class*='Controls'],
+                   [class*='controls'], [class*='Actions'],
+                   [class*='actions'], [class*='metaRow']) {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* Long labels ellipsise instead of stretching their row. */
+.windowBody :where([class*='Title'], [class*='title'],
+                   [class*='Label'], [class*='label'],
+                   [class*='breadcrumb'], [class*='pathText']) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Media must scale down with its container, never define a floor. */
+.windowBody :global(img),
+.windowBody :global(canvas),
+.windowBody :global(svg),
+.windowBody :global(video) {
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .windowResizing {
