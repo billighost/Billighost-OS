@@ -1241,3 +1241,90 @@ export const FileFontIcon = makeIcon('fileFont', () => (
     </g>
   </>
 ));
+
+export const GamepadIcon = makeIcon('gamepad', () => (
+  <>
+    <rect data-part="body" x="2.5" y="6.5" width="19" height="11.5" rx="5.5" stroke="currentColor" strokeWidth="1.6" />
+    <path data-part="pulse" d="M6 12.25h4M8 10.25v4" stroke={A_GLOW} strokeWidth="1.6" strokeLinecap="round" />
+    <circle data-part="spark" cx="15" cy="11" r="1" fill={A_ERR} stroke={A_ERR} strokeWidth="0.8" />
+    <circle data-part="spark" cx="17.5" cy="13.5" r="1" fill={A_OK} stroke={A_OK} strokeWidth="0.8" />
+    <circle cx="12.5" cy="8.5" r="0.6" fill="currentColor" opacity="0.6" />
+  </>
+));
+
+export const SubwayIcon = makeIcon('subway', () => (
+  <>
+    <rect data-part="body" x="4.5" y="3.5" width="15" height="15" rx="2.5" stroke="currentColor" strokeWidth="1.6" />
+    <line x1="4.5" y1="11.5" x2="19.5" y2="11.5" stroke="currentColor" strokeWidth="1.4" />
+    <rect x="7" y="5.5" width="10" height="4.5" rx="1" stroke={A_GLOW} strokeWidth="1.2" />
+    <circle data-part="spark" cx="7.5" cy="15" r="1.2" fill={A_WARN} stroke={A_WARN} strokeWidth="0.6" />
+    <circle data-part="spark" cx="16.5" cy="15" r="1.2" fill={A_WARN} stroke={A_WARN} strokeWidth="0.6" />
+    <line data-part="draw" x1="6.5" y1="18.5" x2="4.5" y2="21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <line data-part="draw" x1="17.5" y1="18.5" x2="19.5" y2="21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+  </>
+));
+
+export const TrophyIcon = makeIcon('trophy', () => (
+  <>
+    <path data-part="body" d="M7 4h10v5c0 2.8-2.2 5-5 5s-5-2.2-5-5V4z" stroke={A_WARN} strokeWidth="1.6" />
+    <path d="M7 6H4c0 2.5 1.5 4 3 4M17 6h3c0 2.5-1.5 4-3 4" stroke={A_WARN} strokeWidth="1.4" strokeLinecap="round" />
+    <line x1="12" y1="14" x2="12" y2="18" stroke={A_WARN} strokeWidth="1.6" />
+    <line data-part="draw" x1="8" y1="18" x2="16" y2="18" stroke={A_WARN} strokeWidth="1.8" strokeLinecap="round" />
+  </>
+));
+
+export const RocketIcon = makeIcon('rocket', () => (
+  <>
+    <path data-part="body" d="M12 2.5c3.5 1.5 6 5.5 6 10.5l-3 3-3-2-3 2-3-3c0-5 2.5-9 6-10.5z" stroke={A_ERR} strokeWidth="1.6" />
+    <circle cx="12" cy="8.5" r="1.5" stroke={A_GLOW} strokeWidth="1.2" />
+    <path data-part="spark" d="M9 18l3 3.5 3-3.5" stroke={A_WARN} strokeWidth="1.6" strokeLinecap="round" />
+  </>
+));
+
+export const MagnetIcon = makeIcon('magnet', () => (
+  <>
+    <path data-part="body" d="M5.5 4v7a6.5 6.5 0 0 0 13 0V4" stroke={A_ERR} strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M4 8h3M17 8h3" stroke={A_GLOW} strokeWidth="1.4" strokeLinecap="round" />
+    <line data-part="pulse" x1="4" y1="4" x2="7" y2="4" stroke={A_GLOW} strokeWidth="2.2" strokeLinecap="round" />
+    <line data-part="pulse" x1="17" y1="4" x2="20" y2="4" stroke={A_GLOW} strokeWidth="2.2" strokeLinecap="round" />
+  </>
+));
+
+export const FlameIcon = makeIcon('flame', () => (
+  <>
+    <path data-part="body" d="M8.5 14c0 2 1.6 3.5 3.5 3.5s3.5-1.5 3.5-3.5c0-2-1.5-3.5-2-5-.5 1.5-1 2-1 2s-.5-2.5-2-4.5c-1.5 2.5-2 5.5-2 7.5z" stroke={A_WARN} strokeWidth="1.6" fill="none" />
+  </>
+));
+
+export const SparklesIcon = makeIcon('sparkles', () => (
+  <>
+    <path data-part="pulse" d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" stroke={A_WARN} strokeWidth="1.5" strokeLinejoin="round" />
+    <circle data-part="spark" cx="19" cy="5" r="1" fill={A_GLOW} />
+    <circle data-part="spark" cx="5" cy="18" r="1" fill={A_GLOW} />
+  </>
+));
+
+export const CoinsIcon = makeIcon('coins', () => (
+  <>
+    <circle data-part="body" cx="9" cy="13" r="5.5" stroke={A_WARN} strokeWidth="1.6" />
+    <path data-part="lift" d="M14.5 7.5a5.5 5.5 0 0 0-5.5-2c-.3 0-.6 0-.9.1a5.5 5.5 0 0 1 6.9 6.9c.1-.3.1-.6.1-.9a5.5 5.5 0 0 0-.6-4.1z" stroke={A_WARN} strokeWidth="1.4" />
+    <text x="9" y="15" fontSize="6" fontWeight="bold" textAnchor="middle" fill={A_WARN} stroke="none">$</text>
+  </>
+));
+
+export const SkateboardIcon = makeIcon('skateboard', () => (
+  <>
+    <path data-part="body" d="M3 9c1.5-2 3-2 6-1.5l6 1c3 .5 4.5.5 6-1.5" stroke={A_GLOW} strokeWidth="1.8" strokeLinecap="round" />
+    <circle data-part="spark" cx="7" cy="13" r="1.6" stroke={A_OK} strokeWidth="1.4" />
+    <circle data-part="spark" cx="17" cy="15" r="1.6" stroke={A_OK} strokeWidth="1.4" />
+  </>
+));
+
+export const SneakersIcon = makeIcon('sneakers', () => (
+  <>
+    <path data-part="body" d="M4 14l3-7 5 2 7 2v3H4z" stroke={A_SOFT} strokeWidth="1.6" strokeLinejoin="round" />
+    <line x1="4" y1="16.5" x2="19" y2="16.5" stroke={A_GLOW} strokeWidth="1.8" strokeLinecap="round" />
+    <path data-part="pulse" d="M8 9l2 2m-1-4l2 2" stroke={A_WARN} strokeWidth="1.3" strokeLinecap="round" />
+  </>
+));
+

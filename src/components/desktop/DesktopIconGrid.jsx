@@ -5,7 +5,7 @@ import {
   MonitorIcon, FolderIcon, FolderOpenIcon, TrashIcon, BoltIcon, GlobeIcon,
   PenIcon, MusicNoteIcon, ImageIcon, GearIcon,
   FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
-  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon, FilmIcon,
+  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon, FilmIcon, GamepadIcon,
 } from '../Icons';
 import { appForFile } from '../../services/fileRouting';
 import styles from './DesktopIconGrid.module.css';
@@ -37,6 +37,7 @@ export default function DesktopIconGrid({
   }, [loadDesktopFiles]);
 
   const SYSTEM_SHORTCUTS = [
+    { id: 'shortcut-subwaysurge', name: 'Subway Surge 3D', icon: <GamepadIcon size={28} />, action: () => onLaunchApp('subwaysurge', 'Subway Surge 3D', null) },
     { id: 'shortcut-pc', name: 'This PC', icon: <MonitorIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/' }) },
     { id: 'shortcut-files', name: 'File Explorer', icon: <FolderIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/Users/User' }) },
     { id: 'shortcut-code', name: 'Code Studio', icon: <CodeIcon size={28} />, action: () => onLaunchApp('code', 'Code Studio', null) },

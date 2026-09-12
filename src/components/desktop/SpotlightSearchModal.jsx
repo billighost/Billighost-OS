@@ -3,7 +3,7 @@ import { VFS } from '../../services/storage/indexedDB';
 import {
   SearchIcon, FolderIcon, FileIcon, FileTextIcon, BoltIcon, GlobeIcon,
   PenIcon, MusicNoteIcon, ImageIcon, GridHashIcon, GearIcon,
-  ChartBarIcon, TrashIcon, CodeIcon, BrushIcon, CheckIcon,
+  ChartBarIcon, TrashIcon, CodeIcon, BrushIcon, CheckIcon, GamepadIcon,
 } from '../Icons';
 import styles from './SpotlightSearchModal.module.css';
 
@@ -90,6 +90,7 @@ export default function SpotlightSearchModal({
 
   // System Applications Registry
   const ALL_APPS = useMemo(() => [
+    { id: 'subwaysurge', name: 'Subway Surge 3D', desc: 'High-speed 3D endless subway runner', icon: <GamepadIcon size={18} /> },
     { id: 'files', name: 'Files', desc: 'Browse Virtual File System', icon: <FolderIcon size={18} /> },
     { id: 'code', name: 'Code Studio', desc: 'Pro Syntax-Highlighted Code Editor', icon: <CodeIcon size={18} /> },
     { id: 'paint', name: 'Paint Studio', desc: 'Drawing & Canvas Art Studio', icon: <BrushIcon size={18} /> },

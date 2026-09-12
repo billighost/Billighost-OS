@@ -4,7 +4,7 @@ import {
   FileTextIcon, ScrollIcon, GhostIcon, TerminalIcon,
   CalculatorIcon, GaugeIcon, FilmIcon,
   LockIcon, RefreshIcon, PowerIcon, SearchIcon,
-  CodeIcon, BrushIcon,
+  CodeIcon, BrushIcon, GamepadIcon,
 } from '../Icons';
 import styles from './StartMenu.module.css';
 
@@ -20,6 +20,7 @@ export default function StartMenu({
   const [searchQuery, setSearchQuery] = useState('');
 
   const APPS = [
+    { id: 'subwaysurge', name: 'Subway Surge 3D', icon: <GamepadIcon size={22} />, desc: '3D High-Speed Subway Runner' },
     { id: 'files', name: 'Files', icon: <FolderIcon size={22} />, desc: 'Virtual File System & Explorer' },
     { id: 'code', name: 'Code Studio', icon: <CodeIcon size={22} />, desc: 'Syntax-Highlighted Code Editor' },
     { id: 'paint', name: 'Paint Studio', icon: <BrushIcon size={22} />, desc: 'Canvas Art & Graphics Studio' },
