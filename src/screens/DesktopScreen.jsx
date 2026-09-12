@@ -40,12 +40,13 @@ import CalculatorApp from '../apps/CalculatorApp';
 import RecycleBinApp from '../apps/RecycleBinApp';
 import VideoEditorApp from '../apps/VideoEditorApp';
 import SubwaySurgeApp from '../apps/SubwaySurgeApp';
+import Aetheria3DApp from '../apps/Aetheria3DApp';
 
 import {
   GearIcon, WindowsIcon, FolderIcon, ImageIcon, PenIcon,
   CodeIcon, BrushIcon, SearchIcon, WidgetsIcon, TerminalIcon,
   CalculatorIcon, GhostIcon, MusicNoteIcon, TrashIcon, GaugeIcon,
-  FileIcon, FilmIcon, GamepadIcon,
+  FileIcon, FilmIcon, GamepadIcon, SwordIcon,
 } from '../components/Icons';
 
 import { appForFile } from '../services/fileRouting';
@@ -76,6 +77,7 @@ function AppTabSvgIcon({ appId }) {
     monitor: <GaugeIcon size={14} />,
     video: <FilmIcon size={14} />,
     subwaysurge: <GamepadIcon size={14} />,
+    aetheria: <SwordIcon size={14} />,
   };
   return iconMap[appId] || <FileIcon size={14} />;
 }
@@ -97,6 +99,7 @@ export function AppIcon({ appId, size = 15 }) {
     monitor: <GaugeIcon size={size} />,
     video: <FilmIcon size={size} />,
     subwaysurge: <GamepadIcon size={size} />,
+    aetheria: <SwordIcon size={size} />,
   };
   return map[appId] || <FileIcon size={size} />;
 }
@@ -360,6 +363,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
         trash: { w: 680, h: 440 },
         video: { w: 900, h: 600 },
         subwaysurge: { w: 860, h: 580 },
+        aetheria: { w: 920, h: 620 },
       };
 
       const size = defaultSizes[appId] || { w: 640, h: 420 };
@@ -828,6 +832,11 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
             )}
             {win.appId === 'subwaysurge' && (
               <SubwaySurgeApp
+                playClick={playClick}
+              />
+            )}
+            {win.appId === 'aetheria' && (
+              <Aetheria3DApp
                 playClick={playClick}
               />
             )}

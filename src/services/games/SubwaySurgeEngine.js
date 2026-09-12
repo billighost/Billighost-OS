@@ -1065,7 +1065,7 @@ export class SubwaySurgeEngine {
     if (!this.isRunning || this.isPaused) return;
     if (this.jetpackActive) return;
     // Don't restart slide if already sliding actively
-    if (this.isSliding && this.slideTimer > 0.15) return;
+    if (this.isSliding && this.slideTimer > 0.05) return;
 
     if (!this.isGrounded) {
       // Fast fall slam down to track
@@ -1073,7 +1073,8 @@ export class SubwaySurgeEngine {
       this.createFootstepDust(this.playerGroup.position.x, this.playerGroup.position.z);
     }
     this.isSliding = true;
-    this.slideTimer = 0.6; // 0.6s crisp slide duration
+    this.slideDuration = 0.26; // Snappy 0.26s slide duration
+    this.slideTimer = 0.26;
     subwayAudio.playSlide();
   }
 
@@ -1593,7 +1594,7 @@ export class SubwaySurgeEngine {
 
     if (this.isSliding) {
       // Smooth tuck and rise using sine curve (prevents clipping through floor)
-      const progress = Math.max(0, this.slideTimer / 0.6);
+      const progress = Math.max(0, this.slideTimer / (this.slideDuration || 0.26));
       const tuck = Math.sin(progress * Math.PI);
       this.charRoot.position.y = THREE.MathUtils.lerp(1.0, 0.48, tuck);
       this.charRoot.rotation.x = THREE.MathUtils.lerp(0.1, -0.45, tuck);

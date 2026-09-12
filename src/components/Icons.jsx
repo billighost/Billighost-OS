@@ -1254,13 +1254,20 @@ export const GamepadIcon = makeIcon('gamepad', () => (
 
 export const SubwayIcon = makeIcon('subway', () => (
   <>
-    <rect data-part="body" x="4.5" y="3.5" width="15" height="15" rx="2.5" stroke="currentColor" strokeWidth="1.6" />
-    <line x1="4.5" y1="11.5" x2="19.5" y2="11.5" stroke="currentColor" strokeWidth="1.4" />
-    <rect x="7" y="5.5" width="10" height="4.5" rx="1" stroke={A_GLOW} strokeWidth="1.2" />
-    <circle data-part="spark" cx="7.5" cy="15" r="1.2" fill={A_WARN} stroke={A_WARN} strokeWidth="0.6" />
-    <circle data-part="spark" cx="16.5" cy="15" r="1.2" fill={A_WARN} stroke={A_WARN} strokeWidth="0.6" />
-    <line data-part="draw" x1="6.5" y1="18.5" x2="4.5" y2="21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    <line data-part="draw" x1="17.5" y1="18.5" x2="19.5" y2="21" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    {/* Aerodynamic Subway Car Body */}
+    <rect data-part="body" x="4" y="3" width="16" height="15" rx="3" fill="rgba(2,132,199,0.12)" stroke="currentColor" strokeWidth="1.6" />
+    {/* Recessed Windshield & Roof light */}
+    <path d="M6 5.5h12v4.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5.5z" fill="rgba(56,189,248,0.22)" stroke={A_GLOW} strokeWidth="1.2" />
+    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1 1" />
+    {/* High-Beam Glowing Headlights */}
+    <circle data-part="spark" cx="7.2" cy="15" r="1.4" fill={A_WARN} stroke={A_WARN} strokeWidth="0.5" />
+    <circle data-part="spark" cx="16.8" cy="15" r="1.4" fill={A_WARN} stroke={A_WARN} strokeWidth="0.5" />
+    {/* Grille / Fender */}
+    <line x1="10" y1="15.2" x2="14" y2="15.2" stroke={A_GLOW} strokeWidth="1.4" strokeLinecap="round" />
+    {/* Angled High-Speed Rail Tracks */}
+    <line data-part="draw" x1="6.5" y1="18.5" x2="3.5" y2="21.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <line data-part="draw" x1="17.5" y1="18.5" x2="20.5" y2="21.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <line x1="7" y1="20.5" x2="17" y2="20.5" stroke="rgba(255,255,255,0.3)" strokeWidth="1.1" strokeLinecap="round" />
   </>
 ));
 
@@ -1327,4 +1334,80 @@ export const SneakersIcon = makeIcon('sneakers', () => (
     <path data-part="pulse" d="M8 9l2 2m-1-4l2 2" stroke={A_WARN} strokeWidth="1.3" strokeLinecap="round" />
   </>
 ));
+
+export const SwordIcon = makeIcon('sword', () => (
+  <>
+    <path data-part="body" d="M19 5l-8.5 8.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M19 5l-3 1-5 5M19 5l-1 3-5 5" stroke={A_GLOW} strokeWidth="1.3" />
+    <line x1="8.5" y1="11.5" x2="12.5" y2="15.5" stroke={A_WARN} strokeWidth="1.8" strokeLinecap="round" />
+    <line data-part="draw" x1="10.5" y1="13.5" x2="6" y2="18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    <circle data-part="spark" cx="4.5" cy="19.5" r="1.2" fill={A_WARN} stroke={A_WARN} strokeWidth="0.5" />
+  </>
+));
+
+export const CompassIcon = makeIcon('compass', () => (
+  <>
+    <circle data-part="body" cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+    <polygon data-part="pulse" points="15.5,8.5 13,13 8.5,15.5 11,11" fill="rgba(6,182,212,0.2)" stroke={A_GLOW} strokeWidth="1.4" strokeLinejoin="round" />
+    <circle cx="12" cy="12" r="1.2" fill={A_ERR} stroke="none" />
+  </>
+));
+
+export const HeartIcon = makeIcon('heart', () => (
+  <>
+    <path
+      data-part="body"
+      d="M12 20.5l-1.4-1.3C5.4 14.5 2 11.4 2 7.6 2 4.5 4.5 2 7.5 2c1.7 0 3.4.8 4.5 2.1C13.1 2.8 14.8 2 16.5 2 19.5 2 22 4.5 22 7.6c0 3.8-3.4 6.9-8.6 11.6L12 20.5z"
+      fill="rgba(239,68,68,0.18)"
+      stroke={A_ERR}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </>
+));
+
+export const PotionIcon = makeIcon('potion', () => (
+  <>
+    <path data-part="body" d="M10 3h4v3l3.5 6c1 1.8.5 4-1.2 5.2A6 6 0 0 1 8 16.5c-1.5-1.5-1.8-3.7-.8-5.3L10 6V3z" stroke={A_OK} strokeWidth="1.6" strokeLinejoin="round" />
+    <line x1="9" y1="3" x2="15" y2="3" stroke={A_WARN} strokeWidth="1.8" strokeLinecap="round" />
+    <circle data-part="spark" cx="12" cy="12" r="1.5" fill={A_OK} stroke="none" />
+    <circle data-part="spark" cx="10.5" cy="14.5" r="1" fill={A_OK} stroke="none" />
+  </>
+));
+
+export const SkullIcon = makeIcon('skull', () => (
+  <>
+    <path
+      data-part="body"
+      d="M12 4c-4.4 0-7.5 3.1-7.5 7.5 0 2.2.9 4.2 2.3 5.6v2.9h10.4v-2.9c1.4-1.4 2.3-3.4 2.3-5.6C19.5 7.1 16.4 4 12 4z"
+      fill="rgba(239,68,68,0.15)"
+      stroke={A_ERR}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle data-part="spark" cx="9" cy="11.5" r="1.5" fill={A_ERR} stroke="none" />
+    <circle data-part="spark" cx="15" cy="11.5" r="1.5" fill={A_ERR} stroke="none" />
+    <line x1="10" y1="17" x2="10" y2="20" stroke={A_ERR} strokeWidth="1.4" />
+    <line x1="14" y1="17" x2="14" y2="20" stroke={A_ERR} strokeWidth="1.4" />
+  </>
+));
+
+export const CrosshairIcon = makeIcon('crosshair', () => (
+  <>
+    <circle data-part="body" cx="12" cy="12" r="7.5" stroke="currentColor" strokeWidth="1.6" />
+    <line x1="12" y1="2.5" x2="12" y2="6.5" stroke={A_GLOW} strokeWidth="1.6" />
+    <line x1="12" y1="17.5" x2="12" y2="21.5" stroke={A_GLOW} strokeWidth="1.6" />
+    <line x1="2.5" y1="12" x2="6.5" y2="12" stroke={A_GLOW} strokeWidth="1.6" />
+    <line x1="17.5" y1="12" x2="21.5" y2="12" stroke={A_GLOW} strokeWidth="1.6" />
+    <circle data-part="pulse" cx="12" cy="12" r="1.2" fill={A_WARN} stroke="none" />
+  </>
+));
+
+// Compatibility Aliases
+export const Volume2Icon = VolumeIcon;
+export const VolumeXIcon = VolumeMuteIcon;
+export const RotateCcwIcon = RotateIcon;
+
 
