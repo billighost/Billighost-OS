@@ -1,6 +1,6 @@
 /**
  * Aetheria 3D — Full 3D Open World Action RPG Application
- * Billighost OS High-Polish Experience
+ * Billighost OS Ultimate Experience
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -10,9 +10,7 @@ import {
   SwordIcon,
   ShieldIcon,
   SparklesIcon,
-  HeartIcon,
   PotionIcon,
-  CompassIcon,
   PlayIcon,
   PauseIcon,
   Volume2Icon,
@@ -20,7 +18,11 @@ import {
   RotateCcwIcon,
   TrophyIcon,
   SkullIcon,
-  CrosshairIcon,
+  HorseIcon,
+  GhostIcon,
+  PaletteIcon,
+  ZapIcon,
+  TargetLockIcon,
 } from '../components/Icons';
 import styles from './Aetheria3DApp.module.css';
 
@@ -31,32 +33,55 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
   const inputLoopRef = useRef(null);
   const keysRef = useRef({});
 
-  // Game UI State
-  const [gameState, setGameState] = useState('start'); // 'start' | 'playing' | 'paused' | 'gameover' | 'victory'
+  // Game UI State: 'start' | 'playing' | 'paused' | 'customizer' | 'settings' | 'gameover' | 'victory'
+  const [gameState, setGameState] = useState('start');
   const [isMuted, setIsMuted] = useState(false);
   const [killerName, setKillerName] = useState('Wild Beast');
   const [toastMessage, setToastMessage] = useState(null);
 
+  // Character Class & Customization State
+  const [selectedClass, setSelectedClass] = useState('paladin');
+  const [customization, setCustomization] = useState({
+    palette: 'spectral',
+    hasCape: true,
+    hasHelmet: true,
+    mountType: 'horse',
+  });
+
+  // Graphics Quality Preset: 'ultra' | 'high' | 'low'
+  const [graphicsQuality, setGraphicsQuality] = useState('high');
+
   // Player RPG Stats
   const [playerStats, setPlayerStats] = useState({
-    hp: 100,
-    maxHp: 100,
+    hp: 120,
+    maxHp: 120,
     stamina: 100,
     maxStamina: 100,
     level: 1,
     exp: 0,
     expNext: 100,
-    potions: 2,
-    equippedWeapon: 'Iron Longsword',
-    attackPower: 25,
+    potions: 3,
+    equippedWeapon: 'Paladin Sunblade',
+    attackPower: 28,
   });
 
   // Boss Stats
   const [bossData, setBossData] = useState({
     active: false,
-    hp: 400,
-    maxHp: 400,
+    hp: 500,
+    maxHp: 500,
   });
+
+  // Ghost Surge (Ascendance Overdrive)
+  const [ghostSurgeData, setGhostSurgeData] = useState({
+    charge: 0,
+    active: false,
+    timer: 0,
+  });
+
+  // Mount & Lock-On States
+  const [isMounted, setIsMounted] = useState(false);
+  const [lockedTargetName, setLockedTargetName] = useState(null);
 
   // Virtual Joystick State
   const joystickRef = useRef({
@@ -75,7 +100,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     lastY: 0,
   });
 
-  // Toast Notification timer
+  // Toast Notification
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => {
@@ -112,6 +137,15 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
           maxHp,
         });
       },
+      onGhostSurgeUpdate: (surge) => {
+        setGhostSurgeData({ ...surge });
+      },
+      onMountUpdate: (mounted) => {
+        setIsMounted(mounted);
+      },
+      onTargetLockUpdate: (target) => {
+        setLockedTargetName(target);
+      },
       onChestOpen: (reward) => {
         showToast(`Discovered ${reward}!`);
       },
@@ -133,7 +167,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     };
   }, [showToast]);
 
-  // Minimap Radar Drawing
+  // Minimap Radar Drawing (Topographic Elevation & Icons)
   const drawMinimap = (data) => {
     const canvas = minimapCanvasRef.current;
     if (!canvas) return;
@@ -144,11 +178,10 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     const h = canvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const radarScale = 0.55; // 1 unit in 3D = 0.55 pixels on radar
+    const radarScale = 0.38; // 1 unit in 3D = 0.38 pixels on radar
 
     ctx.clearRect(0, 0, w, h);
 
-    // Background circle clip
     ctx.save();
     ctx.beginPath();
     ctx.arc(cx, cy, cx - 2, 0, Math.PI * 2);
@@ -157,12 +190,12 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, w, h);
 
-    // Radar concentric rings
+    // Concentric elevation rings
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(cx, cy, (cx - 2) * 0.4, 0, Math.PI * 2);
-    ctx.arc(cx, cy, (cx - 2) * 0.75, 0, Math.PI * 2);
+    ctx.arc(cx, cy, (cx - 2) * 0.38, 0, Math.PI * 2);
+    ctx.arc(cx, cy, (cx - 2) * 0.72, 0, Math.PI * 2);
     ctx.stroke();
 
     // Crosshairs
@@ -174,58 +207,83 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     ctx.lineTo(w, cy);
     ctx.stroke();
 
-    // Draw Chests
+    // Draw Ghost Orbs (Cyan dots)
+    if (data.orbs) {
+      ctx.fillStyle = '#38bdf8';
+      data.orbs.forEach((orb) => {
+        const dx = (orb.x - data.playerX) * radarScale;
+        const dz = (orb.z - data.playerZ) * radarScale;
+        const rx = cx + dx;
+        const ry = cy + dz;
+        if (Math.hypot(dx, dz) < cx - 4) {
+          ctx.beginPath();
+          ctx.arc(rx, ry, 2.0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    }
+
+    // Draw Chests (Gold squares)
     if (data.chests) {
       data.chests.forEach((chest) => {
         const dx = (chest.x - data.playerX) * radarScale;
         const dz = (chest.z - data.playerZ) * radarScale;
         const rx = cx + dx;
         const ry = cy + dz;
-        const dist = Math.hypot(dx, dz);
-        if (dist < cx - 6) {
+        if (Math.hypot(dx, dz) < cx - 6) {
           ctx.fillStyle = chest.opened ? '#64748b' : '#fbbf24';
-          ctx.beginPath();
-          ctx.arc(rx, ry, 2.5, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.fillRect(rx - 2, ry - 2, 4, 4);
         }
       });
     }
 
-    // Draw Enemies
+    // Draw Enemies (Boss = large red, Ghost = purple/cyan, Wolves = amber)
     if (data.enemies) {
       data.enemies.forEach((enemy) => {
         const dx = (enemy.x - data.playerX) * radarScale;
         const dz = (enemy.z - data.playerZ) * radarScale;
         const rx = cx + dx;
         const ry = cy + dz;
-        const dist = Math.hypot(dx, dz);
-        if (dist < cx - 4) {
+        if (Math.hypot(dx, dz) < cx - 4) {
           if (enemy.type === 'boss') {
             ctx.fillStyle = '#ef4444';
             ctx.beginPath();
             ctx.arc(rx, ry, 4.5, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1.2;
             ctx.stroke();
-          } else {
-            ctx.fillStyle = enemy.type === 'wolf' ? '#a855f7' : '#f97316';
+          } else if (enemy.type === 'ghost') {
+            ctx.fillStyle = '#c084fc';
             ctx.beginPath();
-            ctx.arc(rx, ry, 2.8, 0, Math.PI * 2);
+            ctx.arc(rx, ry, 3.0, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillStyle = enemy.type === 'wolf' ? '#f97316' : '#22c55e';
+            ctx.beginPath();
+            ctx.arc(rx, ry, 2.6, 0, Math.PI * 2);
             ctx.fill();
           }
         }
       });
     }
 
-    // Draw Player Pointer at center
+    // Draw Player Pointer at center (with horse ring if mounted)
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(data.facingAngle);
 
+    if (data.isMounted) {
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.rotate(data.facingAngle);
     ctx.fillStyle = '#38bdf8';
     ctx.beginPath();
-    ctx.moveTo(0, 5);
+    ctx.moveTo(0, 6);
     ctx.lineTo(-4, -4);
     ctx.lineTo(0, -2);
     ctx.lineTo(4, -4);
@@ -244,13 +302,11 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
         let moveX = 0;
         let moveZ = 0;
 
-        // Keyboard WASD / Arrows (W/Up = forward +1, S/Down = backward -1)
         if (keys['KeyW'] || keys['ArrowUp']) moveZ += 1;
         if (keys['KeyS'] || keys['ArrowDown']) moveZ -= 1;
         if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
         if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
 
-        // Virtual Touch Joystick input (pushing up gives negative dy -> forward +Z)
         const joy = joystickRef.current;
         if (joy.active) {
           moveX += joy.dx;
@@ -274,7 +330,6 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
   // Keyboard Event Handlers
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Avoid key repeat loops
       if (e.repeat) return;
 
       keysRef.current[e.code] = true;
@@ -286,25 +341,49 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
         return;
       }
 
-      if (e.code === 'KeyJ' || e.code === 'KeyF') {
-        // Combat Attack
+      // Feature 1: Mount/Dismount Steed (H)
+      if (e.code === 'KeyH') {
+        engineRef.current?.toggleMount();
+      }
+      // Feature 21: Jump (Spacebar)
+      else if (e.code === 'Space') {
+        engineRef.current?.jump();
+      }
+      // Feature 22: Target Lock (Tab)
+      else if (e.code === 'Tab') {
+        e.preventDefault();
+        engineRef.current?.toggleTargetLock();
+      }
+      // Feature 3: Ghost Surge Overdrive (G)
+      else if (e.code === 'KeyG') {
+        engineRef.current?.triggerGhostSurge();
+      }
+      // Combat Attack (J / F)
+      else if (e.code === 'KeyJ' || e.code === 'KeyF') {
         engineRef.current?.attack();
-      } else if (e.code === 'KeyK') {
-        // Shield Block
+      }
+      // Shield Block (Hold K)
+      else if (e.code === 'KeyK') {
         engineRef.current?.block(true);
-      } else if (e.code === 'KeyE') {
-        // Arcane Bolt
+      }
+      // Magic Bolt (E)
+      else if (e.code === 'KeyE') {
         engineRef.current?.castMagicBolt();
-      } else if (e.code === 'KeyC' || e.code === 'Space') {
-        // Dodge Roll
+      }
+      // Dodge Roll (C)
+      else if (e.code === 'KeyC') {
         engineRef.current?.dodgeRoll();
-      } else if (e.code === 'KeyQ') {
-        // Health Potion
+      }
+      // Health Potion (Q)
+      else if (e.code === 'KeyQ') {
         engineRef.current?.usePotion();
-      } else if (e.code === 'KeyE') {
-        // Chest Interaction
-        engineRef.current?.interactChest();
-      } else if (e.code === 'Escape') {
+      }
+      // Interact (F / R)
+      else if (e.code === 'KeyR') {
+        engineRef.current?.interact();
+      }
+      // Pause (Escape)
+      else if (e.code === 'Escape') {
         handleTogglePause();
       }
     };
@@ -342,7 +421,6 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     cameraDragRef.current.lastX = e.clientX;
     cameraDragRef.current.lastY = e.clientY;
 
-    // Natural orbit: Drag right rotates view right, drag up tilts view up
     engineRef.current.rotateCamera(-deltaX * 0.005, deltaY * 0.004);
   };
 
@@ -352,7 +430,6 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
 
   // Virtual Joystick Handlers
   const handleJoyStart = (e) => {
-    const touch = e.touches ? e.touches[0] : e;
     const rect = e.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
@@ -410,11 +487,41 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     }
   };
 
+  const handleOpenCustomizer = () => {
+    playClick();
+    if (gameState === 'playing') engineRef.current?.pause();
+    setGameState('customizer');
+  };
+
+  const handleOpenSettings = () => {
+    playClick();
+    if (gameState === 'playing') engineRef.current?.pause();
+    setGameState('settings');
+  };
+
+  const handleApplyClass = (classId) => {
+    playClick();
+    setSelectedClass(classId);
+    engineRef.current?.setClassAndCustomization(classId, customization);
+  };
+
+  const handleApplyPalette = (palette) => {
+    playClick();
+    const newCust = { ...customization, palette };
+    setCustomization(newCust);
+    engineRef.current?.setClassAndCustomization(selectedClass, newCust);
+  };
+
+  const handleApplyQuality = (quality) => {
+    playClick();
+    setGraphicsQuality(quality);
+    engineRef.current?.setGraphicsQuality(quality);
+  };
+
   const handleRestart = () => {
     playClick();
     engineRef.current?.destroy();
 
-    // Re-initialize engine
     const engine = new AetheriaEngine(canvasRef.current, {
       onStatsUpdate: (stats) => {
         setPlayerStats({
@@ -432,6 +539,9 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
       },
       onMinimapUpdate: (data) => drawMinimap(data),
       onBossUpdate: (hp, maxHp) => setBossData({ active: hp > 0, hp, maxHp }),
+      onGhostSurgeUpdate: (surge) => setGhostSurgeData({ ...surge }),
+      onMountUpdate: (mounted) => setIsMounted(mounted),
+      onTargetLockUpdate: (target) => setLockedTargetName(target),
       onChestOpen: (reward) => showToast(`Discovered ${reward}!`),
       onGameOver: (killer) => {
         setKillerName(killer || 'Wild Beast');
@@ -440,6 +550,8 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
       onVictory: () => setGameState('victory'),
     });
 
+    engine.setClassAndCustomization(selectedClass, customization);
+    engine.setGraphicsQuality(graphicsQuality);
     engineRef.current = engine;
     engine.start();
     setGameState('playing');
@@ -483,6 +595,18 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                   <SwordIcon size={12} />
                   <span>LV. {playerStats.level}</span>
                 </div>
+                {isMounted && (
+                  <div className={styles.mountBadge}>
+                    <HorseIcon size={12} />
+                    <span>MOUNTED</span>
+                  </div>
+                )}
+                {lockedTargetName && (
+                  <div className={styles.targetLockBadge}>
+                    <TargetLockIcon size={12} />
+                    <span>{lockedTargetName}</span>
+                  </div>
+                )}
                 <div className={styles.weaponTag} title={playerStats.equippedWeapon}>
                   {playerStats.equippedWeapon}
                 </div>
@@ -512,6 +636,24 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                   <div
                     className={styles.staminaFill}
                     style={{ width: `${Math.max(0, (playerStats.stamina / playerStats.maxStamina) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Ghost Surge Overdrive Bar */}
+              <div className={styles.barRow}>
+                <div className={styles.barLabel}>
+                  <span>GHOST SURGE</span>
+                  <span>{ghostSurgeData.active ? `${Math.ceil(ghostSurgeData.timer)}s` : `${ghostSurgeData.charge}%`}</span>
+                </div>
+                <div className={styles.barTrack}>
+                  <div
+                    className={styles.ghostFill}
+                    style={{
+                      width: ghostSurgeData.active
+                        ? `${(ghostSurgeData.timer / 12) * 100}%`
+                        : `${ghostSurgeData.charge}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -550,6 +692,13 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
             {/* Top Right: Controls & Minimap */}
             <div className={styles.topRightCol}>
               <div className={styles.topActions}>
+                <button
+                  className={styles.hudButton}
+                  onClick={handleOpenCustomizer}
+                  title="Customize Hero & Mount"
+                >
+                  <PaletteIcon size={16} />
+                </button>
                 <button
                   className={styles.hudButton}
                   onClick={handleToggleMute}
@@ -614,6 +763,58 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
 
             {/* Action Buttons */}
             <div className={styles.actionButtonGroup}>
+              {/* Mount / Dismount Steed */}
+              <button
+                className={`${styles.actionBtn} ${styles.actionBtnMount} ${isMounted ? styles.actionBtnMountActive : ''}`}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.toggleMount();
+                }}
+                title="Mount / Dismount Steed (H)"
+              >
+                <HorseIcon size={18} />
+                <span className={styles.actionKeyHint}>H</span>
+              </button>
+
+              {/* Jump Button */}
+              <button
+                className={styles.actionBtn}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.jump();
+                }}
+                title="Jump / Gallop-Jump (Space)"
+              >
+                <RotateCcwIcon size={18} />
+                <span className={styles.actionKeyHint}>Spc</span>
+              </button>
+
+              {/* Target Lock-on Button */}
+              <button
+                className={`${styles.actionBtn} ${styles.actionBtnLock} ${lockedTargetName ? styles.actionBtnLockActive : ''}`}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.toggleTargetLock();
+                }}
+                title="Lock-On Target (Tab)"
+              >
+                <TargetLockIcon size={18} />
+                <span className={styles.actionKeyHint}>Tab</span>
+              </button>
+
+              {/* Ghost Surge Overdrive */}
+              <button
+                className={`${styles.actionBtn} ${styles.actionBtnGhost} ${ghostSurgeData.charge >= 100 || ghostSurgeData.active ? styles.actionBtnGhostReady : ''}`}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.triggerGhostSurge();
+                }}
+                title="Ghost Ascendance Overdrive (G)"
+              >
+                <ZapIcon size={18} />
+                <span className={styles.actionKeyHint}>G</span>
+              </button>
+
               {/* Magic Bolt */}
               <button
                 className={styles.actionBtn}
@@ -638,19 +839,6 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 <span className={styles.actionKeyHint}>K</span>
               </button>
 
-              {/* Dodge Roll */}
-              <button
-                className={styles.actionBtn}
-                onClick={() => {
-                  playClick();
-                  engineRef.current?.dodgeRoll();
-                }}
-                title="Dodge Roll (C / Space)"
-              >
-                <RotateCcwIcon size={18} />
-                <span className={styles.actionKeyHint}>C</span>
-              </button>
-
               {/* Attack (Primary) */}
               <button
                 className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
@@ -658,7 +846,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                   playClick();
                   engineRef.current?.attack();
                 }}
-                title="Sword Combo Attack (J / Click)"
+                title="Combo Attack (J / Click)"
               >
                 <SwordIcon size={22} />
                 <span className={styles.actionKeyHint}>J</span>
@@ -680,42 +868,42 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
               </div>
               <h2 className={styles.modalTitle}>AETHERIA 3D</h2>
               <p className={styles.modalSubtitle}>
-                Venture into the mystical realm of Aetheria. Hunt shadow beasts, unearth ancient relic chests, level up your warrior, and slay the Ancient Stone Golem.
+                Ultimate Billighost OS Edition. Ride mounts, hunt Phantoms, unearth ancient relic chests, level up your warrior, and conquer the Monolith Colosseum.
               </p>
             </div>
 
             <div className={styles.controlsCheatSheet}>
               <div className={styles.controlRow}>
-                <span>Move Warrior</span>
+                <span>Move Warrior / Mount</span>
                 <span className={styles.keyBadge}>W A S D / Joystick</span>
               </div>
               <div className={styles.controlRow}>
-                <span>Sprint</span>
-                <span className={styles.keyBadge}>Shift</span>
+                <span>Mount / Dismount Steed</span>
+                <span className={styles.keyBadge}>H</span>
               </div>
               <div className={styles.controlRow}>
-                <span>3-Hit Sword Attack</span>
+                <span>Jump / Gallop-Jump</span>
+                <span className={styles.keyBadge}>Spacebar</span>
+              </div>
+              <div className={styles.controlRow}>
+                <span>3-Hit Combo Attack</span>
                 <span className={styles.keyBadge}>J / Click</span>
+              </div>
+              <div className={styles.controlRow}>
+                <span>Lock-On Target</span>
+                <span className={styles.keyBadge}>Tab</span>
+              </div>
+              <div className={styles.controlRow}>
+                <span>Ghost Ascendance</span>
+                <span className={styles.keyBadge}>G</span>
               </div>
               <div className={styles.controlRow}>
                 <span>Shield Block (80% def)</span>
                 <span className={styles.keyBadge}>Hold K</span>
               </div>
               <div className={styles.controlRow}>
-                <span>Arcane Magic Bolt</span>
-                <span className={styles.keyBadge}>E</span>
-              </div>
-              <div className={styles.controlRow}>
-                <span>Dodge Roll (I-Frames)</span>
-                <span className={styles.keyBadge}>C / Space</span>
-              </div>
-              <div className={styles.controlRow}>
-                <span>Heal Potion</span>
-                <span className={styles.keyBadge}>Q</span>
-              </div>
-              <div className={styles.controlRow}>
-                <span>Orbit Camera</span>
-                <span className={styles.keyBadge}>Drag Screen</span>
+                <span>Arcane Bolt / Heal</span>
+                <span className={styles.keyBadge}>E / Q</span>
               </div>
             </div>
 
@@ -724,12 +912,163 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 <PlayIcon size={16} />
                 <span>Embark on Adventure</span>
               </button>
+              <button className={styles.btnSecondary} onClick={handleOpenCustomizer}>
+                <PaletteIcon size={16} />
+                <span>Customize Hero & Mount</span>
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. Pause Screen */}
+      {/* 2. Character Customizer Modal */}
+      {gameState === 'customizer' && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIconRing}>
+                <PaletteIcon size={26} />
+              </div>
+              <h2 className={styles.modalTitle}>HERO & MOUNT STUDIO</h2>
+              <p className={styles.modalSubtitle}>Select your class, armor palette, and steed type.</p>
+            </div>
+
+            {/* Class Selection */}
+            <div className={styles.customizerSection}>
+              <span className={styles.sectionHeading}>Hero Class</span>
+              <div className={styles.classGrid}>
+                {[
+                  { id: 'paladin', name: 'Paladin', desc: 'Sword & Crest Shield' },
+                  { id: 'rogue', name: 'Shadow Rogue', desc: 'Dual Katana Crits' },
+                  { id: 'sorceress', name: 'Sorceress', desc: 'Arcane Staff & Magic' },
+                  { id: 'berserker', name: 'Berserker', desc: 'Colossal 2H Cleaver' },
+                ].map((c) => (
+                  <button
+                    key={c.id}
+                    className={`${styles.classCard} ${selectedClass === c.id ? styles.classCardActive : ''}`}
+                    onClick={() => handleApplyClass(c.id)}
+                  >
+                    <span className={styles.className}>{c.name}</span>
+                    <span className={styles.classDesc}>{c.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Armor Color Palette */}
+            <div className={styles.customizerSection}>
+              <span className={styles.sectionHeading}>Armor Palette</span>
+              <div className={styles.paletteRow}>
+                {[
+                  { id: 'spectral', color: '#38bdf8' },
+                  { id: 'obsidian', color: '#334155' },
+                  { id: 'crimson', color: '#ef4444' },
+                  { id: 'emerald', color: '#10b981' },
+                  { id: 'gold', color: '#f59e0b' },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    className={`${styles.paletteCircle} ${customization.palette === p.id ? styles.paletteCircleActive : ''}`}
+                    style={{ backgroundColor: p.color }}
+                    onClick={() => handleApplyPalette(p.id)}
+                    title={p.id}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Mount Selection */}
+            <div className={styles.customizerSection}>
+              <span className={styles.sectionHeading}>Steed Breed</span>
+              <div className={styles.segmentedControl}>
+                {[
+                  { id: 'horse', label: 'Warhorse' },
+                  { id: 'spectral', label: 'Spectral' },
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    className={`${styles.segmentedBtn} ${customization.mountType === m.id ? styles.segmentedBtnActive : ''}`}
+                    onClick={() => {
+                      playClick();
+                      const newCust = { ...customization, mountType: m.id };
+                      setCustomization(newCust);
+                      engineRef.current?.setClassAndCustomization(selectedClass, newCust);
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.btnPrimary}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.resume();
+                  setGameState('playing');
+                }}
+              >
+                <PlayIcon size={16} />
+                <span>Return to Adventure</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Settings Modal */}
+      {gameState === 'settings' && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalIconRing}>
+                <SparklesIcon size={26} />
+              </div>
+              <h2 className={styles.modalTitle}>GRAPHICS & SOUND SETTINGS</h2>
+              <p className={styles.modalSubtitle}>Adjust performance and visual fidelity presets.</p>
+            </div>
+
+            <div className={styles.customizerSection}>
+              <div className={styles.toggleRow}>
+                <span>Graphics Quality Preset</span>
+                <div className={styles.segmentedControl}>
+                  {['low', 'high', 'ultra'].map((q) => (
+                    <button
+                      key={q}
+                      className={`${styles.segmentedBtn} ${graphicsQuality === q ? styles.segmentedBtnActive : ''}`}
+                      onClick={() => handleApplyQuality(q)}
+                    >
+                      {q.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalActions}>
+              <button className={styles.btnSecondary} onClick={handleToggleMute}>
+                {isMuted ? <VolumeXIcon size={16} /> : <Volume2Icon size={16} />}
+                <span>{isMuted ? 'Unmute Audio' : 'Mute Audio'}</span>
+              </button>
+              <button
+                className={styles.btnPrimary}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.resume();
+                  setGameState('playing');
+                }}
+              >
+                <PlayIcon size={16} />
+                <span>Resume Journey</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Pause Screen */}
       {gameState === 'paused' && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalCard}>
@@ -743,16 +1082,16 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
 
             <div className={styles.statGrid}>
               <div className={styles.statItem}>
+                <span className={styles.statLabel}>Class</span>
+                <span className={styles.statVal}>{selectedClass.toUpperCase()}</span>
+              </div>
+              <div className={styles.statItem}>
                 <span className={styles.statLabel}>Level</span>
                 <span className={styles.statVal}>Lv. {playerStats.level}</span>
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Weapon</span>
                 <span className={styles.statVal}>{playerStats.equippedWeapon}</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statLabel}>Health</span>
-                <span className={styles.statVal}>{playerStats.hp} / {playerStats.maxHp}</span>
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Potions</span>
@@ -765,9 +1104,13 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 <PlayIcon size={16} />
                 <span>Resume Journey</span>
               </button>
-              <button className={styles.btnSecondary} onClick={handleToggleMute}>
-                {isMuted ? <VolumeXIcon size={16} /> : <Volume2Icon size={16} />}
-                <span>{isMuted ? 'Unmute Audio' : 'Mute Audio'}</span>
+              <button className={styles.btnSecondary} onClick={handleOpenCustomizer}>
+                <PaletteIcon size={16} />
+                <span>Hero Customizer</span>
+              </button>
+              <button className={styles.btnSecondary} onClick={handleOpenSettings}>
+                <SparklesIcon size={16} />
+                <span>Graphics & Settings</span>
               </button>
               <button className={styles.btnSecondary} onClick={handleRestart}>
                 <RotateCcwIcon size={16} />
@@ -778,7 +1121,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
         </div>
       )}
 
-      {/* 3. Game Over Screen */}
+      {/* 5. Game Over Screen */}
       {gameState === 'gameover' && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalCard}>
@@ -794,12 +1137,12 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
 
             <div className={styles.statGrid}>
               <div className={styles.statItem}>
-                <span className={styles.statLabel}>Warrior Level</span>
-                <span className={styles.statVal}>Lv. {playerStats.level}</span>
+                <span className={styles.statLabel}>Hero Class</span>
+                <span className={styles.statVal}>{selectedClass.toUpperCase()}</span>
               </div>
               <div className={styles.statItem}>
-                <span className={styles.statLabel}>Attack Power</span>
-                <span className={styles.statVal}>{playerStats.attackPower}</span>
+                <span className={styles.statLabel}>Warrior Level</span>
+                <span className={styles.statVal}>Lv. {playerStats.level}</span>
               </div>
             </div>
 
@@ -813,7 +1156,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
         </div>
       )}
 
-      {/* 4. Victory Screen */}
+      {/* 6. Victory Screen */}
       {gameState === 'victory' && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalCard}>
@@ -828,6 +1171,10 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
             </div>
 
             <div className={styles.statGrid}>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>Champion Class</span>
+                <span className={styles.statVal}>{selectedClass.toUpperCase()}</span>
+              </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Final Level</span>
                 <span className={styles.statVal}>Lv. {playerStats.level}</span>

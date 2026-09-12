@@ -1405,9 +1405,47 @@ export const CrosshairIcon = makeIcon('crosshair', () => (
   </>
 ));
 
+export const HorseIcon = makeIcon('horse', () => (
+  <>
+    <path
+      data-part="body"
+      d="M19 6c-1-1.5-3-2-5-1.5L11 3 9 4.5l1.5 3.5C9 9 7.5 11 6 14l-2 1v3l3-1 2-2c1.5 1 4 1.5 6 1l1 4h3l-1-5c1.5-1.5 2-4 1-9z"
+      stroke={A_WARN}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle data-part="spark" cx="12" cy="7.5" r="1" fill={A_WARN} stroke="none" />
+    <path data-part="accent" d="M15 4.5c1 1.5 1.5 3.5 1 5.5" stroke={A_GLOW} strokeWidth="1.4" strokeLinecap="round" />
+  </>
+));
+
+export const ZapIcon = makeIcon('zap', () => (
+  <>
+    <polygon
+      data-part="body"
+      points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+      stroke={A_WARN}
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="rgba(251,191,36,0.15)"
+    />
+  </>
+));
+
+export const TargetLockIcon = makeIcon('target-lock', () => (
+  <>
+    <path data-part="body" d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3" stroke={A_GLOW} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <circle data-part="pulse" cx="12" cy="12" r="3" stroke={A_ERR} strokeWidth="1.5" />
+    <circle data-part="spark" cx="12" cy="12" r="1" fill={A_ERR} stroke="none" />
+  </>
+));
+
 // Compatibility Aliases
 export const Volume2Icon = VolumeIcon;
 export const VolumeXIcon = VolumeMuteIcon;
 export const RotateCcwIcon = RotateIcon;
+
 
 

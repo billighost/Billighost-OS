@@ -437,15 +437,184 @@ class AetheriaAudioEngine {
     osc.stop(t + 0.4);
   }
 
+  playHorseGallop() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    // Two quick rhythmic hoof impacts (clip-clop)
+    [0, 0.08].forEach((offset, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(idx === 0 ? 320 : 420, t + offset);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(idx === 0 ? 110 : 135, t + offset);
+      osc.frequency.exponentialRampToValueAtTime(40, t + offset + 0.06);
+
+      gain.gain.setValueAtTime(0.22, t + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + offset + 0.07);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t + offset);
+      osc.stop(t + offset + 0.08);
+    });
+  }
+
+  playMountCall() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    // Steed whinny / horn fanfare call
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(350, t);
+    osc.frequency.linearRampToValueAtTime(580, t + 0.15);
+    osc.frequency.linearRampToValueAtTime(460, t + 0.32);
+    osc.frequency.linearRampToValueAtTime(720, t + 0.45);
+
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.52);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.54);
+  }
+
+  playGhostWail() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(480, t);
+    osc.frequency.exponentialRampToValueAtTime(780, t + 0.2);
+    osc.frequency.exponentialRampToValueAtTime(260, t + 0.55);
+
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.58);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.6);
+  }
+
+  playGhostSurge() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    // Resonant spectral shockwave chord
+    [523.25, 659.25, 987.77, 1318.5].forEach((freq, idx) => {
+      const t = this.ctx.currentTime + idx * 0.04;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.4);
+
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.58);
+    });
+  }
+
+  playJump() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(150, t);
+    osc.frequency.exponentialRampToValueAtTime(380, t + 0.15);
+
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.19);
+  }
+
+  playLand() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(110, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.12);
+
+    gain.gain.setValueAtTime(0.3, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  }
+
+  playLockOn() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, t);
+    osc.frequency.setValueAtTime(1320, t + 0.05);
+
+    gain.gain.setValueAtTime(0.15, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start(t);
+    osc.stop(t + 0.11);
+  }
+
   destroy() {
     this.stopBattleRhythm();
     if (this.ambientTimer) clearInterval(this.ambientTimer);
     if (this.windNode) {
-      try { this.windNode.stop(); } catch {}
+      try { this.windNode.stop(); } catch { }
       this.windNode = null;
     }
     if (this.ctx) {
-      try { this.ctx.close(); } catch {}
+      try { this.ctx.close(); } catch { }
       this.ctx = null;
     }
   }
