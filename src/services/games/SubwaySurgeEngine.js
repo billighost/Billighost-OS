@@ -1346,7 +1346,7 @@ export class SubwaySurgeEngine {
       group: crateGroup,
       type,
       x,
-      y,
+      y: 1.1,
       z,
       collected: false,
     });

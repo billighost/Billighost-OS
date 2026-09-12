@@ -108,67 +108,8 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     }, 2800);
   }, []);
 
-  // Initialize Engine
-  useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const engine = new AetheriaEngine(canvasRef.current, {
-      onStatsUpdate: (stats) => {
-        setPlayerStats({
-          hp: stats.hp,
-          maxHp: stats.maxHp,
-          stamina: Math.round(stats.stamina),
-          maxStamina: stats.maxStamina,
-          level: stats.level,
-          exp: stats.exp,
-          expNext: stats.expNext,
-          potions: stats.potions,
-          equippedWeapon: stats.equippedWeapon,
-          attackPower: stats.attackPower,
-        });
-      },
-      onMinimapUpdate: (data) => {
-        drawMinimap(data);
-      },
-      onBossUpdate: (hp, maxHp) => {
-        setBossData({
-          active: hp > 0,
-          hp,
-          maxHp,
-        });
-      },
-      onGhostSurgeUpdate: (surge) => {
-        setGhostSurgeData({ ...surge });
-      },
-      onMountUpdate: (mounted) => {
-        setIsMounted(mounted);
-      },
-      onTargetLockUpdate: (target) => {
-        setLockedTargetName(target);
-      },
-      onChestOpen: (reward) => {
-        showToast(`Discovered ${reward}!`);
-      },
-      onGameOver: (killer) => {
-        setKillerName(killer || 'Wild Beast');
-        setGameState('gameover');
-      },
-      onVictory: () => {
-        setGameState('victory');
-      },
-    });
-
-    engineRef.current = engine;
-
-    return () => {
-      if (inputLoopRef.current) cancelAnimationFrame(inputLoopRef.current);
-      engine.destroy();
-      engineRef.current = null;
-    };
-  }, [showToast]);
-
   // Minimap Radar Drawing (Topographic Elevation & Icons)
-  const drawMinimap = (data) => {
+  const drawMinimap = useCallback((data) => {
     const canvas = minimapCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -292,7 +233,66 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     ctx.restore();
 
     ctx.restore();
-  };
+  }, []);
+
+  // Initialize Engine
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const engine = new AetheriaEngine(canvasRef.current, {
+      onStatsUpdate: (stats) => {
+        setPlayerStats({
+          hp: stats.hp,
+          maxHp: stats.maxHp,
+          stamina: Math.round(stats.stamina),
+          maxStamina: stats.maxStamina,
+          level: stats.level,
+          exp: stats.exp,
+          expNext: stats.expNext,
+          potions: stats.potions,
+          equippedWeapon: stats.equippedWeapon,
+          attackPower: stats.attackPower,
+        });
+      },
+      onMinimapUpdate: (data) => {
+        drawMinimap(data);
+      },
+      onBossUpdate: (hp, maxHp) => {
+        setBossData({
+          active: hp > 0,
+          hp,
+          maxHp,
+        });
+      },
+      onGhostSurgeUpdate: (surge) => {
+        setGhostSurgeData({ ...surge });
+      },
+      onMountUpdate: (mounted) => {
+        setIsMounted(mounted);
+      },
+      onTargetLockUpdate: (target) => {
+        setLockedTargetName(target);
+      },
+      onChestOpen: (reward) => {
+        showToast(`Discovered ${reward}!`);
+      },
+      onGameOver: (killer) => {
+        setKillerName(killer || 'Wild Beast');
+        setGameState('gameover');
+      },
+      onVictory: () => {
+        setGameState('victory');
+      },
+    });
+
+    engineRef.current = engine;
+
+    return () => {
+      if (inputLoopRef.current) cancelAnimationFrame(inputLoopRef.current);
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, [showToast, drawMinimap]);
 
   // Continuous Movement Input Loop
   useEffect(() => {
@@ -326,6 +326,28 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
       if (inputLoopRef.current) cancelAnimationFrame(inputLoopRef.current);
     };
   }, [gameState]);
+
+  // Button Actions with useCallback
+  const handleStartGame = useCallback(() => {
+    playClick();
+    aetheriaAudio.ensureContext();
+    engineRef.current?.start();
+    setGameState('playing');
+  }, [playClick]);
+
+  const handleTogglePause = useCallback(() => {
+    playClick();
+    setGameState((prev) => {
+      if (prev === 'playing') {
+        engineRef.current?.pause();
+        return 'paused';
+      } else if (prev === 'paused') {
+        engineRef.current?.resume();
+        return 'playing';
+      }
+      return prev;
+    });
+  }, [playClick]);
 
   // Keyboard Event Handlers
   useEffect(() => {
@@ -401,7 +423,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [gameState]);
+  }, [gameState, handleStartGame, handleTogglePause]);
 
   // Mouse / Touch Camera Drag
   const handlePointerDown = (e) => {
@@ -468,25 +490,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     setThumbPos({ x: 0, y: 0 });
   };
 
-  // Button Actions
-  const handleStartGame = () => {
-    playClick();
-    aetheriaAudio.ensureContext();
-    engineRef.current?.start();
-    setGameState('playing');
-  };
-
-  const handleTogglePause = () => {
-    playClick();
-    if (gameState === 'playing') {
-      engineRef.current?.pause();
-      setGameState('paused');
-    } else if (gameState === 'paused') {
-      engineRef.current?.resume();
-      setGameState('playing');
-    }
-  };
-
+  // Navigation Actions
   const handleOpenCustomizer = () => {
     playClick();
     if (gameState === 'playing') engineRef.current?.pause();
@@ -811,7 +815,7 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 }}
                 title="Ghost Ascendance Overdrive (G)"
               >
-                <ZapIcon size={18} />
+                <GhostIcon size={18} />
                 <span className={styles.actionKeyHint}>G</span>
               </button>
 
