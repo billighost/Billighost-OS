@@ -94,7 +94,7 @@ export class SubwaySurgeEngine {
     // Chunks & Obstacles
     this.chunks = [];
     this.chunkLength = 50;
-    this.totalChunks = 7;
+    this.totalChunks = 4; // Optimized from 7 to 4 for ultra-smooth performance
     this.nextChunkZ = 0;
 
     this.activeTrains = [];
@@ -120,58 +120,102 @@ export class SubwaySurgeEngine {
     // 1. Scene & Atmosphere
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x0a0f1d);
-    this.scene.fog = new THREE.FogExp2(0x0a0f1d, 0.012);
+    this.scene.fog = new THREE.FogExp2(0x0a0f1d, 0.015);
 
     // 2. Camera
-    this.camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 350);
+    this.camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 280);
     this.camera.position.set(0, 4.5, 7.5);
     this.camera.lookAt(0, 2, -10);
 
-    // 3. Renderer
+    // 3. High-Performance Optimized Renderer
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
       powerPreference: 'high-performance',
     });
     this.renderer.setSize(width, height, false);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Cap pixel ratio at 1.25 to prevent GPU fillrate throttling on Retina/4K screens
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // 4. Lighting
+    // 4. Lighting Setup
     this.setupLighting();
 
-    // 5. Build Player 3D Articulated Model
+    // 5. Initialize Shared Material and Geometry Caches (Drastically reduces GPU draw calls & GC)
+    this.initCaches();
+
+    // 6. Build Player 3D Articulated Model
     this.buildPlayerCharacter();
 
-    // 6. Generate Initial Track Chunks
+    // 7. Generate Initial Track Chunks
     this.nextChunkZ = 0;
     for (let i = 0; i < this.totalChunks; i++) {
       this.spawnChunk(this.nextChunkZ);
       this.nextChunkZ -= this.chunkLength;
     }
 
-    // 7. Particle System Setup
+    // 8. Particle System Setup
     this.setupParticleSystem();
 
     // Resize observer
     window.addEventListener('resize', this.handleResize);
   }
 
+  initCaches() {
+    this.materials = {
+      bed: new THREE.MeshLambertMaterial({ color: 0x181e28 }),
+      curb: new THREE.MeshLambertMaterial({ color: 0x334155 }),
+      rail: new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.25 }),
+      tie: new THREE.MeshLambertMaterial({ color: 0x271e16 }),
+      steel: new THREE.MeshLambertMaterial({ color: 0x475569 }),
+      neonBlue: new THREE.MeshBasicMaterial({ color: 0x38bdf8 }),
+      neonYellow: new THREE.MeshBasicMaterial({ color: 0xfef08a }),
+      bldg: new THREE.MeshLambertMaterial({ color: 0x111827 }),
+      bldgWin: new THREE.MeshBasicMaterial({ color: 0x38bdf8 }),
+      trainBody: new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.65, roughness: 0.35 }),
+      trainRoof: new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7, roughness: 0.4 }),
+      trainGlass: new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 }),
+      lightGlow: new THREE.MeshBasicMaterial({ color: 0xfef08a }),
+      ramp: new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.5, metalness: 0.3 }),
+      hurdlePole: new THREE.MeshLambertMaterial({ color: 0xef4444 }),
+      hurdleBar: new THREE.MeshLambertMaterial({ color: 0xffffff }),
+      hurdleStripe: new THREE.MeshBasicMaterial({ color: 0xef4444 }),
+      warnArch: new THREE.MeshLambertMaterial({ color: 0x1e293b }),
+      warnCross: new THREE.MeshLambertMaterial({ color: 0xf59e0b }),
+      warnRed: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
+      coin: new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.2, emissive: 0xd97706, emissiveIntensity: 0.3 }),
+      coinStar: new THREE.MeshBasicMaterial({ color: 0xfffbeb }),
+    };
+
+    this.geometries = {
+      bed: new THREE.PlaneGeometry(16, this.chunkLength),
+      curb: new THREE.BoxGeometry(0.2, 0.3, this.chunkLength),
+      rail: new THREE.BoxGeometry(0.08, 0.12, this.chunkLength),
+      tie: new THREE.BoxGeometry(1.9, 0.08, 0.3),
+      archPillar: new THREE.BoxGeometry(0.3, 7.5, 0.3),
+      archBeam: new THREE.BoxGeometry(14, 0.35, 0.35),
+      coin: new THREE.CylinderGeometry(0.34, 0.34, 0.08, 14),
+      coinStar: new THREE.OctahedronGeometry(0.14),
+    };
+    this.geometries.bed.rotateX(-Math.PI / 2);
+    this.geometries.coin.rotateX(Math.PI / 2);
+  }
+
   setupLighting() {
     // Ambient Light (subtle cool blue fill)
-    const ambientLight = new THREE.AmbientLight(0x435b80, 0.9);
+    const ambientLight = new THREE.AmbientLight(0x435b80, 0.95);
     this.scene.add(ambientLight);
 
-    // Key Directional Sun / Tunnel Light (casts soft shadows)
-    this.dirLight = new THREE.DirectionalLight(0xfff3db, 1.4);
+    // Key Directional Sun Light (optimized 512x512 shadow map)
+    this.dirLight = new THREE.DirectionalLight(0xfff3db, 1.3);
     this.dirLight.position.set(15, 30, 20);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 1024;
-    this.dirLight.shadow.mapSize.height = 1024;
+    this.dirLight.shadow.mapSize.width = 512;
+    this.dirLight.shadow.mapSize.height = 512;
     this.dirLight.shadow.camera.near = 0.5;
-    this.dirLight.shadow.camera.far = 100;
-    const d = 25;
+    this.dirLight.shadow.camera.far = 80;
+    const d = 20;
     this.dirLight.shadow.camera.left = -d;
     this.dirLight.shadow.camera.right = d;
     this.dirLight.shadow.camera.top = d;
@@ -450,69 +494,57 @@ export class SubwaySurgeEngine {
     const chunk = new THREE.Group();
     chunk.position.z = chunkZ;
 
-    // 1. Ground Trackbed (Ballast Gravel)
-    const bedGeo = new THREE.PlaneGeometry(16, this.chunkLength);
-    const bedMat = new THREE.MeshStandardMaterial({
-      color: 0x181e28,
-      roughness: 0.95,
-      metalness: 0.05,
-    });
-    const bed = new THREE.Mesh(bedGeo, bedMat);
-    bed.rotation.x = -Math.PI / 2;
+    // 1. Ground Trackbed (Ballast Gravel) - Uses shared geometry and material
+    const bed = new THREE.Mesh(this.geometries.bed, this.materials.bed);
     bed.position.y = 0;
     bed.receiveShadow = true;
     chunk.add(bed);
 
     // 2. Concrete Track Divider Curbs
-    const curbGeo = new THREE.BoxGeometry(0.2, 0.3, this.chunkLength);
-    const curbMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
     [-LANE_WIDTH * 1.5, -LANE_WIDTH * 0.5, LANE_WIDTH * 0.5, LANE_WIDTH * 1.5].forEach(cx => {
-      const curb = new THREE.Mesh(curbGeo, curbMat);
+      const curb = new THREE.Mesh(this.geometries.curb, this.materials.curb);
       curb.position.set(cx, 0.15, 0);
-      curb.receiveShadow = true;
       chunk.add(curb);
     });
 
-    // 3. Rails & Sleepers (Ties) for all 3 Lanes
-    const railMat = new THREE.MeshStandardMaterial({
-      color: 0x94a3b8,
-      metalness: 0.9,
-      roughness: 0.2,
-    });
-    const tieMat = new THREE.MeshStandardMaterial({ color: 0x271e16, roughness: 0.9 });
-    const tieGeo = new THREE.BoxGeometry(1.9, 0.08, 0.3);
-    const railGeo = new THREE.BoxGeometry(0.08, 0.12, this.chunkLength);
-
+    // 3. Rails
     LANES.forEach(laneX => {
-      // Rails (Left & Right of each track)
-      const railL = new THREE.Mesh(railGeo, railMat);
+      const railL = new THREE.Mesh(this.geometries.rail, this.materials.rail);
       railL.position.set(laneX - 0.75, 0.06, 0);
-      railL.receiveShadow = true;
-      const railR = new THREE.Mesh(railGeo, railMat);
+      const railR = new THREE.Mesh(this.geometries.rail, this.materials.rail);
       railR.position.set(laneX + 0.75, 0.06, 0);
-      railR.receiveShadow = true;
       chunk.add(railL);
       chunk.add(railR);
-
-      // Sleepers / Wooden Ties along track
-      for (let z = -this.chunkLength / 2 + 1; z < this.chunkLength / 2; z += 1.8) {
-        const tie = new THREE.Mesh(tieGeo, tieMat);
-        tie.position.set(laneX, 0.04, z);
-        tie.receiveShadow = true;
-        chunk.add(tie);
-      }
     });
 
-    // 4. Overhead Catenary Power Arch
+    // 4. Instanced Ties: 1 single draw call replaces 80+ individual meshes!
+    const tiesPerLane = Math.floor(this.chunkLength / 2.0);
+    const totalTies = LANES.length * tiesPerLane;
+    const instancedTies = new THREE.InstancedMesh(this.geometries.tie, this.materials.tie, totalTies);
+    const dummy = new THREE.Object3D();
+    let tieIdx = 0;
+
+    LANES.forEach(laneX => {
+      for (let i = 0; i < tiesPerLane; i++) {
+        const z = -this.chunkLength / 2 + 1 + i * 2.0;
+        dummy.position.set(laneX, 0.04, z);
+        dummy.updateMatrix();
+        instancedTies.setMatrixAt(tieIdx++, dummy.matrix);
+      }
+    });
+    instancedTies.instanceMatrix.needsUpdate = true;
+    chunk.add(instancedTies);
+
+    // 5. Overhead Catenary Power Arch
     const arch = this.buildCatenaryArch();
     arch.position.set(0, 0, 0);
     chunk.add(arch);
 
-    // 5. Background City Skyline / Tunnel Walls
+    // 6. Background City Skyline
     this.addCityScenery(chunk);
 
-    // 6. Populate Gameplay Elements in Chunk (Obstacles, Trains, Coins, Powerups)
-    if (Math.abs(chunkZ) > 40) { // Keep starting zone safe and clear
+    // 7. Populate Gameplay Elements in Chunk
+    if (Math.abs(chunkZ) > 40) {
       this.populateChunkGameplay(chunkZ);
     }
 
@@ -522,69 +554,33 @@ export class SubwaySurgeEngine {
 
   buildCatenaryArch() {
     const archGroup = new THREE.Group();
-    const steelMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7, roughness: 0.4 });
-    const neonMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
-    // Left & Right Pillars
-    const pillarGeo = new THREE.BoxGeometry(0.3, 7.5, 0.3);
-    const leftPillar = new THREE.Mesh(pillarGeo, steelMat);
+    // Pillars & Crossbeam from cache
+    const leftPillar = new THREE.Mesh(this.geometries.archPillar, this.materials.steel);
     leftPillar.position.set(-6.8, 3.75, 0);
-    const rightPillar = new THREE.Mesh(pillarGeo, steelMat);
+    const rightPillar = new THREE.Mesh(this.geometries.archPillar, this.materials.steel);
     rightPillar.position.set(6.8, 3.75, 0);
     archGroup.add(leftPillar);
     archGroup.add(rightPillar);
 
-    // Crossbeam
-    const beamGeo = new THREE.BoxGeometry(14, 0.35, 0.35);
-    const beam = new THREE.Mesh(beamGeo, steelMat);
+    const beam = new THREE.Mesh(this.geometries.archBeam, this.materials.steel);
     beam.position.set(0, 7.3, 0);
     archGroup.add(beam);
-
-    // Overhead Signal Lamps
-    LANES.forEach(lx => {
-      const lampGeo = new THREE.BoxGeometry(0.4, 0.6, 0.3);
-      const lamp = new THREE.Mesh(lampGeo, steelMat);
-      lamp.position.set(lx, 6.8, 0);
-
-      const lightGeo = new THREE.CircleGeometry(0.12, 12);
-      const light = new THREE.Mesh(lightGeo, neonMat);
-      light.position.set(lx, 6.8, 0.16);
-      archGroup.add(lamp);
-      archGroup.add(light);
-    });
 
     return archGroup;
   }
 
   addCityScenery(chunk) {
-    const bldgMat = new THREE.MeshStandardMaterial({
-      color: 0x111827,
-      roughness: 0.9,
-      metalness: 0.2,
-    });
-    const windowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-
     // Left and Right Skyscraper silhouettes
     [-14, 14].forEach(sideX => {
-      for (let i = 0; i < 3; i++) {
-        const h = 18 + Math.random() * 22;
-        const w = 7 + Math.random() * 4;
-        const d = 8 + Math.random() * 5;
+      for (let i = 0; i < 2; i++) {
+        const h = 22 + (i * 8);
+        const w = 8;
+        const d = 10;
         const bldgGeo = new THREE.BoxGeometry(w, h, d);
-        const bldg = new THREE.Mesh(bldgGeo, bldgMat);
-        bldg.position.set(sideX + (Math.random() * 4 - 2), h / 2, -this.chunkLength / 2 + i * 15);
+        const bldg = new THREE.Mesh(bldgGeo, this.materials.bldg);
+        bldg.position.set(sideX, h / 2, -this.chunkLength / 2 + i * 22);
         chunk.add(bldg);
-
-        // Window glow matrix
-        const winGeo = new THREE.PlaneGeometry(0.4, 0.6);
-        for (let row = 4; row < h - 2; row += 2.5) {
-          if (Math.random() > 0.4) {
-            const win = new THREE.Mesh(winGeo, windowMat);
-            win.position.set(sideX > 0 ? sideX - w / 2 - 0.05 : sideX + w / 2 + 0.05, row, bldg.position.z);
-            win.rotation.y = sideX > 0 ? -Math.PI / 2 : Math.PI / 2;
-            chunk.add(win);
-          }
-        }
       }
     });
   }
@@ -1068,6 +1064,8 @@ export class SubwaySurgeEngine {
   slide() {
     if (!this.isRunning || this.isPaused) return;
     if (this.jetpackActive) return;
+    // Don't restart slide if already sliding actively
+    if (this.isSliding && this.slideTimer > 0.15) return;
 
     if (!this.isGrounded) {
       // Fast fall slam down to track
@@ -1075,7 +1073,7 @@ export class SubwaySurgeEngine {
       this.createFootstepDust(this.playerGroup.position.x, this.playerGroup.position.z);
     }
     this.isSliding = true;
-    this.slideTimer = 0.85; // 0.85s slide duration
+    this.slideTimer = 0.6; // 0.6s crisp slide duration
     subwayAudio.playSlide();
   }
 
@@ -1247,6 +1245,15 @@ export class SubwaySurgeEngine {
       this.slideTimer -= delta;
       if (this.slideTimer <= 0) {
         this.isSliding = false;
+        if (this.charRoot) {
+          this.charRoot.position.y = 1.0;
+          this.charRoot.rotation.x = 0.1;
+          this.charRoot.rotation.z = 0;
+          if (this.leftArm) this.leftArm.rotation.x = 0;
+          if (this.rightArm) this.rightArm.rotation.x = 0;
+          if (this.leftLeg) this.leftLeg.rotation.x = 0;
+          if (this.rightLeg) this.rightLeg.rotation.x = 0;
+        }
       }
     }
 
@@ -1585,13 +1592,15 @@ export class SubwaySurgeEngine {
     const runCycle = time * (this.speed * 0.4);
 
     if (this.isSliding) {
-      // Slide Pose: Flat horizontal forward roll
-      this.charRoot.position.y = 0.35;
-      this.charRoot.rotation.x = -Math.PI / 2.6;
-      this.leftArm.rotation.x = -Math.PI / 2;
-      this.rightArm.rotation.x = -Math.PI / 2;
-      this.leftLeg.rotation.x = 0;
-      this.rightLeg.rotation.x = 0;
+      // Smooth tuck and rise using sine curve (prevents clipping through floor)
+      const progress = Math.max(0, this.slideTimer / 0.6);
+      const tuck = Math.sin(progress * Math.PI);
+      this.charRoot.position.y = THREE.MathUtils.lerp(1.0, 0.48, tuck);
+      this.charRoot.rotation.x = THREE.MathUtils.lerp(0.1, -0.45, tuck);
+      this.leftLeg.rotation.x = 0.3;
+      this.rightLeg.rotation.x = 0.3;
+      this.leftArm.rotation.x = -1.0;
+      this.rightArm.rotation.x = -1.0;
       this.createFootstepDust(this.playerGroup.position.x, this.playerGroup.position.z);
     } else if (this.hoverboardActive) {
       // Hoverboard Stance: Surfer stance sideways

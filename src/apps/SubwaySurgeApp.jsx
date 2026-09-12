@@ -184,6 +184,8 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
 
       // When in play
       if (gameState === 'playing') {
+        if (e.repeat) return; // Prevent key repeat flooding when holding keys down
+
         if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
           e.preventDefault();
           engineRef.current.moveLeft();
@@ -422,67 +424,69 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
             </div>
           </div>
 
-          {/* Active Power-Up Gauges Tray */}
-          <div className={styles.powerupTray}>
-            {powerups.hoverboard && (
-              <div className={styles.powerupMeter} style={{ borderColor: '#06b6d4' }}>
-                <span className={styles.powerupIcon} style={{ color: '#06b6d4' }}><SkateboardIcon size={16} /></span>
-                <div className={styles.powerupBarTrack}>
-                  <div
-                    className={styles.powerupBarFill}
-                    style={{ width: `${(powerups.hoverboard / 30) * 100}%`, background: '#06b6d4' }}
-                  />
+          {/* Middle Row: Active Power-Up Gauges Tray */}
+          <div className={styles.hudMiddle}>
+            <div className={styles.powerupTray}>
+              {powerups.hoverboard && (
+                <div className={styles.powerupMeter} style={{ borderColor: '#06b6d4' }}>
+                  <span className={styles.powerupIcon} style={{ color: '#06b6d4' }}><SkateboardIcon size={16} /></span>
+                  <div className={styles.powerupBarTrack}>
+                    <div
+                      className={styles.powerupBarFill}
+                      style={{ width: `${(powerups.hoverboard / 30) * 100}%`, background: '#06b6d4' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {powerups.jetpack && (
-              <div className={styles.powerupMeter} style={{ borderColor: '#ef4444' }}>
-                <span className={styles.powerupIcon} style={{ color: '#ef4444' }}><RocketIcon size={16} /></span>
-                <div className={styles.powerupBarTrack}>
-                  <div
-                    className={styles.powerupBarFill}
-                    style={{ width: `${(powerups.jetpack / 16) * 100}%`, background: '#ef4444' }}
-                  />
+              {powerups.jetpack && (
+                <div className={styles.powerupMeter} style={{ borderColor: '#ef4444' }}>
+                  <span className={styles.powerupIcon} style={{ color: '#ef4444' }}><RocketIcon size={16} /></span>
+                  <div className={styles.powerupBarTrack}>
+                    <div
+                      className={styles.powerupBarFill}
+                      style={{ width: `${(powerups.jetpack / 16) * 100}%`, background: '#ef4444' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {powerups.magnet && (
-              <div className={styles.powerupMeter} style={{ borderColor: '#8b5cf6' }}>
-                <span className={styles.powerupIcon} style={{ color: '#8b5cf6' }}><MagnetIcon size={16} /></span>
-                <div className={styles.powerupBarTrack}>
-                  <div
-                    className={styles.powerupBarFill}
-                    style={{ width: `${(powerups.magnet / 20) * 100}%`, background: '#8b5cf6' }}
-                  />
+              {powerups.magnet && (
+                <div className={styles.powerupMeter} style={{ borderColor: '#8b5cf6' }}>
+                  <span className={styles.powerupIcon} style={{ color: '#8b5cf6' }}><MagnetIcon size={16} /></span>
+                  <div className={styles.powerupBarTrack}>
+                    <div
+                      className={styles.powerupBarFill}
+                      style={{ width: `${(powerups.magnet / 20) * 100}%`, background: '#8b5cf6' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {powerups.multiplier && (
-              <div className={styles.powerupMeter} style={{ borderColor: '#f59e0b' }}>
-                <span className={styles.powerupIcon} style={{ color: '#f59e0b' }}><FlameIcon size={16} /></span>
-                <div className={styles.powerupBarTrack}>
-                  <div
-                    className={styles.powerupBarFill}
-                    style={{ width: `${(powerups.multiplier / 24) * 100}%`, background: '#f59e0b' }}
-                  />
+              {powerups.multiplier && (
+                <div className={styles.powerupMeter} style={{ borderColor: '#f59e0b' }}>
+                  <span className={styles.powerupIcon} style={{ color: '#f59e0b' }}><FlameIcon size={16} /></span>
+                  <div className={styles.powerupBarTrack}>
+                    <div
+                      className={styles.powerupBarFill}
+                      style={{ width: `${(powerups.multiplier / 24) * 100}%`, background: '#f59e0b' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {powerups.sneakers && (
-              <div className={styles.powerupMeter} style={{ borderColor: '#10b981' }}>
-                <span className={styles.powerupIcon} style={{ color: '#10b981' }}><SneakersIcon size={16} /></span>
-                <div className={styles.powerupBarTrack}>
-                  <div
-                    className={styles.powerupBarFill}
-                    style={{ width: `${(powerups.sneakers / 20) * 100}%`, background: '#10b981' }}
-                  />
+              {powerups.sneakers && (
+                <div className={styles.powerupMeter} style={{ borderColor: '#10b981' }}>
+                  <span className={styles.powerupIcon} style={{ color: '#10b981' }}><SneakersIcon size={16} /></span>
+                  <div className={styles.powerupBarTrack}>
+                    <div
+                      className={styles.powerupBarFill}
+                      style={{ width: `${(powerups.sneakers / 20) * 100}%`, background: '#10b981' }}
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Bottom Row: Hoverboard Summon & Touch D-Pad */}
