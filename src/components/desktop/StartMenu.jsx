@@ -4,7 +4,7 @@ import {
   FileTextIcon, ScrollIcon, GhostIcon, TerminalIcon,
   CalculatorIcon, GaugeIcon, FilmIcon,
   LockIcon, RefreshIcon, PowerIcon, SearchIcon,
-  CodeIcon, BrushIcon, GamepadIcon, SwordIcon,
+  CodeIcon, BrushIcon, GamepadIcon, SwordIcon, RocketIcon,
 } from '../Icons';
 import styles from './StartMenu.module.css';
 
@@ -22,6 +22,7 @@ export default function StartMenu({
   const APPS = [
     { id: 'subwaysurge', name: 'Subway Surge 3D', icon: <GamepadIcon size={22} />, desc: '3D High-Speed Subway Runner' },
     { id: 'aetheria', name: 'Aetheria 3D', icon: <SwordIcon size={22} />, desc: '3D Open World Action RPG' },
+    { id: 'voidstrike', name: 'VoidStrike 3D', icon: <RocketIcon size={22} />, desc: '3D Starfighter Space Combat' },
     { id: 'files', name: 'Files', icon: <FolderIcon size={22} />, desc: 'Virtual File System & Explorer' },
     { id: 'code', name: 'Code Studio', icon: <CodeIcon size={22} />, desc: 'Syntax-Highlighted Code Editor' },
     { id: 'paint', name: 'Paint Studio', icon: <BrushIcon size={22} />, desc: 'Canvas Art & Graphics Studio' },
