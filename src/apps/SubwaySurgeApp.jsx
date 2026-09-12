@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SubwaySurgeEngine } from '../services/games/SubwaySurgeEngine';
 import { subwayAudio } from '../services/games/SubwaySurgeAudio';
 import {
@@ -8,7 +8,6 @@ import {
   CoinsIcon,
   RocketIcon,
   MagnetIcon,
-  ShieldIcon,
   SkateboardIcon,
   FlameIcon,
   SparklesIcon,
