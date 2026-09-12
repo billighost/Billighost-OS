@@ -259,6 +259,25 @@ export class SubwaySurgeEngine {
     visor.position.set(0, 1.15, 0.24);
     this.charRoot.add(visor);
 
+    // Headphones / Cyber Headset
+    const headsetBandGeo = new THREE.TorusGeometry(0.32, 0.04, 8, 24, Math.PI);
+    const headsetMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+    const headsetBand = new THREE.Mesh(headsetBandGeo, headsetMat);
+    headsetBand.rotation.x = Math.PI / 2;
+    headsetBand.position.set(0, 1.25, 0);
+    this.charRoot.add(headsetBand);
+
+    const earPadGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.08, 16);
+    const earGlowMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.8 });
+    const earL = new THREE.Mesh(earPadGeo, earGlowMat);
+    earL.rotation.z = Math.PI / 2;
+    earL.position.set(-0.3, 1.18, 0);
+    const earR = new THREE.Mesh(earPadGeo, earGlowMat);
+    earR.rotation.z = Math.PI / 2;
+    earR.position.set(0.3, 1.18, 0);
+    this.charRoot.add(earL);
+    this.charRoot.add(earR);
+
     // 3. Arms (L & R articulable shoulders)
     const armGeo = new THREE.BoxGeometry(0.2, 0.65, 0.2);
 
@@ -1029,12 +1048,19 @@ export class SubwaySurgeEngine {
 
   jump() {
     if (!this.isRunning || this.isPaused) return;
-    if (this.isGrounded && !this.jetpackActive) {
-      const force = this.sneakersActive ? this.jumpForce * 1.5 : this.jumpForce;
+    if (this.jetpackActive) return;
+
+    // Instant slide cancel on jump
+    if (this.isSliding) {
+      this.isSliding = false;
+      this.slideTimer = 0;
+    }
+
+    if (this.isGrounded) {
+      const force = this.sneakersActive ? this.jumpForce * 1.45 : this.jumpForce;
       this.playerVY = force;
       this.isGrounded = false;
       this.isJumping = true;
-      this.isSliding = false;
       subwayAudio.playJump();
     }
   }
@@ -1044,8 +1070,9 @@ export class SubwaySurgeEngine {
     if (this.jetpackActive) return;
 
     if (!this.isGrounded) {
-      // Fast fall down
-      this.playerVY = -this.gravity * 0.7;
+      // Fast fall slam down to track
+      this.playerVY = -this.gravity * 0.85;
+      this.createFootstepDust(this.playerGroup.position.x, this.playerGroup.position.z);
     }
     this.isSliding = true;
     this.slideTimer = 0.85; // 0.85s slide duration
@@ -1631,6 +1658,13 @@ export class SubwaySurgeEngine {
     this.camera.position.x += (targetCamX - this.camera.position.x) * Math.min(1, 10 * delta);
     this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1, 8 * delta);
     this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1, 12 * delta);
+
+    // Dynamic FOV based on speed for exhilarating rush
+    const targetFov = THREE.MathUtils.clamp(65 + (this.speed - this.baseSpeed) * 0.4, 65, 82);
+    if (Math.abs(this.camera.fov - targetFov) > 0.05) {
+      this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, 4 * delta);
+      this.camera.updateProjectionMatrix();
+    }
 
     // Apply camera shake if any
     if (this.shakeIntensity > 0) {

@@ -521,18 +521,79 @@
 }
 
 /* RESPONSIVENESS TWEAKS FOR VERY SMALL WINDOWS */
-@media (max-width: 440px), (max-height: 400px) {
+@media (max-width: 480px), (max-height: 440px) {
   .hudOverlay {
     padding: 6px;
   }
+  .modalCard {
+    padding: 12px;
+    gap: 8px;
+    max-height: 94%;
+  }
+  .statLabel {
+    display: none;
+  }
   .statBadge {
-    padding: 3px 6px;
+    padding: 3px 8px;
+    gap: 4px;
   }
   .instructionsGrid {
-    grid-template-columns: 1fr;
+    display: none;
+  }
+  .gameTitle {
+    font-size: 1.25rem;
+  }
+  .gameSubtitle {
+    display: none;
+  }
+  .touchControls {
+    gap: 4px;
+  }
+  .touchBtn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+  .hoverboardSummonBtn {
+    padding: 4px 10px;
+    font-size: 0.72rem;
   }
   .powerupTray {
-    top: 40px;
+    top: 36px;
     gap: 3px;
   }
+  .powerupMeter {
+    min-width: 90px;
+    padding: 2px 6px;
+  }
 }
+
+@media (max-height: 360px) {
+  .hudOverlay {
+    padding: 4px 6px;
+  }
+  .powerupTray {
+    top: 30px;
+  }
+  .modalCard {
+    padding: 8px 12px;
+    gap: 6px;
+    max-height: 96%;
+  }
+  .primaryBtn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+  .secondaryBtn {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+  .statsGrid {
+    gap: 6px;
+  }
+  .statCard {
+    padding: 4px 8px;
+  }
+}
+
