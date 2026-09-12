@@ -627,3 +627,221 @@
   }
 }
 
+/* --- BILLIGHOST HUD & GAMEPLAY UPGRADES --- */
+
+/* Ghost Surge Charge Bar */
+.ghostSurgeContainer {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
+}
+
+.ghostSurgeBar {
+  width: 80px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ghostSurgeFill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 4px;
+  transition: width 0.25s ease-out;
+}
+
+.ghostSurgeReady {
+  animation: pulseGlow 1.2s infinite alternate;
+  border-color: #38bdf8;
+  cursor: pointer;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+  100% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.9); }
+}
+
+/* Combo Streak Multiplier Badge */
+.comboBadge {
+  pointer-events: none;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+  animation: comboPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes comboPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Interactive 3D Turntable Preview in Locker */
+.turntableContainer {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: radial-gradient(circle at center, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.turntableContainer:active {
+  cursor: grabbing;
+}
+
+.turntableCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.turntableHint {
+  position: absolute;
+  bottom: 8px;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 2px 10px;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+/* Missions & Objectives Tray */
+.missionsCard {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.missionTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+}
+
+.missionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #e2e8f0;
+}
+
+.missionBarTrack {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.missionBarFill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.missionReward {
+  font-weight: 700;
+  color: #fbbf24;
+  font-size: 0.68rem;
+}
+
+/* Second Chance / Revive Modal */
+.reviveModalCard {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 20px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(56, 189, 248, 0.25);
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reviveBtn {
+  width: 100%;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #0284c7, #06b6d4);
+  border: none;
+  border-radius: 12px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+  transition: all 0.2s ease;
+}
+
+.reviveBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(6, 182, 212, 0.6);
+}
+
+/* Audio Controls Group */
+.volumeGroup {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.volumeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.volumeSlider {
+  flex: 1;
+  accent-color: #38bdf8;
+  cursor: pointer;
+}
+

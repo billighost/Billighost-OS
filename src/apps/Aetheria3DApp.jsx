@@ -244,17 +244,17 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
         let moveX = 0;
         let moveZ = 0;
 
-        // Keyboard WASD / Arrows
-        if (keys['KeyW'] || keys['ArrowUp']) moveZ -= 1;
-        if (keys['KeyS'] || keys['ArrowDown']) moveZ += 1;
+        // Keyboard WASD / Arrows (W/Up = forward +1, S/Down = backward -1)
+        if (keys['KeyW'] || keys['ArrowUp']) moveZ += 1;
+        if (keys['KeyS'] || keys['ArrowDown']) moveZ -= 1;
         if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
         if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
 
-        // Virtual Touch Joystick input
+        // Virtual Touch Joystick input (pushing up gives negative dy -> forward +Z)
         const joy = joystickRef.current;
         if (joy.active) {
           moveX += joy.dx;
-          moveZ += joy.dy;
+          moveZ -= joy.dy;
         }
 
         const isSprint = Boolean(keys['ShiftLeft'] || keys['ShiftRight']);
@@ -342,7 +342,8 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
     cameraDragRef.current.lastX = e.clientX;
     cameraDragRef.current.lastY = e.clientY;
 
-    engineRef.current.rotateCamera(deltaX * 0.006, -deltaY * 0.005);
+    // Natural orbit: Drag right rotates view right, drag up tilts view up
+    engineRef.current.rotateCamera(-deltaX * 0.005, deltaY * 0.004);
   };
 
   const handlePointerUp = () => {

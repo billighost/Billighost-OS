@@ -72,6 +72,195 @@ class SubwaySurgeAudioEngine {
     }
   }
 
+  setBgmVolume(vol) {
+    if (this.musicGain && this.ctx) {
+      this.musicGain.gain.setValueAtTime(Math.max(0, Math.min(1, vol)) * 0.4, this.ctx.currentTime);
+    }
+  }
+
+  setSfxVolume(vol) {
+    if (this.sfxGain && this.ctx) {
+      this.sfxGain.gain.setValueAtTime(Math.max(0, Math.min(1, vol)) * 0.65, this.ctx.currentTime);
+    }
+  }
+
+  // --- BILLIGHOST THEMED SPECTRAL EFFECTS ---
+
+  playGhostWail() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(580, t);
+    osc.frequency.exponentialRampToValueAtTime(320, t + 0.45);
+
+    // Eerie spectral vibrato LFO
+    lfo.frequency.setValueAtTime(14, t);
+    lfoGain.gain.setValueAtTime(45, t);
+    lfo.connect(osc.frequency);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(650, t);
+    filter.Q.value = 5.0;
+
+    gain.gain.setValueAtTime(0.22, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfxGain);
+
+    lfo.start(t);
+    osc.start(t);
+    lfo.stop(t + 0.46);
+    osc.stop(t + 0.46);
+  }
+
+  playGhostToken() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const freqs = [659.25, 880, 1046.5, 1318.51];
+    freqs.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const startT = t + idx * 0.04;
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startT);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.25, startT + 0.15);
+
+      gain.gain.setValueAtTime(0.18, startT);
+      gain.gain.exponentialRampToValueAtTime(0.001, startT + 0.18);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(startT);
+      osc.stop(startT + 0.19);
+    });
+  }
+
+  playGhostSurge() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    // Ascending hyperspeed chord sweep
+    const chords = [330, 440, 554.37, 660, 880, 1108.73];
+    chords.forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const st = t + i * 0.035;
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, st);
+      osc.frequency.exponentialRampToValueAtTime(freq * 2.2, st + 0.35);
+
+      gain.gain.setValueAtTime(0.12, st);
+      gain.gain.exponentialRampToValueAtTime(0.001, st + 0.4);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(st);
+      osc.stop(st + 0.42);
+    });
+  }
+
+  playStunt() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.exponentialRampToValueAtTime(950, t + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(300, t + 0.28);
+
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(t);
+    osc.stop(t + 0.29);
+  }
+
+  playRevive() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    // Resonant sub burst + sparkling high chime
+    const subOsc = this.ctx.createOscillator();
+    const subGain = this.ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(80, t);
+    subOsc.frequency.exponentialRampToValueAtTime(260, t + 0.35);
+    subGain.gain.setValueAtTime(0.5, t);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    subOsc.connect(subGain);
+    subGain.connect(this.sfxGain);
+    subOsc.start(t);
+    subOsc.stop(t + 0.52);
+
+    [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+      const chime = this.ctx.createOscillator();
+      const cGain = this.ctx.createGain();
+      const ct = t + 0.15 + idx * 0.06;
+      chime.type = 'sine';
+      chime.frequency.setValueAtTime(freq, ct);
+      cGain.gain.setValueAtTime(0.2, ct);
+      cGain.gain.exponentialRampToValueAtTime(0.001, ct + 0.3);
+      chime.connect(cGain);
+      cGain.connect(this.sfxGain);
+      chime.start(ct);
+      chime.stop(ct + 0.32);
+    });
+  }
+
+  playStreakMultiplier(tier = 2) {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    const t = this.ctx.currentTime;
+    const baseFreq = tier >= 16 ? 1200 : tier >= 8 ? 960 : tier >= 4 ? 780 : 640;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(baseFreq, t);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, t + 0.18);
+
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+
+    osc.start(t);
+    osc.stop(t + 0.21);
+  }
+
   // --- SOUND EFFECTS ---
 
   playCoin() {
