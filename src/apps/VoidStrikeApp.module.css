@@ -1,4 +1,4 @@
-/* VoidStrike 3D — Starfighter Space Combat Stylesheet */
+/* VoidStrike 3D — Starfighter Space Combat Stylesheet 2.0 */
 
 .container {
   position: relative;
@@ -53,16 +53,16 @@
 .telemetryCard {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  gap: 5px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 12px;
   padding: 8px 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
   pointer-events: auto;
-  min-width: 190px;
+  min-width: 195px;
   max-width: 250px;
 }
 
@@ -75,13 +75,13 @@
 .shipClassBadge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(2, 132, 199, 0.15));
   border: 1px solid rgba(56, 189, 248, 0.4);
   color: #38bdf8;
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: 6px;
   letter-spacing: 0.5px;
 }
@@ -97,15 +97,24 @@
 .gaugeRow {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .gaugeLabel {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 10px;
   font-weight: 600;
   color: #cbd5e1;
+}
+
+.ghostSurgeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #38bdf8;
+  font-weight: 700;
 }
 
 .gaugeTrack {
@@ -142,21 +151,100 @@
   transition: width 0.1s linear;
 }
 
+.ghostSurgeFill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #38bdf8, #a855f7);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+  border-radius: 3px;
+  transition: width 0.15s ease-out;
+}
+
+.ghostSurgePulse {
+  animation: surgePulse 0.4s infinite alternate;
+}
+
+@keyframes surgePulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.6); box-shadow: 0 0 16px #38bdf8; }
+}
+
+/* Center Status Column */
+.centerStatusCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.missionPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 4px 14px;
+}
+
+.missionWaveText {
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+}
+
+.scoreText {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.nearMissBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.2));
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  color: #fde047;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 8px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.comboBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.2));
+  border: 1px solid rgba(168, 85, 247, 0.6);
+  color: #f472b6;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 8px;
+  animation: pulseLock 0.3s infinite alternate;
+}
+
 /* Boss Health Bar */
 .bossBarContainer {
-  flex: 1;
-  max-width: 380px;
+  width: 100%;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  border: 1.5px solid rgba(239, 68, 68, 0.45);
   border-radius: 12px;
-  padding: 8px 16px;
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+  padding: 7px 14px;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
   animation: fadeIn 0.3s ease-out;
 }
 
@@ -172,9 +260,9 @@
 
 .bossTrack {
   width: 100%;
-  height: 9px;
+  height: 8px;
   background: rgba(30, 41, 59, 0.9);
-  border-radius: 5px;
+  border-radius: 4px;
   overflow: hidden;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
@@ -209,7 +297,6 @@
   height: 34px;
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
   color: #f1f5f9;
@@ -227,14 +314,12 @@
   transform: translateY(1px);
 }
 
-/* 3D Spherical Radar */
 .radarCard {
   position: relative;
   width: 96px;
   height: 96px;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1.5px solid rgba(56, 189, 248, 0.35);
   border-radius: 50%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 0 14px rgba(56, 189, 248, 0.15);
@@ -260,8 +345,8 @@
 }
 
 .crosshairRing {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border: 1.5px solid rgba(56, 189, 248, 0.45);
   border-radius: 50%;
   display: flex;
@@ -280,9 +365,9 @@
 
 .lockBox {
   position: absolute;
-  width: 58px;
-  height: 58px;
-  border: 2px dashed rgba(245, 158, 11, 0.6);
+  width: 60px;
+  height: 60px;
+  border: 2px dashed rgba(245, 158, 11, 0.65);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -295,7 +380,7 @@
 
 .lockBoxSolid {
   border: 2px solid #ef4444;
-  box-shadow: 0 0 14px rgba(239, 68, 68, 0.8);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
   animation: none;
 }
 
@@ -327,11 +412,10 @@
   pointer-events: auto;
 }
 
-/* Virtual Flight Stick / Joystick */
 .joystickZone {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   background: rgba(15, 23, 42, 0.45);
   border: 1.5px dashed rgba(56, 189, 248, 0.3);
@@ -344,8 +428,8 @@
 
 .joystickThumb {
   position: absolute;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #38bdf8, #0284c7);
   box-shadow: 0 4px 12px rgba(2, 132, 199, 0.5);
@@ -354,7 +438,7 @@
   transition: transform 0.05s linear;
 }
 
-/* Combat Action Buttons */
+/* Action Buttons */
 .actionButtonGroup {
   display: flex;
   align-items: center;
@@ -372,7 +456,6 @@
   border-radius: 12px;
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #f1f5f9;
   cursor: pointer;
@@ -391,6 +474,18 @@
 
 .actionBtn:active {
   transform: translateY(1px);
+}
+
+.actionBtnGhost {
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.actionBtnGhostReady {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.4), rgba(168, 85, 247, 0.5));
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+  animation: surgePulse 0.5s infinite alternate;
 }
 
 .actionBtnPrimary {
@@ -429,7 +524,7 @@
   letter-spacing: 0.3px;
 }
 
-/* --- RESPONSIVE MODALS (START, PAUSE, VICTORY, GAMEOVER) --- */
+/* --- MODALS --- */
 
 .modalOverlay {
   position: absolute;
@@ -437,13 +532,13 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(2, 6, 23, 0.8);
+  background: rgba(2, 6, 23, 0.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   padding: 16px 12px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -452,31 +547,34 @@
 }
 
 .modalCard {
-  margin: auto 0;
   width: 100%;
   max-width: 440px;
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));
-  border: 1.5px solid rgba(56, 189, 248, 0.25);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border: 1.5px solid rgba(56, 189, 248, 0.3);
   border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   text-align: center;
   box-sizing: border-box;
+}
+
+.hangarModalCard {
+  max-width: 520px;
 }
 
 .modalHeader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .modalIconRing {
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(2, 132, 199, 0.1));
   border: 1.5px solid rgba(56, 189, 248, 0.4);
@@ -484,7 +582,7 @@
   align-items: center;
   justify-content: center;
   color: #38bdf8;
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
 }
 
 .modalIconRingGold {
@@ -502,18 +600,189 @@
 }
 
 .modalTitle {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
   color: #f8fafc;
   margin: 0;
 }
 
 .modalSubtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: #94a3b8;
-  line-height: 1.5;
+  line-height: 1.45;
   margin: 0;
+}
+
+/* Hangar Customization Tabs */
+.hangarTabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.hangarTab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hangarTabActive {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+/* Hangar Grid Cards */
+.hangarGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.hangarCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.hangarCard:hover {
+  background: rgba(30, 41, 59, 0.7);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.hangarCardSelected {
+  background: rgba(2, 132, 199, 0.15);
+  border: 1.5px solid #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.hangarCardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hangarShipName {
+  font-size: 12px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.hangarShipClass {
+  font-size: 10px;
+  font-weight: 600;
+  color: #38bdf8;
+}
+
+.hangarShipDesc {
+  font-size: 10px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.statRadar {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.statMini {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+
+.statMiniBar {
+  height: 3px;
+  background: #38bdf8;
+  border-radius: 2px;
+}
+
+.pilotPerkBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #34d399;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Paint Customizer */
+.paintCustomizer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+}
+
+.paintSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.paintLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.colorPillRow {
+  display: flex;
+  gap: 8px;
+}
+
+.colorSwatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.colorSwatch:hover {
+  transform: scale(1.15);
+}
+
+.colorSwatchActive {
+  border-color: #ffffff;
+  box-shadow: 0 0 10px #ffffff;
+  transform: scale(1.2);
 }
 
 /* Stats Grid */
@@ -539,7 +808,6 @@
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .statVal {
@@ -552,11 +820,11 @@
 .controlsCheatSheet {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 11px;
 }
 
@@ -578,7 +846,7 @@
   color: #e2e8f0;
 }
 
-/* Modal Action Buttons */
+/* Modal Actions */
 .modalActions {
   display: flex;
   flex-direction: column;
@@ -632,101 +900,69 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* --- ULTRA-RESPONSIVE BREAKPOINTS (DOWN TO 320px) --- */
-
-@media (max-width: 600px) {
+/* Responsive Media Queries */
+@media (max-width: 640px) {
   .hud {
     padding: 6px 8px;
   }
-
   .telemetryCard {
-    min-width: 140px;
-    max-width: 170px;
+    min-width: 145px;
+    max-width: 175px;
     padding: 6px 8px;
-    gap: 4px;
+    gap: 3px;
   }
-
   .radarCard {
     width: 68px;
     height: 68px;
   }
-
-  .bossBarContainer {
-    max-width: 220px;
-    padding: 6px 10px;
+  .missionPill {
+    padding: 2px 10px;
+    font-size: 10px;
   }
-
   .joystickZone {
     width: 76px;
     height: 76px;
   }
-
   .joystickThumb {
     width: 32px;
     height: 32px;
   }
-
   .actionBtn {
     min-width: 38px;
     min-height: 38px;
     padding: 4px;
   }
-
   .actionBtnPrimary {
     min-width: 44px;
     min-height: 44px;
   }
-
   .actionKeyHint {
     display: none;
   }
-
-  .modalCard {
-    padding: 14px;
-    gap: 12px;
+  .hangarModalCard {
+    padding: 12px;
   }
-
-  .modalTitle {
-    font-size: 17px;
+  .hangarGrid {
+    max-height: 140px;
   }
 }
 
-@media (max-height: 460px) {
+@media (max-height: 480px) {
   .hud {
     padding: 4px 8px;
   }
-
   .radarCard {
     display: none;
   }
-
-  .joystickZone {
-    width: 64px;
-    height: 64px;
-  }
-
-  .actionBtn {
-    min-width: 36px;
-    min-height: 36px;
-  }
-
-  .actionBtnPrimary {
-    min-width: 40px;
-    min-height: 40px;
-  }
-
-  .modalCard {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .statGrid {
-    padding: 8px;
-    gap: 6px;
-  }
-
   .controlsCheatSheet {
     display: none;
+  }
+  .hangarGrid {
+    max-height: 110px;
+  }
+  .hangarModalCard {
+    padding: 10px;
+    gap: 8px;
   }
 }
 
@@ -736,6 +972,6 @@
 }
 
 @keyframes pulseLock {
-  from { transform: scale(0.95); opacity: 0.7; }
-  to { transform: scale(1.05); opacity: 1.0; }
+  from { transform: scale(0.96); opacity: 0.75; }
+  to { transform: scale(1.04); opacity: 1.0; }
 }
