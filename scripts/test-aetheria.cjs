@@ -1,6 +1,5 @@
 const { chromium } = require('playwright');
 const path = require('path');
-const fs = require('fs');
 const { bootToDesktop, seedProfile } = require('./harness.cjs');
 
 const ARTIFACTS_DIR = path.resolve('C:/Users/bb201/.gemini/antigravity-ide/brain/e2c1e766-140b-4be7-bc39-c47014282541');
