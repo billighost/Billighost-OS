@@ -62,14 +62,15 @@
   padding: 8px 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   pointer-events: auto;
-  min-width: 190px;
-  max-width: 250px;
+  min-width: 210px;
+  max-width: 280px;
 }
 
 .playerHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .playerLevelBadge {
@@ -86,6 +87,39 @@
   letter-spacing: 0.5px;
 }
 
+.mountBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.35), rgba(217, 119, 6, 0.2));
+  border: 1px solid rgba(245, 158, 11, 0.6);
+  color: #fbbf24;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  animation: pulseMount 2s infinite ease-in-out;
+}
+
+.targetLockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.35), rgba(185, 28, 28, 0.2));
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  max-width: 95px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .weaponTag {
   font-size: 11px;
   color: #94a3b8;
@@ -93,7 +127,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  margin-left: auto;
+  max-width: 100px;
 }
 
 .barRow {
@@ -134,6 +169,16 @@
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
   border-radius: 3px;
   transition: width 0.15s ease-out;
+}
+
+.ghostFill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #a855f7, #06b6d4);
+  background-size: 200% 100%;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+  border-radius: 3px;
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: ghostShimmer 2.5s infinite linear;
 }
 
 .expFill {
@@ -404,6 +449,55 @@
 
 .actionBtnPrimary .actionKeyHint {
   color: #fca5a5;
+}
+
+.actionBtnMount {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.actionBtnMountActive {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.5));
+  border-color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.actionBtnLock {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.actionBtnLockActive {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(185, 28, 28, 0.5));
+  border-color: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+.actionBtnGhost {
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.actionBtnGhostReady {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(168, 85, 247, 0.55));
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
+  animation: pulseGhostReady 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseMount {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+@keyframes pulseGhostReady {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 14px rgba(56, 189, 248, 0.6); }
+  50% { transform: scale(1.06); box-shadow: 0 0 22px rgba(168, 85, 247, 0.85); }
+}
+
+@keyframes ghostShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
 /* Floating Banner Notification */

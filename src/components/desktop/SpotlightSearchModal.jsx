@@ -3,7 +3,7 @@ import { VFS } from '../../services/storage/indexedDB';
 import {
   SearchIcon, FolderIcon, FileIcon, FileTextIcon, BoltIcon, GlobeIcon,
   PenIcon, MusicNoteIcon, ImageIcon, GridHashIcon, GearIcon,
-  ChartBarIcon, TrashIcon, CodeIcon, BrushIcon, CheckIcon, GamepadIcon, SwordIcon, RocketIcon,
+  ChartBarIcon, TrashIcon, CodeIcon, BrushIcon, CheckIcon, GamepadIcon, SwordIcon, RocketIcon, ZapIcon,
 } from '../Icons';
 import styles from './SpotlightSearchModal.module.css';
 
@@ -93,6 +93,7 @@ export default function SpotlightSearchModal({
     { id: 'subwaysurge', name: 'Subway Surge 3D', desc: 'High-speed 3D endless subway runner', icon: <GamepadIcon size={18} /> },
     { id: 'aetheria', name: 'Aetheria 3D', desc: 'Open-world 3D action RPG adventure', icon: <SwordIcon size={18} /> },
     { id: 'voidstrike', name: 'VoidStrike 3D', desc: 'Dogfight space combat flight simulator', icon: <RocketIcon size={18} /> },
+    { id: 'cyberswarm', name: 'CyberSwarm: Rogue Overdrive', desc: 'Top-down 360° horde survivor shooter', icon: <ZapIcon size={18} /> },
     { id: 'files', name: 'Files', desc: 'Browse Virtual File System', icon: <FolderIcon size={18} /> },
     { id: 'code', name: 'Code Studio', desc: 'Pro Syntax-Highlighted Code Editor', icon: <CodeIcon size={18} /> },
     { id: 'paint', name: 'Paint Studio', desc: 'Drawing & Canvas Art Studio', icon: <BrushIcon size={18} /> },

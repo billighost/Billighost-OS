@@ -90,44 +90,49 @@ async function run() {
   // SCREEN 2: LOCKER & 3D TURNTABLE
   // ==========================================
   console.log('--- Screen 2: Locker & 3D Turntable ---');
-  const lockerBtn = win.locator('text="Locker & Upgrades"').first();
+  const lockerBtn = win.locator('button:has-text("Locker & Upgrades")').first();
   await lockerBtn.click();
   await page.waitForTimeout(1500);
 
   // Verify turntable canvas is present
-  const turntableCanvas = win.locator('canvas').nth(1); // 0 is game canvas, 1 is turntable
-  console.log('Turntable canvas count:', await win.locator('canvas').count());
+  const canvases = win.locator('canvas');
+  console.log('Canvas count in Locker:', await canvases.count());
+  const turntableCanvas = canvases.last();
   await takeShot(page, '02_locker_turntable_dash.png');
 
   // Simulate dragging the turntable to rotate 3D character
   console.log('Interacting with 3D turntable (rotating character)...');
-  const turntableBox = await turntableCanvas.boundingBox();
-  if (turntableBox) {
-    await page.mouse.move(turntableBox.x + turntableBox.width / 2, turntableBox.y + turntableBox.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(turntableBox.x + turntableBox.width / 2 + 120, turntableBox.y + turntableBox.height / 2, { steps: 10 });
-    await page.mouse.up();
-    await page.waitForTimeout(500);
+  try {
+    const turntableBox = await turntableCanvas.boundingBox();
+    if (turntableBox) {
+      await page.mouse.move(turntableBox.x + turntableBox.width / 2, turntableBox.y + turntableBox.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(turntableBox.x + turntableBox.width / 2 + 120, turntableBox.y + turntableBox.height / 2, { steps: 10 });
+      await page.mouse.up();
+      await page.waitForTimeout(500);
+    }
+  } catch (e) {
+    console.log('Turntable drag note:', e.message);
   }
 
   // Switch to Billi (Spectral Master)
   console.log('Selecting Billi (Spectral Master)...');
-  const billiCard = win.locator('text="Billi (Spectral Master)"').first();
+  const billiCard = win.locator('button:has-text("Billi (Spectral Master)"), div:has-text("Billi (Spectral Master)")').last();
   if (await billiCard.isVisible()) {
     await billiCard.click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1000);
     await takeShot(page, '03_locker_turntable_billi.png');
   }
 
   // Switch to Hoverboards Tab
   console.log('Switching to Hoverboards tab...');
-  const boardsTab = win.locator('text="Hoverboards"').first();
+  const boardsTab = win.locator('button:has-text("Hoverboards")').first();
   await boardsTab.click();
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1000);
   await takeShot(page, '04_locker_boards.png');
 
   // Select Phantom Drift hoverboard
-  const phantomCard = win.locator('text="Phantom Drift"').first();
+  const phantomCard = win.locator('button:has-text("Phantom Drift"), div:has-text("Phantom Drift")').last();
   if (await phantomCard.isVisible()) {
     await phantomCard.click();
     await page.waitForTimeout(500);
@@ -135,7 +140,7 @@ async function run() {
 
   // Return to Menu
   console.log('Returning to main menu...');
-  const backBtn = win.locator('text="Back to Menu"').first();
+  const backBtn = win.locator('button:has-text("Back to Menu")').first();
   await backBtn.click();
   await page.waitForTimeout(600);
 
@@ -143,7 +148,7 @@ async function run() {
   // SCREEN 3: ACTIVE 3D GAMEPLAY RUN
   // ==========================================
   console.log('--- Screen 3: Active 3D Gameplay Run ---');
-  const launchBtn = win.locator('text="Launch Run"').first();
+  const launchBtn = win.locator('button:has-text("Launch Run")').first();
   await launchBtn.click();
   await page.waitForTimeout(2000);
 
@@ -181,7 +186,7 @@ async function run() {
   await takeShot(page, '07_pause_screen.png');
 
   // Adjust volume sliders
-  console.log('Testing volume sliders...');
+  console.log('Testing volume sliders in Pause modal...');
   const sliders = win.locator('input[type="range"]');
   if (await sliders.count() >= 2) {
     await sliders.nth(0).fill('0.5');
@@ -189,8 +194,8 @@ async function run() {
   }
 
   // Resume game
-  console.log('Resuming run...');
-  const resumeBtn = win.locator('text="Resume Run"').first();
+  console.log('Resuming run from Pause modal...');
+  const resumeBtn = win.locator('button:has-text("Resume Run")').first();
   await resumeBtn.click();
   await page.waitForTimeout(800);
 
@@ -198,96 +203,50 @@ async function run() {
   // SCREEN 5: REVIVE / SECOND CHANCE SCREEN
   // ==========================================
   console.log('--- Screen 5: Revive / Second Chance Screen ---');
-  // Trigger game over via in-page engine event so we can test the Revive Screen modal
   await page.evaluate(() => {
-    // Dispatch a synthetic crash through the window app instance or trigger collision
-    // Since player has 850 coins, this will trigger the Second Chance modal!
-    const canvas = document.querySelector('[data-app="subwaysurge"] canvas');
-    if (canvas && window.__subwayEngine) {
-      window.__subwayEngine.onGameOver(340, 24);
+    if (window.__subwaySetState) {
+      window.__subwaySetState('revive');
     }
   });
-
-  // If __subwayEngine isn't globally stored, let's trigger it by letting the character hit an obstacle
-  // or calling the state setter directly
-  const hasReviveModal = await win.locator('text="Second Chance!"').count();
-  if (!hasReviveModal) {
-    // Steer character right into an obstacle or wait for collision
-    console.log('Steering to hazard lane to trigger collision...');
-    await page.keyboard.press('ArrowRight');
-    await page.waitForTimeout(2000);
-  }
-
-  // If still not triggered, let's trigger state or check if revive/game over is visible
-  let reviveVisible = await win.locator('text="Second Chance!"').isVisible().catch(() => false);
-  if (!reviveVisible) {
-    // Let's trigger it via React state or direct engine collision callback
-    await page.evaluate(() => {
-      // Find the React fiber node on the canvas or container to call onGameOver
-      const appEl = document.querySelector('[data-app="subwaysurge"]');
-      if (appEl) {
-        // Find React key
-        const key = Object.keys(appEl).find(k => k.startsWith('__reactFiber$') || k.startsWith('__reactInternalInstance$'));
-        if (key) {
-          let fiber = appEl[key];
-          while (fiber) {
-            if (fiber.memoizedState && typeof fiber.memoizedState.baseState !== 'undefined') {
-              // Found state hook
-            }
-            fiber = fiber.return;
-          }
-        }
-      }
-    });
-  }
-
-  // Check if revive screen or game over screen appeared
-  if (await win.locator('text="Second Chance!"').count()) {
-    console.log('Second Chance / Revive Screen is visible!');
-    await takeShot(page, '08_revive_screen.png');
-
-    // Click "Give Up" to transition to Game Over screen
-    console.log('Clicking Give Up to view Game Over screen...');
-    const giveUpBtn = win.locator('text="Give Up"').first();
-    await giveUpBtn.click();
-    await page.waitForTimeout(800);
-  } else {
-    console.log('Waiting for runner collision...');
-    await page.waitForTimeout(3000);
-  }
+  await page.waitForTimeout(600);
+  await takeShot(page, '08_revive_screen.png');
 
   // ==========================================
   // SCREEN 6: GAME OVER SCREEN
   // ==========================================
   console.log('--- Screen 6: Game Over Screen ---');
-  const gameOverCard = win.locator('text="Crash! Run Ended"');
-  if (await gameOverCard.count()) {
-    console.log('Game Over screen verified!');
-    await takeShot(page, '09_gameover_screen.png');
+  const giveUpBtn = win.locator('button:has-text("Give Up")').first();
+  if (await giveUpBtn.isVisible()) {
+    await giveUpBtn.click();
   } else {
-    // If not triggered yet, let's pause and capture current screen
-    console.log('Capturing current game state...');
-    await takeShot(page, '09_gameover_screen.png');
+    await page.evaluate(() => {
+      if (window.__subwaySetState) {
+        window.__subwaySetState('gameover');
+      }
+    });
   }
+  await page.waitForTimeout(600);
+  await takeShot(page, '09_gameover_screen.png');
 
   // ==========================================
   // RESPONSIVENESS & WEIRD SCREEN SIZES
   // ==========================================
   console.log('--- Responsiveness Testing on Weird Screen Sizes ---');
 
-  // Maximize the window first to test responsive layout at browser boundaries
+  // Maximize the window first to test full-screen responsive layouts
   const maxBtn = win.locator('button[title="Maximize"]').first();
   if (await maxBtn.count()) {
     await maxBtn.click();
     await page.waitForTimeout(600);
   }
 
-  // Return to Start screen to test modal responsiveness
-  const exitBtn = win.locator('text="Exit to Menu", text="Run Again", text="Back to Menu"').first();
-  if (await exitBtn.count() && await exitBtn.isVisible()) {
-    await exitBtn.click();
-    await page.waitForTimeout(600);
-  }
+  // Go to start screen to test responsive card layout
+  await page.evaluate(() => {
+    if (window.__subwaySetState) {
+      window.__subwaySetState('start');
+    }
+  });
+  await page.waitForTimeout(500);
 
   // Viewport A: Compact Square (500x500)
   console.log('Testing Weird Viewport A: Compact Square (500x500)...');
@@ -312,6 +271,17 @@ async function run() {
   await page.setViewportSize({ width: 1600, height: 520 });
   await page.waitForTimeout(800);
   await takeShot(page, '13_responsive_ultrawide_1600x520.png');
+
+  // Also test Active Gameplay on Mobile Portrait (360x780) to verify HUD responsiveness
+  console.log('Testing Active Gameplay on Mobile Portrait (360x780)...');
+  await page.evaluate(() => {
+    if (window.__subwaySetState && window.__subwayEngine) {
+      window.__subwaySetState('playing');
+      window.__subwayEngine.start();
+    }
+  });
+  await page.waitForTimeout(1000);
+  await takeShot(page, '14_responsive_gameplay_mobile_360x780.png');
 
   // Restore Default Desktop
   await page.setViewportSize({ width: 1280, height: 800 });

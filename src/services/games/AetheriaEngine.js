@@ -199,7 +199,7 @@ export class AetheriaEngine {
     this.renderer.setSize(width, height, false);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.graphicsQuality === 'ultra' ? 1.5 : 1.2));
     this.renderer.shadowMap.enabled = this.graphicsQuality !== 'low';
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
 
     // 4. Initialize Shared Materials
     this.initMaterials();
@@ -231,6 +231,14 @@ export class AetheriaEngine {
     // Lock starting position to ground height
     this.pos.y = this.getTerrainHeight(this.pos.x, this.pos.z);
     this.playerGroup.position.copy(this.pos);
+
+    // Initial Camera Position & View Frame
+    const cx = this.pos.x - Math.sin(this.camYaw) * (this.camDistance * Math.cos(this.camPitch));
+    const cy = this.pos.y + this.camHeight + Math.sin(this.camPitch) * this.camDistance;
+    const cz = this.pos.z - Math.cos(this.camYaw) * (this.camDistance * Math.cos(this.camPitch));
+    this.camera.position.set(cx, cy, cz);
+    this.camera.lookAt(this.pos.x, this.pos.y + 1.6, this.pos.z);
+    this.render();
 
     window.addEventListener('resize', this.handleResize);
   }
@@ -381,9 +389,10 @@ export class AetheriaEngine {
     geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
     geo.computeVertexNormals();
 
-    const mat = new THREE.MeshLambertMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.9,
+      roughness: 0.85,
+      metalness: 0.1,
     });
     this.terrainMesh = new THREE.Mesh(geo, mat);
     this.terrainMesh.receiveShadow = this.graphicsQuality !== 'low';
@@ -795,7 +804,7 @@ export class AetheriaEngine {
     this.charRoot.add(this.rightLeg);
   }
 
-  buildRogueModel(armorMat) {
+  buildRogueModel(_armorMat) {
     const leatherMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.6 });
     const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.88, 0.44), leatherMat);
     torso.position.y = 0.45;
@@ -1696,7 +1705,11 @@ export class AetheriaEngine {
 
   resume() {
     this.isPaused = false;
-    this.clock.start();
+    if (!this.isRunning) {
+      this.start();
+    } else {
+      this.clock.start();
+    }
   }
 
   animate() {
@@ -1822,7 +1835,7 @@ export class AetheriaEngine {
     }
   }
 
-  updateGhostOrbs(delta) {
+  updateGhostOrbs(_delta) {
     const time = this.clock.getElapsedTime();
     this.ghostOrbs.forEach(orb => {
       if (orb.collected) return;
@@ -2000,7 +2013,7 @@ export class AetheriaEngine {
     }
   }
 
-  animatePlayer(delta) {
+  animatePlayer(_delta) {
     if (!this.charRoot) return;
 
     const speed = Math.hypot(this.vel.x, this.vel.z);

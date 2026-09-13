@@ -21,7 +21,6 @@ import {
   HorseIcon,
   GhostIcon,
   PaletteIcon,
-  ZapIcon,
   TargetLockIcon,
 } from '../components/Icons';
 import styles from './Aetheria3DApp.module.css';
@@ -1010,8 +1009,12 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 className={styles.btnPrimary}
                 onClick={() => {
                   playClick();
-                  engineRef.current?.resume();
-                  setGameState('playing');
+                  if (!engineRef.current?.isRunning) {
+                    handleStartGame();
+                  } else {
+                    engineRef.current?.resume();
+                    setGameState('playing');
+                  }
                 }}
               >
                 <PlayIcon size={16} />

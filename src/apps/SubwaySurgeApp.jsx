@@ -191,6 +191,10 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
     engine.setCharacter(selectedCharacter);
     engine.setBoard(selectedBoard);
     engineRef.current = engine;
+    if (typeof window !== 'undefined') {
+      window.__subwayEngine = engine;
+      window.__subwaySetState = setGameState;
+    }
 
     const ro = new ResizeObserver(() => {
       engine.handleResize();
@@ -200,6 +204,10 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
     }
 
     return () => {
+      if (typeof window !== 'undefined') {
+        window.__subwayEngine = null;
+        window.__subwaySetState = null;
+      }
       ro.disconnect();
       engine.destroy();
       subwayAudio.stopMusic();

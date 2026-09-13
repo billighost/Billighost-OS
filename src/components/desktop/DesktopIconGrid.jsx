@@ -5,7 +5,7 @@ import {
   MonitorIcon, FolderIcon, FolderOpenIcon, TrashIcon, BoltIcon, GlobeIcon,
   PenIcon, MusicNoteIcon, ImageIcon, GearIcon,
   FileIcon, FileTextIcon, UploadIcon, RefreshIcon, InfoIcon,
-  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon, FilmIcon, GamepadIcon, SwordIcon, RocketIcon,
+  CodeIcon, BrushIcon, TerminalIcon, CalculatorIcon, GhostIcon, FilmIcon, GamepadIcon, SwordIcon, RocketIcon, ZapIcon,
 } from '../Icons';
 import { appForFile } from '../../services/fileRouting';
 import styles from './DesktopIconGrid.module.css';
@@ -40,6 +40,7 @@ export default function DesktopIconGrid({
     { id: 'shortcut-subwaysurge', name: 'Subway Surge 3D', icon: <GamepadIcon size={28} />, action: () => onLaunchApp('subwaysurge', 'Subway Surge 3D', null) },
     { id: 'shortcut-aetheria', name: 'Aetheria 3D', icon: <SwordIcon size={28} />, action: () => onLaunchApp('aetheria', 'Aetheria 3D', null) },
     { id: 'shortcut-voidstrike', name: 'VoidStrike 3D', icon: <RocketIcon size={28} />, action: () => onLaunchApp('voidstrike', 'VoidStrike 3D', null) },
+    { id: 'shortcut-cyberswarm', name: 'CyberSwarm', icon: <ZapIcon size={28} />, action: () => onLaunchApp('cyberswarm', 'CyberSwarm', null) },
     { id: 'shortcut-pc', name: 'This PC', icon: <MonitorIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/' }) },
     { id: 'shortcut-files', name: 'File Explorer', icon: <FolderIcon size={28} />, action: () => onLaunchApp('files', 'Files', null, { initialPath: '/Users/User' }) },
     { id: 'shortcut-code', name: 'Code Studio', icon: <CodeIcon size={28} />, action: () => onLaunchApp('code', 'Code Studio', null) },
