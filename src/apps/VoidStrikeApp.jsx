@@ -190,6 +190,9 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
     distance: 0,
   });
 
+  // Off-screen Threat Indicators
+  const [threats, setThreats] = useState([]);
+
   // Virtual Joystick Flight Stick
   const joystickRef = useRef({
     active: false,
@@ -261,6 +264,12 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
           ghostSurgeActive: active,
           ghostSurgeTimer: timer,
         }));
+      },
+      onThreatsUpdate: (t) => {
+        setThreats(t);
+      },
+      onCameraModeChange: (mode) => {
+        setCameraMode(mode);
       },
       onGameOver: () => {
         setGameState('gameover');
@@ -482,6 +491,12 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
       } else if (e.code === 'KeyG') {
         // Trigger Ghost Surge Overdrive
         engineRef.current?.triggerGhostSurge();
+      } else if (e.code === 'KeyT') {
+        // Snap/align starfighter directly toward nearest target
+        engineRef.current?.snapToNearestTarget();
+      } else if (e.code === 'KeyR') {
+        // Toggle rear glance view
+        engineRef.current?.toggleRearView();
       } else if (e.code === 'KeyV') {
         engineRef.current?.toggleCameraMode();
         setCameraMode((prev) => (prev === 'chase' ? 'cockpit' : 'chase'));
@@ -787,6 +802,16 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
             <div className={styles.topRightCol}>
               <div className={styles.topActions}>
                 <button
+                  className={`${styles.hudButton} ${cameraMode === 'rear' ? styles.hudButtonActive : ''}`}
+                  onClick={() => {
+                    playClick();
+                    engineRef.current?.toggleRearView();
+                  }}
+                  title={`Toggle Rear View (R): ${cameraMode === 'rear' ? 'Active' : 'Off'}`}
+                >
+                  <RotateCcwIcon size={16} />
+                </button>
+                <button
                   className={styles.hudButton}
                   onClick={() => {
                     playClick();
@@ -836,6 +861,47 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
             )}
           </div>
 
+          {/* Off-screen Threat Edge Direction Indicators */}
+          {threats && threats.filter((t) => t.isOffscreen).map((t, idx) => {
+            const rotDeg = 90 - (t.angle * 180) / Math.PI;
+            return (
+              <div
+                key={`${t.id || t.type}-${idx}`}
+                className={`${styles.threatMarker} ${
+                  t.type === 'ghost'
+                    ? styles.threatGhost
+                    : t.type === 'gunship'
+                    ? styles.threatGunship
+                    : t.type === 'boss'
+                    ? styles.threatBoss
+                    : styles.threatFighter
+                }`}
+                style={{
+                  left: `${(t.screenX * 100).toFixed(1)}%`,
+                  top: `${(t.screenY * 100).toFixed(1)}%`,
+                }}
+                title={`${t.type.toUpperCase()} - ${t.dist}M (Click or Press T to Snap)`}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.snapToNearestTarget();
+                }}
+              >
+                <div
+                  className={styles.threatArrow}
+                  style={{ transform: `rotate(${rotDeg}deg)` }}
+                />
+                <span className={styles.threatDist}>{t.dist}m</span>
+              </div>
+            );
+          })}
+
+          {/* Rear-View Active Warning Banner */}
+          {cameraMode === 'rear' && (
+            <div className={styles.rearViewAlert}>
+              <span>⚠️ REAR-VIEW CAMERA ACTIVE [R]</span>
+            </div>
+          )}
+
           {/* Bottom Controls Bar */}
           <div className={styles.bottomBar}>
             <div className={styles.leftControls}>
@@ -858,6 +924,19 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
 
             {/* Combat Action Buttons */}
             <div className={styles.actionButtonGroup}>
+              {/* Snap to Nearest Threat */}
+              <button
+                className={styles.actionBtn}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.snapToNearestTarget();
+                }}
+                title="Snap to Nearest Threat (T)"
+              >
+                <TargetLockIcon size={18} />
+                <span className={styles.actionKeyHint}>T</span>
+              </button>
+
               {/* Ghost Surge Overdrive */}
               <button
                 className={`${styles.actionBtn} ${styles.actionBtnGhost} ${
@@ -1077,6 +1156,14 @@ export default function VoidStrikeApp({ playClick = () => {} }) {
               <div className={styles.controlRow}>
                 <span>Twin Plasma Cannons</span>
                 <span className={styles.keyBadge}>Space / Left Click</span>
+              </div>
+              <div className={styles.controlRow}>
+                <span>Snap to Nearest Threat</span>
+                <span className={styles.keyBadge}>T</span>
+              </div>
+              <div className={styles.controlRow}>
+                <span>Rear-View Camera Toggle</span>
+                <span className={styles.keyBadge}>R</span>
               </div>
               <div className={styles.controlRow}>
                 <span>Homing Torpedo</span>

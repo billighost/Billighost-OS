@@ -300,6 +300,18 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
     turntableRendererRef.current = renderer;
     turntableSceneRef.current = scene;
 
+    const ro = new ResizeObserver(() => {
+      if (!canvas) return;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w && h) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h, false);
+      }
+    });
+    ro.observe(canvas);
+
     let rot = 0;
     const renderTurntable = () => {
       turntableReqId.current = requestAnimationFrame(renderTurntable);
@@ -312,6 +324,7 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
     renderTurntable();
 
     return () => {
+      ro.disconnect();
       if (turntableReqId.current) cancelAnimationFrame(turntableReqId.current);
       dummyEngine.destroy();
       renderer.dispose();
@@ -442,6 +455,19 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
     setGameState('playing');
     engineRef.current?.resume();
   };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__subwayPause = handlePause;
+      window.__subwayResume = handleResume;
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.__subwayPause = null;
+        window.__subwayResume = null;
+      }
+    };
+  }, []);
 
   const handleTriggerGameOver = (finalScore, earnedCoins) => {
     if (reviveTimerRef.current) clearInterval(reviveTimerRef.current);

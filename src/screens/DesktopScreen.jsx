@@ -465,6 +465,17 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
     );
   }, []);
 
+  useEffect(() => {
+    window.__billighostResizeWindow = (appId, w, h) => {
+      setWindows(prev =>
+        prev.map(win => (win.appId === appId ? { ...win, size: { w, h }, restoreSize: { w, h }, isMaximized: false } : win))
+      );
+    };
+    return () => {
+      delete window.__billighostResizeWindow;
+    };
+  }, []);
+
   // --- Global Context Menu & Taskbar State ---
   const [globalContextMenu, setGlobalContextMenu] = useState(null);
   const [taskbarLocked, setTaskbarLocked] = useState(true);

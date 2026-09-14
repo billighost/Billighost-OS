@@ -136,6 +136,23 @@ async function run() {
   await page.keyboard.press('KeyV');
   await page.waitForTimeout(300);
 
+  // Test Target Snap Align (T)
+  console.log('Testing Target Snap Align (T)...');
+  await page.keyboard.press('KeyT');
+  await page.waitForTimeout(400);
+
+  // Test Rear-View Camera Toggle (R)
+  console.log('Testing Rear-View Camera Toggle (R)...');
+  await page.keyboard.press('KeyR');
+  await page.waitForTimeout(500);
+
+  // Shot 10: Rear-View Camera Active with Alert Banner
+  await takeShot(page, '10_voidstrike_rear_view.png');
+
+  // Toggle off Rear View
+  await page.keyboard.press('KeyR');
+  await page.waitForTimeout(300);
+
   // Test Small Window Responsiveness (720x440)
   console.log('Testing responsive scaling (720x440)...');
   await page.setViewportSize({ width: 720, height: 440 });

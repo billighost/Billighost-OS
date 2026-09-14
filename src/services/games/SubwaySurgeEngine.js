@@ -103,6 +103,8 @@ export class SubwaySurgeEngine {
     this.hoverboardTimer = 0;
     this.jetpackActive = false;
     this.jetpackTimer = 0;
+    this.jetpackLanding = false;
+    this.skyCoinsEndDist = 0;
     this.magnetActive = false;
     this.magnetTimer = 0;
     this.multiplierActive = false;
@@ -267,14 +269,22 @@ export class SubwaySurgeEngine {
       bldgWinPurple: new THREE.MeshBasicMaterial({ color: 0xa855f7 }),
       trainBody: new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.65, roughness: 0.28 }),
       trainRoof: new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.35 }),
+      trainCorrugated: new THREE.MeshStandardMaterial({ color: 0x0369a1, metalness: 0.8, roughness: 0.25 }),
+      trainDarkMetal: new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.25 }),
       trainGlass: new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.05, metalness: 0.95 }),
       trainLight: new THREE.MeshBasicMaterial({ color: 0xfffae0 }),
-      rampPlate: new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.45, metalness: 0.4 }),
+      trainGlowHeadlight: new THREE.MeshBasicMaterial({ color: 0xffffff }),
+      trainRedTail: new THREE.MeshBasicMaterial({ color: 0xef4444 }),
+      trainPantograph: new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.2 }),
+      trainBogie: new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.4 }),
+      rampPlate: new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.35, metalness: 0.55 }),
+      rampChevron: new THREE.MeshBasicMaterial({ color: 0x111827 }),
+      rampNeonGuide: new THREE.MeshBasicMaterial({ color: 0x06b6d4 }),
       hurdlePole: new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 }),
       hurdleStripe: new THREE.MeshBasicMaterial({ color: 0xef4444 }),
       hurdleWhite: new THREE.MeshBasicMaterial({ color: 0xffffff }),
-      coin: new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.88, roughness: 0.15, emissive: 0xd97706, emissiveIntensity: 0.4 }),
-      ghostToken: new THREE.MeshStandardMaterial({ color: 0x7eb8ff, metalness: 0.9, roughness: 0.1, emissive: 0x0284c7, emissiveIntensity: 0.7 }),
+      coin: new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.92, roughness: 0.12, emissive: 0xd97706, emissiveIntensity: 0.45 }),
+      ghostToken: new THREE.MeshStandardMaterial({ color: 0x7eb8ff, metalness: 0.92, roughness: 0.08, emissive: 0x0284c7, emissiveIntensity: 0.75 }),
       ghostMat: new THREE.MeshStandardMaterial({ color: 0xcfe4ff, transparent: true, opacity: 0.88, roughness: 0.2, metalness: 0.1, emissive: 0x0284c7, emissiveIntensity: 0.6 }),
       ghostGlow: new THREE.MeshBasicMaterial({ color: 0x7eb8ff }),
       ghostEye: new THREE.MeshBasicMaterial({ color: 0xffffff }),
@@ -390,40 +400,66 @@ export class SubwaySurgeEngine {
   // Character 1: Dash (Classic Streetwear Runner)
   buildDashStreetCharacter() {
     const skinMat = new THREE.MeshLambertMaterial({ color: 0xffd5b3 });
-    const hoodieMat = new THREE.MeshStandardMaterial({ color: this.characterSkin.hoodie, roughness: 0.55, metalness: 0.1 });
-    const pantsMat = new THREE.MeshStandardMaterial({ color: this.characterSkin.pants, roughness: 0.7 });
+    const hoodieMat = new THREE.MeshStandardMaterial({ color: this.characterSkin.hoodie, roughness: 0.5, metalness: 0.15 });
+    const pantsMat = new THREE.MeshStandardMaterial({ color: this.characterSkin.pants, roughness: 0.65 });
     const capMat = new THREE.MeshStandardMaterial({ color: this.characterSkin.cap, roughness: 0.45 });
-    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 });
-    const soleMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.6 });
-    const visorMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.8 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+    const soleMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 });
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.85 });
 
-    // Torso with collar & zipper seam
-    const torsoGeo = new THREE.BoxGeometry(0.72, 0.88, 0.48);
+    // Torso with layered hoodie, collar, zipper, and kangaroo front pocket
+    const torsoGeo = new THREE.BoxGeometry(0.74, 0.9, 0.5);
     const torso = new THREE.Mesh(torsoGeo, hoodieMat);
     torso.position.y = 0.45;
     torso.castShadow = true;
     this.charRoot.add(torso);
 
-    const zipperGeo = new THREE.BoxGeometry(0.04, 0.88, 0.02);
-    const zipper = new THREE.Mesh(zipperGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    zipper.position.set(0, 0.45, 0.25);
+    // Front kangaroo pouch pocket
+    const pocketGeo = new THREE.BoxGeometry(0.54, 0.32, 0.08);
+    const pocket = new THREE.Mesh(pocketGeo, hoodieMat);
+    pocket.position.set(0, 0.28, 0.28);
+    this.charRoot.add(pocket);
+
+    // Center metallic zipper
+    const zipper = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.88, 0.02), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9 }));
+    zipper.position.set(0, 0.45, 0.26);
     this.charRoot.add(zipper);
 
-    // Cyber Backpack
-    const packGeo = new THREE.BoxGeometry(0.48, 0.62, 0.22);
-    const packMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.5 });
-    const pack = new THREE.Mesh(packGeo, packMat);
-    pack.position.set(0, 0.48, -0.32);
-    this.charRoot.add(pack);
+    // Hoodie drawstrings with metal aglet tips
+    [-0.1, 0.1].forEach(dx => {
+      const stringMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      stringMesh.position.set(dx, 0.68, 0.27);
+      const aglet = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.06), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.9 }));
+      aglet.position.set(dx, 0.51, 0.27);
+      this.charRoot.add(stringMesh);
+      this.charRoot.add(aglet);
+    });
 
-    // Blinking antenna on backpack
-    const antGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.35);
-    const ant = new THREE.Mesh(antGeo, new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 }));
-    ant.position.set(0.18, 0.88, -0.32);
-    const antLight = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({ color: 0x22c55e }));
-    antLight.position.set(0.18, 1.05, -0.32);
-    this.charRoot.add(ant);
-    this.charRoot.add(antLight);
+    // Cyber Tactical Backpack with dual power cells and telemetry readout
+    const packGroup = new THREE.Group();
+    packGroup.position.set(0, 0.48, -0.34);
+    const pack = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.66, 0.22), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 }));
+    packGroup.add(pack);
+
+    // Dual cylindrical power cells
+    [-0.16, 0.16].forEach(cx => {
+      const cell = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.52, 12), new THREE.MeshStandardMaterial({ color: 0x06b6d4, emissive: 0x06b6d4, emissiveIntensity: 0.6 }));
+      cell.position.set(cx, 0.02, -0.12);
+      packGroup.add(cell);
+    });
+
+    // Blinking telemetry LCD & comms antenna
+    const lcd = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.14), new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide }));
+    lcd.position.set(0, 0.12, -0.12);
+    packGroup.add(lcd);
+
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.38), new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 }));
+    ant.position.set(0.19, 0.48, 0);
+    const antLight = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+    antLight.position.set(0.19, 0.68, 0);
+    packGroup.add(ant);
+    packGroup.add(antLight);
+    this.charRoot.add(packGroup);
 
     // Head, Cap & Visor
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.52, 0.48), skinMat);
@@ -438,31 +474,37 @@ export class SubwaySurgeEngine {
     this.charRoot.add(cap);
     this.charRoot.add(capBrim);
 
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.12, 0.08), visorMat);
+    // Curved neon cyber visor
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 0.1), visorMat);
     visor.position.set(0, 1.15, 0.25);
     this.charRoot.add(visor);
 
-    // Headphones with glowing rings
-    const earL = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 16), visorMat);
-    earL.rotation.z = Math.PI / 2;
-    earL.position.set(-0.29, 1.18, 0);
-    const earR = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 16), visorMat);
-    earR.rotation.z = Math.PI / 2;
-    earR.position.set(0.29, 1.18, 0);
-    this.charRoot.add(earL);
-    this.charRoot.add(earR);
+    // Wireless Cyberpunk Headphones with glowing equalizer rings
+    [-0.29, 0.29].forEach(ex => {
+      const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.08, 16), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 }));
+      ear.rotation.z = Math.PI / 2;
+      ear.position.set(ex, 1.18, 0);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.02, 8, 16), visorMat);
+      ring.rotation.y = Math.PI / 2;
+      ring.position.set(ex + (ex > 0 ? 0.04 : -0.04), 1.18, 0);
+      this.charRoot.add(ear);
+      this.charRoot.add(ring);
+    });
 
-    // Arms
+    // Arms with smart watch on left wrist
     const armGeo = new THREE.BoxGeometry(0.2, 0.65, 0.2);
     this.leftArm = new THREE.Group();
-    this.leftArm.position.set(-0.46, 0.8, 0);
+    this.leftArm.position.set(-0.48, 0.8, 0);
     const armL = new THREE.Mesh(armGeo, hoodieMat);
     armL.position.y = -0.3;
+    const watch = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.08, 0.24), visorMat);
+    watch.position.y = -0.45;
     this.leftArm.add(armL);
+    this.leftArm.add(watch);
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
-    this.rightArm.position.set(0.46, 0.8, 0);
+    this.rightArm.position.set(0.48, 0.8, 0);
     const armR = new THREE.Mesh(armGeo, hoodieMat);
     armR.position.y = -0.3;
     this.rightArm.add(armR);
@@ -480,48 +522,76 @@ export class SubwaySurgeEngine {
     const ghostMat = this.materials.ghostMat;
     const coreMat = this.materials.ghostGlow;
 
-    // Outer scalloped floating shroud
-    const cloakGeo = new THREE.CylinderGeometry(0.55, 0.78, 1.5, 20, 4, true);
+    // Outer multi-tiered undulating spectral cloak
+    const cloakGeo = new THREE.CylinderGeometry(0.56, 0.86, 1.6, 24, 6, true);
     const cloak = new THREE.Mesh(cloakGeo, ghostMat);
     cloak.position.y = 0.75;
     this.charRoot.add(cloak);
 
+    // Scalloped undulating bottom edge ribbons
+    for (let r = 0; r < 6; r++) {
+      const angle = (r / 6) * Math.PI * 2;
+      const ribbon = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.55, 8), ghostMat);
+      ribbon.position.set(Math.cos(angle) * 0.75, 0.02, Math.sin(angle) * 0.75);
+      ribbon.rotation.x = Math.PI;
+      this.charRoot.add(ribbon);
+    }
+
     // Head dome
-    const domeGeo = new THREE.SphereGeometry(0.44, 20, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeGeo = new THREE.SphereGeometry(0.48, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
     const dome = new THREE.Mesh(domeGeo, ghostMat);
     dome.position.y = 1.48;
     this.charRoot.add(dome);
 
-    // Glowing Cyan Eyes
-    const eyeGeo = new THREE.SphereGeometry(0.09, 12, 12);
+    // Floating Rotating Spectral Rune Halo above crown
+    const haloGroup = new THREE.Group();
+    haloGroup.position.y = 2.15;
+    const haloRing = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.03, 8, 24), coreMat);
+    haloRing.rotation.x = Math.PI / 2;
+    haloGroup.add(haloRing);
+    for (let i = 0; i < 4; i++) {
+      const ang = (i / 4) * Math.PI * 2;
+      const rune = new THREE.Mesh(new THREE.OctahedronGeometry(0.06), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      rune.position.set(Math.cos(ang) * 0.38, 0, Math.sin(ang) * 0.38);
+      haloGroup.add(rune);
+    }
+    this.charRoot.add(haloGroup);
+
+    // Glowing Expressive Cyan Eyes
+    const eyeGeo = new THREE.SphereGeometry(0.1, 14, 14);
     const eyeL = new THREE.Mesh(eyeGeo, this.materials.ghostEye);
-    eyeL.position.set(-0.16, 1.34, 0.38);
+    eyeL.position.set(-0.16, 1.34, 0.4);
     const eyeR = new THREE.Mesh(eyeGeo, this.materials.ghostEye);
-    eyeR.position.set(0.16, 1.34, 0.38);
+    eyeR.position.set(0.16, 1.34, 0.4);
     this.charRoot.add(eyeL);
     this.charRoot.add(eyeR);
 
-    // Central OS Core Ring
-    const coreRing = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 8, 24), coreMat);
-    coreRing.position.set(0, 0.82, 0);
-    this.charRoot.add(coreRing);
+    // Pulsating Inner Soul Core
+    const coreSphere = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 16), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+    coreSphere.position.set(0, 0.88, 0);
+    this.charRoot.add(coreSphere);
 
-    // Floating spectral arms
-    const ghostArmGeo = new THREE.ConeGeometry(0.12, 0.6, 12);
+    // Floating Articulated Phantom Hands
     this.leftArm = new THREE.Group();
-    this.leftArm.position.set(-0.5, 0.85, 0);
-    const gArmL = new THREE.Mesh(ghostArmGeo, ghostMat);
-    gArmL.position.y = -0.25;
-    gArmL.rotation.z = -0.2;
-    this.leftArm.add(gArmL);
+    this.leftArm.position.set(-0.55, 0.88, 0);
+    const handL = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), ghostMat);
+    handL.position.y = -0.2;
+    const clawL = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.28, 8), coreMat);
+    clawL.position.set(0, -0.36, 0.08);
+    clawL.rotation.x = 0.5;
+    this.leftArm.add(handL);
+    this.leftArm.add(clawL);
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
-    this.rightArm.position.set(0.5, 0.85, 0);
-    const gArmR = new THREE.Mesh(ghostArmGeo, ghostMat);
-    gArmR.position.y = -0.25;
-    gArmR.rotation.z = 0.2;
-    this.rightArm.add(gArmR);
+    this.rightArm.position.set(0.55, 0.88, 0);
+    const handR = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), ghostMat);
+    handR.position.y = -0.2;
+    const clawR = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.28, 8), coreMat);
+    clawR.position.set(0, -0.36, 0.08);
+    clawR.rotation.x = 0.5;
+    this.rightArm.add(handR);
+    this.rightArm.add(clawR);
     this.charRoot.add(this.rightArm);
 
     this.leftLeg = new THREE.Group();
@@ -532,48 +602,63 @@ export class SubwaySurgeEngine {
 
   // Character 3: Nova (Chrome Android Ninja)
   buildNovaNinjaCharacter() {
-    const armorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.15 });
+    const armorMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, metalness: 0.95, roughness: 0.12 });
     const underMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
-    const visorMat = new THREE.MeshStandardMaterial({ color: 0xec4899, emissive: 0xec4899, emissiveIntensity: 0.9 });
-    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 });
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0xec4899, emissive: 0xec4899, emissiveIntensity: 0.95 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.25 });
 
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.85, 0.44), armorMat);
+    // Angular Exoskeleton Torso
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.88, 0.46), armorMat);
     torso.position.y = 0.45;
     this.charRoot.add(torso);
 
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.5, 0.46), underMat);
+    // Illuminated chest core
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), visorMat);
+    core.position.set(0, 0.56, 0.25);
+    this.charRoot.add(core);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.52, 0.48), underMat);
     head.position.y = 1.15;
     this.charRoot.add(head);
 
-    // Angular Chrome Visor
-    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.18, 0.12), visorMat);
-    visor.position.set(0, 1.16, 0.24);
+    // Angular Holographic Chrome Visor
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.14), visorMat);
+    visor.position.set(0, 1.16, 0.26);
     this.charRoot.add(visor);
 
-    // Twin Katana Holster
-    const katanaGeo = new THREE.BoxGeometry(0.08, 1.1, 0.08);
-    const k1 = new THREE.Mesh(katanaGeo, armorMat);
-    k1.rotation.z = 0.45;
-    k1.position.set(0.12, 0.7, -0.28);
-    const k2 = new THREE.Mesh(katanaGeo, armorMat);
-    k2.rotation.z = -0.45;
-    k2.position.set(-0.12, 0.7, -0.28);
+    // Dual Ion Back Thrusters
+    [-0.18, 0.18].forEach(tx => {
+      const pod = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 12), armorMat);
+      pod.position.set(tx, 0.55, -0.32);
+      const nozz = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.18, 12), visorMat);
+      nozz.position.set(tx, 0.22, -0.32);
+      this.charRoot.add(pod);
+      this.charRoot.add(nozz);
+    });
+
+    // Twin Katana Sheaths on Back
+    const k1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.15, 0.08), armorMat);
+    k1.rotation.z = 0.42;
+    k1.position.set(0.14, 0.72, -0.3);
+    const k2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.15, 0.08), armorMat);
+    k2.rotation.z = -0.42;
+    k2.position.set(-0.14, 0.72, -0.3);
     this.charRoot.add(k1);
     this.charRoot.add(k2);
 
     const armGeo = new THREE.BoxGeometry(0.18, 0.65, 0.18);
     this.leftArm = new THREE.Group();
-    this.leftArm.position.set(-0.46, 0.8, 0);
+    this.leftArm.position.set(-0.48, 0.8, 0);
     this.leftArm.add(new THREE.Mesh(armGeo, armorMat));
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
-    this.rightArm.position.set(0.46, 0.8, 0);
+    this.rightArm.position.set(0.48, 0.8, 0);
     this.rightArm.add(new THREE.Mesh(armGeo, armorMat));
     this.charRoot.add(this.rightArm);
 
-    this.leftLeg = this.buildHumanLeg(underMat, shoeMat, armorMat, -0.2);
-    this.rightLeg = this.buildHumanLeg(underMat, shoeMat, armorMat, 0.2);
+    this.leftLeg = this.buildHumanLeg(underMat, shoeMat, visorMat, -0.2);
+    this.rightLeg = this.buildHumanLeg(underMat, shoeMat, visorMat, 0.2);
     this.charRoot.add(this.leftLeg);
     this.charRoot.add(this.rightLeg);
   }
@@ -581,37 +666,43 @@ export class SubwaySurgeEngine {
   // Character 4: Pulse (Retro Synthwave Racer)
   buildPulseSynthwaveCharacter() {
     const skinMat = new THREE.MeshLambertMaterial({ color: 0xfcd34d });
-    const jacketMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.6, metalness: 0.2 });
+    const jacketMat = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.55, metalness: 0.25 });
     const neonWireMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
     const pantsMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.7 });
     const shoeMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: 0.4 });
     const shadesMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
 
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.85, 0.46), jacketMat);
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.88, 0.48), jacketMat);
     torso.position.y = 0.45;
     this.charRoot.add(torso);
 
-    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.06, 0.48), neonWireMat);
-    trim.position.y = 0.2;
+    // Neon Wire lapel trims
+    const trim = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.08, 0.5), neonWireMat);
+    trim.position.y = 0.22;
     this.charRoot.add(trim);
+
+    // Graphic Equalizer Decal on Chest
+    const eq = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.22), new THREE.MeshBasicMaterial({ color: 0x22d3ee, side: THREE.DoubleSide }));
+    eq.position.set(0, 0.52, 0.26);
+    this.charRoot.add(eq);
 
     const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.5, 0.46), skinMat);
     head.position.y = 1.15;
     this.charRoot.add(head);
 
     // Retro Shutter Shades
-    const shades = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.16, 0.08), shadesMat);
-    shades.position.set(0, 1.18, 0.25);
+    const shades = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.18, 0.1), shadesMat);
+    shades.position.set(0, 1.18, 0.26);
     this.charRoot.add(shades);
 
     const armGeo = new THREE.BoxGeometry(0.2, 0.65, 0.2);
     this.leftArm = new THREE.Group();
-    this.leftArm.position.set(-0.46, 0.8, 0);
+    this.leftArm.position.set(-0.48, 0.8, 0);
     this.leftArm.add(new THREE.Mesh(armGeo, jacketMat));
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
-    this.rightArm.position.set(0.46, 0.8, 0);
+    this.rightArm.position.set(0.48, 0.8, 0);
     this.rightArm.add(new THREE.Mesh(armGeo, jacketMat));
     this.charRoot.add(this.rightArm);
 
@@ -623,31 +714,37 @@ export class SubwaySurgeEngine {
 
   // Character 5: Zero (Shadow Matrix Operative)
   buildZeroShadowCharacter() {
-    const coatMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.9 });
+    const coatMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.9, metalness: 0.2 });
+    const armorPlateMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.7 });
     const maskMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
     const shoeMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
 
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.95, 0.48), coatMat);
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.96, 0.5), coatMat);
     torso.position.y = 0.45;
     this.charRoot.add(torso);
 
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.52, 0.48), coatMat);
+    // Segmented Ballistic Chest Plates
+    const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.42, 0.1), armorPlateMat);
+    chestPlate.position.set(0, 0.58, 0.26);
+    this.charRoot.add(chestPlate);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.54, 0.5), coatMat);
     head.position.y = 1.15;
     this.charRoot.add(head);
 
-    // Glowing Digital Matrix Mask
-    const mask = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.28, 0.08), maskMat);
-    mask.position.set(0, 1.12, 0.25);
+    // Quad-Lens Tactical NVG Optics / Digital Matrix Visor
+    const mask = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.24, 0.1), maskMat);
+    mask.position.set(0, 1.14, 0.26);
     this.charRoot.add(mask);
 
     const armGeo = new THREE.BoxGeometry(0.2, 0.65, 0.2);
     this.leftArm = new THREE.Group();
-    this.leftArm.position.set(-0.46, 0.8, 0);
+    this.leftArm.position.set(-0.48, 0.8, 0);
     this.leftArm.add(new THREE.Mesh(armGeo, coatMat));
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
-    this.rightArm.position.set(0.46, 0.8, 0);
+    this.rightArm.position.set(0.48, 0.8, 0);
     this.rightArm.add(new THREE.Mesh(armGeo, coatMat));
     this.charRoot.add(this.rightArm);
 
@@ -661,23 +758,36 @@ export class SubwaySurgeEngine {
     const legGroup = new THREE.Group();
     legGroup.position.set(posX, 0.05, 0);
 
+    // Articulated Thigh & Shin
     const legGeo = new THREE.BoxGeometry(0.24, 0.72, 0.24);
     const leg = new THREE.Mesh(legGeo, pantsMat);
     leg.position.y = -0.36;
     leg.castShadow = true;
     legGroup.add(leg);
 
-    // High-top sneaker with sole & tread
-    const shoeGeo = new THREE.BoxGeometry(0.26, 0.18, 0.46);
+    // Knee protector plate
+    const kneeGeo = new THREE.BoxGeometry(0.26, 0.14, 0.06);
+    const knee = new THREE.Mesh(kneeGeo, pantsMat);
+    knee.position.set(0, -0.34, 0.14);
+    legGroup.add(knee);
+
+    // Sculpted High-Top Sneaker with Lace Tongues & Air-Cushion Bubble
+    const shoeGeo = new THREE.BoxGeometry(0.28, 0.22, 0.48);
     const shoe = new THREE.Mesh(shoeGeo, shoeMat);
     shoe.position.set(0, -0.7, 0.09);
     shoe.castShadow = true;
 
-    const soleGeo = new THREE.BoxGeometry(0.28, 0.06, 0.48);
+    // Glowing Neon Air-Cushion Heel Bubble
+    const airBubble = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.18, 12), soleMat);
+    airBubble.rotation.z = Math.PI / 2;
+    airBubble.position.set(0, -0.76, -0.08);
+
+    const soleGeo = new THREE.BoxGeometry(0.3, 0.08, 0.52);
     const sole = new THREE.Mesh(soleGeo, soleMat);
-    sole.position.set(0, -0.81, 0.09);
+    sole.position.set(0, -0.82, 0.09);
 
     legGroup.add(shoe);
+    legGroup.add(airBubble);
     legGroup.add(sole);
 
     return legGroup;
@@ -696,59 +806,74 @@ export class SubwaySurgeEngine {
       roughness: 0.25,
       metalness: 0.1,
       emissive: 0x1d4ed8,
-      emissiveIntensity: 0.7,
+      emissiveIntensity: 0.75,
     });
 
-    const bodyGeo = new THREE.CylinderGeometry(0.7, 1.05, 1.8, 24, 4, true);
+    // 1. Layered Undulating Cloak
+    const bodyGeo = new THREE.CylinderGeometry(0.72, 1.1, 1.9, 24, 6, true);
     const chaserBody = new THREE.Mesh(bodyGeo, chaserMat);
-    chaserBody.position.y = 0.9;
+    chaserBody.position.y = 0.95;
     this.chaserGroup.add(chaserBody);
 
-    // Head Dome
-    const domeGeo = new THREE.SphereGeometry(0.68, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    // Trailing ragged spectral ribbons
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const ribbon = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.75, 8), chaserMat);
+      ribbon.position.set(Math.cos(angle) * 0.95, 0.05, Math.sin(angle) * 0.95);
+      ribbon.rotation.x = Math.PI + (Math.random() - 0.5) * 0.4;
+      this.chaserGroup.add(ribbon);
+    }
+
+    // 2. Head Dome
+    const domeGeo = new THREE.SphereGeometry(0.7, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
     const dome = new THREE.Mesh(domeGeo, chaserMat);
-    dome.position.y = 1.8;
+    dome.position.y = 1.85;
     this.chaserGroup.add(dome);
 
-    // Glowing Eyes
+    // 3. Menacing Glowing Cyan Eyes with Angled Brow
     const eyeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), eyeMat);
-    eyeL.position.set(-0.25, 1.7, 0.55);
-    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), eyeMat);
-    eyeR.position.set(0.25, 1.7, 0.55);
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 12), eyeMat);
+    eyeL.position.set(-0.26, 1.72, 0.56);
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 12), eyeMat);
+    eyeR.position.set(0.26, 1.72, 0.56);
     this.chaserGroup.add(eyeL);
     this.chaserGroup.add(eyeR);
 
-    // Inspector Cap / Hat on Ghost
-    const capGeo = new THREE.CylinderGeometry(0.72, 0.75, 0.22, 24);
-    const capMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
-    const cap = new THREE.Mesh(capGeo, capMat);
-    cap.position.set(0, 2.38, 0);
-    const brimGeo = new THREE.BoxGeometry(0.8, 0.05, 0.4);
-    const brim = new THREE.Mesh(brimGeo, capMat);
-    brim.position.set(0, 2.28, 0.45);
-    const badge = new THREE.Mesh(new THREE.OctahedronGeometry(0.1), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
-    badge.position.set(0, 2.45, 0.65);
+    // 4. Official Inspector Cap with High-Gloss Brim & Golden Shield Badge
+    const capMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.35, metalness: 0.4 });
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.74, 0.78, 0.24, 24), capMat);
+    cap.position.set(0, 2.42, 0);
+    const brim = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.06, 0.44), capMat);
+    brim.position.set(0, 2.32, 0.48);
+    const badge = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), new THREE.MeshBasicMaterial({ color: 0xf59e0b }));
+    badge.position.set(0, 2.48, 0.68);
     this.chaserGroup.add(cap);
     this.chaserGroup.add(brim);
     this.chaserGroup.add(badge);
 
-    // Floating Mini Security Drone (companion like the dog)
-    this.chaserDrone = new THREE.Group();
-    this.chaserDrone.position.set(1.4, 1.4, 0);
+    // 5. Dual Orbiting Spectral Surveillance Drones (Hound Companions)
+    this.chaserDrone1 = new THREE.Group();
+    this.chaserDrone1.position.set(1.6, 1.4, 0);
+    this.buildSingleDrone(this.chaserDrone1, 0x06b6d4);
+    this.chaserGroup.add(this.chaserDrone1);
 
-    const droneBody = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 12), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 }));
-    const droneEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
-    droneEye.position.z = 0.22;
-    const droneRing = new THREE.Mesh(new THREE.TorusGeometry(0.35, 0.02, 6, 24), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
-    droneRing.rotation.x = Math.PI / 2;
-
-    this.chaserDrone.add(droneBody);
-    this.chaserDrone.add(droneEye);
-    this.chaserDrone.add(droneRing);
-    this.chaserGroup.add(this.chaserDrone);
+    this.chaserDrone2 = new THREE.Group();
+    this.chaserDrone2.position.set(-1.6, 1.4, 0);
+    this.buildSingleDrone(this.chaserDrone2, 0xef4444);
+    this.chaserGroup.add(this.chaserDrone2);
 
     this.scene.add(this.chaserGroup);
+  }
+
+  buildSingleDrone(group, ringColor) {
+    const droneBody = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85 }));
+    const droneEye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 12), new THREE.MeshBasicMaterial({ color: ringColor }));
+    droneEye.position.z = 0.24;
+    const droneRing = new THREE.Mesh(new THREE.TorusGeometry(0.38, 0.025, 8, 24), new THREE.MeshBasicMaterial({ color: ringColor }));
+    droneRing.rotation.x = Math.PI / 2;
+    group.add(droneBody);
+    group.add(droneEye);
+    group.add(droneRing);
   }
 
   // --- HOVERBOARDS & POWERUP MESHES ---
@@ -1061,74 +1186,211 @@ export class SubwaySurgeEngine {
     const height = 3.8;
     const width = 2.4;
 
-    const bodyGeo = new THREE.BoxGeometry(width, height - 0.4, length);
+    // 1. Aerodynamic Main Body Shell
+    const bodyGeo = new THREE.BoxGeometry(width, height - 0.5, length - 1.2);
     const body = new THREE.Mesh(bodyGeo, this.materials.trainBody);
-    body.position.y = (height - 0.4) / 2 + 0.4;
+    body.position.y = (height - 0.5) / 2 + 0.45;
     body.castShadow = true;
     body.receiveShadow = true;
     trainGroup.add(body);
 
-    const roofGeo = new THREE.BoxGeometry(width + 0.1, 0.2, length + 0.1);
+    // Aerodynamic Sloped Bullet Front Nose
+    const noseGeo = new THREE.CylinderGeometry(width / 2, width / 2 + 0.05, 1.4, 16, 1, false, 0, Math.PI);
+    noseGeo.rotateZ(Math.PI / 2);
+    noseGeo.rotateY(Math.PI / 2);
+    const nose = new THREE.Mesh(noseGeo, this.materials.trainBody);
+    nose.position.set(0, height * 0.52, length / 2 - 0.4);
+    trainGroup.add(nose);
+
+    // Carbon Crash Bumper on Front & Rear
+    const bumperMat = this.materials.trainDarkMetal;
+    const fBumper = new THREE.Mesh(new THREE.BoxGeometry(width + 0.15, 0.4, 0.45), bumperMat);
+    fBumper.position.set(0, 0.4, length / 2 - 0.2);
+    const rBumper = new THREE.Mesh(new THREE.BoxGeometry(width + 0.15, 0.4, 0.45), bumperMat);
+    rBumper.position.set(0, 0.4, -length / 2 + 0.5);
+    trainGroup.add(fBumper);
+    trainGroup.add(rBumper);
+
+    // 2. Corrugated Steel Side Ribs (Texture & Specular Depth)
+    const ribGeo = new THREE.BoxGeometry(0.04, 0.06, length - 2.5);
+    for (let ry = 1.0; ry <= height - 0.8; ry += 0.22) {
+      const ribL = new THREE.Mesh(ribGeo, this.materials.trainCorrugated);
+      ribL.position.set(-width / 2 - 0.02, ry, 0);
+      const ribR = new THREE.Mesh(ribGeo, this.materials.trainCorrugated);
+      ribR.position.set(width / 2 + 0.02, ry, 0);
+      trainGroup.add(ribL);
+      trainGroup.add(ribR);
+    }
+
+    // 3. Arched Roof with HVAC Pods & Emergency Hatches
+    const roofGeo = new THREE.BoxGeometry(width + 0.08, 0.24, length);
     const roof = new THREE.Mesh(roofGeo, this.materials.trainRoof);
-    roof.position.y = height + 0.1;
+    roof.position.y = height + 0.12;
     roof.receiveShadow = true;
     trainGroup.add(roof);
 
-    for (let rz = -length / 3; rz <= length / 3; rz += length / 3) {
-      const ac = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.35, 2.2), this.materials.trainRoof);
-      ac.position.set(0, height + 0.3, rz);
-      trainGroup.add(ac);
+    // Heavy-duty HVAC Units & Aero Fairings
+    for (let rz of [-length * 0.32, 0, length * 0.32]) {
+      const hvac = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.36, 2.6), this.materials.trainDarkMetal);
+      hvac.position.set(0, height + 0.32, rz);
+      trainGroup.add(hvac);
+      // Fan vents
+      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.05, 12), this.materials.rampChevron);
+      vent.position.set(0, height + 0.52, rz);
+      trainGroup.add(vent);
     }
 
-    const windshield = new THREE.Mesh(new THREE.BoxGeometry(width - 0.3, 1.2, 0.1), this.materials.trainGlass);
-    windshield.position.set(0, height - 1.0, length / 2 + 0.05);
+    // 4. Sprung High-Voltage Roof Pantograph (Sparking Contact with Catenary)
+    const pantoGroup = new THREE.Group();
+    pantoGroup.position.set(0, height + 0.24, -length * 0.15);
+
+    const baseGeo = new THREE.BoxGeometry(1.2, 0.08, 1.0);
+    pantoGroup.add(new THREE.Mesh(baseGeo, this.materials.trainDarkMetal));
+
+    // Articulated diamond scissor arms
+    const armMat = this.materials.trainPantograph;
+    const armGeo = new THREE.CylinderGeometry(0.025, 0.025, 1.3);
+    const pL = new THREE.Mesh(armGeo, armMat);
+    pL.rotation.z = 0.55;
+    pL.position.set(-0.35, 0.6, 0);
+    const pR = new THREE.Mesh(armGeo, armMat);
+    pR.rotation.z = -0.55;
+    pR.position.set(0.35, 0.6, 0);
+    pantoGroup.add(pL);
+    pantoGroup.add(pR);
+
+    // Contact Shoe
+    const shoeGeo = new THREE.BoxGeometry(1.6, 0.04, 0.16);
+    const pShoe = new THREE.Mesh(shoeGeo, armMat);
+    pShoe.position.set(0, 1.15, 0);
+    pantoGroup.add(pShoe);
+    trainGroup.add(pantoGroup);
+
+    // 5. Cockpit Windshield & LED Headlights
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(width - 0.4, 1.1, 0.12), this.materials.trainGlass);
+    windshield.position.set(0, height - 0.95, length / 2 - 0.18);
     trainGroup.add(windshield);
 
+    // Destination Sign ("EXPR // SURGE METRO 04")
+    const signGeo = new THREE.BoxGeometry(1.4, 0.24, 0.06);
+    const signMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const destSign = new THREE.Mesh(signGeo, signMat);
+    destSign.position.set(0, height - 0.22, length / 2 - 0.16);
+    trainGroup.add(destSign);
+
+    // Dual Projector Headlights
     const hlGeo = new THREE.CircleGeometry(0.24, 16);
-    const hlL = new THREE.Mesh(hlGeo, this.materials.trainLight);
-    hlL.position.set(-0.7, 1.1, length / 2 + 0.06);
-    const hlR = new THREE.Mesh(hlGeo, this.materials.trainLight);
-    hlR.position.set(0.7, 1.1, length / 2 + 0.06);
+    const hlL = new THREE.Mesh(hlGeo, this.materials.trainGlowHeadlight);
+    hlL.position.set(-0.72, 1.1, length / 2 - 0.14);
+    const hlR = new THREE.Mesh(hlGeo, this.materials.trainGlowHeadlight);
+    hlR.position.set(0.72, 1.1, length / 2 - 0.14);
     trainGroup.add(hlL);
     trainGroup.add(hlR);
 
-    // Windows with Silhouettes
-    const winGeo = new THREE.PlaneGeometry(1.6, 0.8);
+    // Forward Headlight Beam Cones (Volumetric Cyber Effect)
+    const coneGeo = new THREE.ConeGeometry(1.4, 8.0, 16, 1, true);
+    coneGeo.rotateX(-Math.PI / 2);
+    const beamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+    const beamL = new THREE.Mesh(coneGeo, beamMat);
+    beamL.position.set(-0.72, 1.1, length / 2 + 3.8);
+    const beamR = new THREE.Mesh(coneGeo, beamMat);
+    beamR.position.set(0.72, 1.1, length / 2 + 3.8);
+    trainGroup.add(beamL);
+    trainGroup.add(beamR);
+
+    // Rear Red LED Markers
+    const rTailL = new THREE.Mesh(hlGeo, this.materials.trainRedTail);
+    rTailL.position.set(-0.72, 1.1, -length / 2 + 0.52);
+    rTailL.rotation.y = Math.PI;
+    const rTailR = new THREE.Mesh(hlGeo, this.materials.trainRedTail);
+    rTailR.position.set(0.72, 1.1, -length / 2 + 0.52);
+    rTailR.rotation.y = Math.PI;
+    trainGroup.add(rTailL);
+    trainGroup.add(rTailR);
+
+    // 6. Realistic Tinted Windows with Passenger Cabin Silhouettes
+    const winFrameGeo = new THREE.PlaneGeometry(1.7, 0.9);
     const winMat = new THREE.MeshBasicMaterial({ color: 0xfef08a, side: THREE.DoubleSide });
-    for (let wz = -length / 2 + 3; wz <= length / 2 - 3; wz += 3.8) {
-      const wL = new THREE.Mesh(winGeo, winMat);
-      wL.position.set(-width / 2 - 0.02, height * 0.6, wz);
+    const silMat = new THREE.MeshBasicMaterial({ color: 0x1e293b, side: THREE.DoubleSide });
+
+    for (let wz = -length / 2 + 3.2; wz <= length / 2 - 3.2; wz += 3.6) {
+      // Left Window
+      const wL = new THREE.Mesh(winFrameGeo, winMat);
+      wL.position.set(-width / 2 - 0.04, height * 0.58, wz);
       wL.rotation.y = Math.PI / 2;
-      const wR = new THREE.Mesh(winGeo, winMat);
-      wR.position.set(width / 2 + 0.02, height * 0.6, wz);
+      // Passenger silhouette inside left window
+      const sL = new THREE.Mesh(new THREE.CircleGeometry(0.24, 10), silMat);
+      sL.position.set(-width / 2 - 0.05, height * 0.58 - 0.08, wz);
+      sL.rotation.y = Math.PI / 2;
+
+      // Right Window
+      const wR = new THREE.Mesh(winFrameGeo, winMat);
+      wR.position.set(width / 2 + 0.04, height * 0.58, wz);
       wR.rotation.y = -Math.PI / 2;
+      // Passenger silhouette inside right window
+      const sR = new THREE.Mesh(new THREE.CircleGeometry(0.24, 10), silMat);
+      sR.position.set(width / 2 + 0.05, height * 0.58 - 0.08, wz);
+      sR.rotation.y = -Math.PI / 2;
+
       trainGroup.add(wL);
+      trainGroup.add(sL);
       trainGroup.add(wR);
+      trainGroup.add(sR);
+
+      // Roof Marker Lamp above window
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.12), this.materials.neonAmber);
+      lamp.position.set(-width / 2 - 0.03, height + 0.05, wz);
+      trainGroup.add(lamp);
     }
 
-    // Undercarriage Bogies
-    const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.12, 12);
+    // 7. High-Fidelity Bogie Wheel Assemblies (Dual 4-Wheel Trucks)
+    const wheelGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.14, 16);
     wheelGeo.rotateZ(Math.PI / 2);
-    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9 });
-    [-length / 2 + 2, length / 2 - 2].forEach(bz => {
-      [-width / 2 + 0.2, width / 2 - 0.2].forEach(wx => {
-        const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-        wheel.position.set(wx, 0.3, bz);
-        trainGroup.add(wheel);
+    const flangeGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.04, 16);
+    flangeGeo.rotateZ(Math.PI / 2);
+
+    [-length / 2 + 3.0, length / 2 - 3.0].forEach(bogieZ => {
+      // Bogie sub-frame
+      const bFrame = new THREE.Mesh(new THREE.BoxGeometry(width - 0.2, 0.22, 2.6), this.materials.trainBogie);
+      bFrame.position.set(0, 0.42, bogieZ);
+      trainGroup.add(bFrame);
+
+      // Suspension coil springs
+      [-0.8, 0.8].forEach(wx => {
+        const spring = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.32, 8), this.materials.trainDarkMetal);
+        spring.position.set(wx, 0.38, bogieZ);
+        trainGroup.add(spring);
+      });
+
+      // 4 Wheels per bogie
+      [-0.85, 0.85].forEach(wzOff => {
+        [-width / 2 + 0.25, width / 2 - 0.25].forEach(wx => {
+          const wheel = new THREE.Mesh(wheelGeo, this.materials.trainDarkMetal);
+          wheel.position.set(wx, 0.36, bogieZ + wzOff);
+          const flange = new THREE.Mesh(flangeGeo, this.materials.rail);
+          flange.position.set(wx + (wx > 0 ? -0.06 : 0.06), 0.36, bogieZ + wzOff);
+          trainGroup.add(wheel);
+          trainGroup.add(flange);
+        });
       });
     });
 
+    // 8. Textured Heavy-Duty Diamond-Plate Surf Ramp (7.0 Length)
+    const rampLen = 7.0;
     if (hasRamp) {
-      const rw = width * 0.9;
-      const rl = 6;
+      const rw = width * 0.94;
       const rh = height;
+      const zTip = length / 2 + rampLen;
+      const zTop = length / 2;
+
+      // Incline Ramp Surface
       const vertices = new Float32Array([
-        -rw / 2, 0, length / 2 + rl,
-         rw / 2, 0, length / 2 + rl,
-         rw / 2, rh, length / 2,
-        -rw / 2, 0, length / 2 + rl,
-         rw / 2, rh, length / 2,
-        -rw / 2, rh, length / 2,
+        -rw / 2, 0, zTip,
+         rw / 2, 0, zTip,
+         rw / 2, rh, zTop,
+        -rw / 2, 0, zTip,
+         rw / 2, rh, zTop,
+        -rw / 2, rh, zTop,
       ]);
       const rampGeo = new THREE.BufferGeometry();
       rampGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
@@ -1136,6 +1398,39 @@ export class SubwaySurgeEngine {
       const ramp = new THREE.Mesh(rampGeo, this.materials.rampPlate);
       ramp.receiveShadow = true;
       trainGroup.add(ramp);
+
+      // Side Safety Rails with Neon Cyan Guide Strips
+      const railH = 0.5;
+      [-rw / 2 - 0.04, rw / 2 + 0.04].forEach(rx => {
+        const railVerts = new Float32Array([
+          rx, 0, zTip,
+          rx, railH, zTip,
+          rx, rh + railH, zTop,
+          rx, 0, zTip,
+          rx, rh + railH, zTop,
+          rx, rh, zTop,
+        ]);
+        const rGeo = new THREE.BufferGeometry();
+        rGeo.setAttribute('position', new THREE.BufferAttribute(railVerts, 3));
+        rGeo.computeVertexNormals();
+        const rMesh = new THREE.Mesh(rGeo, this.materials.trainDarkMetal);
+        trainGroup.add(rMesh);
+
+        // Luminous Cyan Guide Line on Top of Rail
+        const glowVerts = new Float32Array([
+          rx, railH + 0.04, zTip,
+          rx, rh + railH + 0.04, zTop,
+        ]);
+        const gLineGeo = new THREE.BufferGeometry();
+        gLineGeo.setAttribute('position', new THREE.BufferAttribute(glowVerts, 3));
+        const gLine = new THREE.Line(gLineGeo, this.materials.rampNeonGuide);
+        trainGroup.add(gLine);
+      });
+
+      // Black & Yellow Hazard Chevrons at Ramp Entry Tip
+      const tipChevron = new THREE.Mesh(new THREE.BoxGeometry(rw + 0.1, 0.08, 0.6), this.materials.rampChevron);
+      tipChevron.position.set(0, 0.04, zTip - 0.3);
+      trainGroup.add(tipChevron);
     }
 
     this.spawnTrainRoofCoins(laneX, chunkZ, length, height + 0.5);
@@ -1151,6 +1446,7 @@ export class SubwaySurgeEngine {
       isMoving,
       moveSpeed: isMoving ? 14 : 0,
       hasRamp,
+      rampLen,
     });
   }
 
@@ -1726,14 +2022,50 @@ export class SubwaySurgeEngine {
     this.playerGroup.rotation.z = -dx * 0.09;
 
     if (this.jetpackActive) {
-      const skyY = 14;
-      this.playerY += (skyY - this.playerY) * Math.min(1, 4 * delta);
-      this.playerGroup.position.y = this.playerY;
-      this.isGrounded = false;
+      if (!this.jetpackLanding) {
+        this.skyCoinsEndDist -= moveDist;
+        const skyY = 14;
+        this.playerY += (skyY - this.playerY) * Math.min(1, 6 * delta);
+        this.playerGroup.position.y = this.playerY;
+        this.isGrounded = false;
 
-      const pPos = this.playerGroup.position;
-      this.createJetpackFlame(pPos.x - 0.22, pPos.y + 0.1, pPos.z - 0.4);
-      this.createJetpackFlame(pPos.x + 0.22, pPos.y + 0.1, pPos.z - 0.4);
+        const pPos = this.playerGroup.position;
+        this.createJetpackFlame(pPos.x - 0.22, pPos.y + 0.1, pPos.z - 0.4);
+        this.createJetpackFlame(pPos.x + 0.22, pPos.y + 0.1, pPos.z - 0.4);
+
+        const effSpeed = Math.max(20, effectiveSpeed);
+        this.callbacks.onPowerupChange('jetpack', Math.max(0, this.skyCoinsEndDist / effSpeed));
+
+        // When the sky coin highway finishes (last coins have passed player)
+        if (this.skyCoinsEndDist <= 8 || this.jetpackTimer <= 0) {
+          this.jetpackLanding = true;
+          this.jetpackLandingTimer = 1.0;
+          subwayAudio.stopJetpackLoop();
+          subwayAudio.playSlide();
+        }
+      } else {
+        // Smooth graceful glide back down to ground / train roof!
+        const targetGround = this.checkGroundUnderPlayer();
+        this.playerY = THREE.MathUtils.lerp(this.playerY, targetGround, Math.min(1, 4.5 * delta));
+        this.playerGroup.position.y = this.playerY;
+        this.jetpackLandingTimer -= delta;
+
+        // Subtle smoke puff while descending
+        const pPos = this.playerGroup.position;
+        this.createFootstepDust(pPos.x, pPos.z);
+
+        if (this.jetpackLandingTimer <= 0 || this.playerY <= targetGround + 0.15) {
+          this.playerY = targetGround;
+          this.playerGroup.position.y = this.playerY;
+          this.jetpackActive = false;
+          this.jetpackLanding = false;
+          this.isGrounded = true;
+          this.playerVY = 0;
+          if (this.jetpackMesh) this.jetpackMesh.visible = false;
+          this.callbacks.onPowerupChange('jetpack', 0);
+          this.createBurst(pPos.x, pPos.y + 0.3, pPos.z, 0x38bdf8, 12);
+        }
+      }
     } else {
       this.playerY += this.playerVY * delta;
       this.playerVY -= this.gravity * delta;
@@ -1790,13 +2122,13 @@ export class SubwaySurgeEngine {
       }
     }
 
-    if (this.jetpackActive) {
+    if (this.jetpackActive && !this.jetpackLanding) {
       this.jetpackTimer -= delta;
-      this.callbacks.onPowerupChange('jetpack', Math.max(0, this.jetpackTimer));
       if (this.jetpackTimer <= 0) {
-        this.jetpackActive = false;
-        if (this.jetpackMesh) this.jetpackMesh.visible = false;
+        this.jetpackLanding = true;
+        this.jetpackLandingTimer = 1.0;
         subwayAudio.stopJetpackLoop();
+        subwayAudio.playSlide();
       }
     }
 
@@ -1863,17 +2195,40 @@ export class SubwaySurgeEngine {
   checkGroundUnderPlayer() {
     const px = this.playerGroup.position.x;
     const py = this.playerY;
+    let highestGround = 0;
 
     for (let train of this.activeTrains) {
       const tz = train.group.position.z;
       const tx = train.laneX;
-      if (Math.abs(px - tx) < 1.3 && Math.abs(tz) < train.length / 2 + 0.5) {
-        if (py >= train.height - 0.3) {
-          return train.height + 0.1;
+      const halfLen = train.length / 2;
+      const rampLen = train.rampLen || 7.0;
+
+      // Only check if player is horizontally aligned with this train's lane
+      if (Math.abs(px - tx) < (train.width / 2 + 0.38)) {
+        // 1. RAMP SLOPE CHECK (Smooth continuous incline from floor to roof)
+        // Ramp tip on floor is at (tz + halfLen + rampLen)
+        // Ramp top on roof is at (tz + halfLen)
+        // Player is at z = 0
+        if (train.hasRamp && (tz + halfLen) <= 0.5 && (tz + halfLen + rampLen) >= -0.5) {
+          const distFromTip = (tz + halfLen + rampLen) - 0;
+          const ratio = Math.max(0, Math.min(1, distFromTip / rampLen));
+          const currentRampHeight = ratio * train.height;
+          if (currentRampHeight > highestGround) {
+            highestGround = currentRampHeight;
+          }
+        }
+        // 2. TRAIN ROOF CHECK
+        else if ((tz - halfLen - 0.6) <= 0 && (tz + halfLen + 0.6) >= 0) {
+          const roofHeight = train.height + 0.1;
+          if (py >= train.height - 0.75) {
+            if (roofHeight > highestGround) {
+              highestGround = roofHeight;
+            }
+          }
         }
       }
     }
-    return 0;
+    return highestGround;
   }
 
   updateGhostChaser(delta) {
@@ -1889,10 +2244,15 @@ export class SubwaySurgeEngine {
     const t = this.clock.getElapsedTime();
     this.chaserGroup.position.y = 1.3 + Math.sin(t * 3.5) * 0.25;
 
-    if (this.chaserDrone) {
-      this.chaserDrone.position.x = Math.sin(t * 4) * 1.5;
-      this.chaserDrone.position.y = 1.3 + Math.cos(t * 3) * 0.3;
-      this.chaserDrone.position.z = Math.cos(t * 4) * 0.8;
+    if (this.chaserDrone1) {
+      this.chaserDrone1.position.x = Math.sin(t * 3.8) * 1.8;
+      this.chaserDrone1.position.y = 1.3 + Math.cos(t * 2.8) * 0.35;
+      this.chaserDrone1.position.z = Math.cos(t * 3.8) * 0.9;
+    }
+    if (this.chaserDrone2) {
+      this.chaserDrone2.position.x = Math.sin(t * 3.8 + Math.PI) * 1.8;
+      this.chaserDrone2.position.y = 1.3 + Math.cos(t * 2.8 + Math.PI) * 0.35;
+      this.chaserDrone2.position.z = Math.cos(t * 3.8 + Math.PI) * 0.9;
     }
   }
 
@@ -2018,23 +2378,27 @@ export class SubwaySurgeEngine {
     const pPos = this.playerGroup.position;
     const tz = train.group.position.z;
     const tx = train.laneX;
+    const halfLen = train.length / 2;
+    const rampLen = train.rampLen || 7.0;
 
     const inLane = Math.abs(pPos.x - tx) < (train.width / 2 + 0.35);
-    const inZRange = (tz - train.length / 2) < (pPos.z + 0.4) && (pPos.z - 0.4) < (tz + train.length / 2);
+    const inZRange = (tz - halfLen) < (pPos.z + 0.4) && (pPos.z - 0.4) < (tz + halfLen);
 
     if (Math.abs(pPos.x - tx) < (train.width / 2 + 0.85) && inZRange && !inLane) {
       this.handleNearMiss();
     }
 
-    if (inLane && inZRange) {
-      if (pPos.y >= train.height - 0.25) return;
+    if (!inLane) return;
 
-      if (train.hasRamp && pPos.z > tz + train.length / 2 - 4) {
-        this.playerY = Math.max(this.playerY, train.height);
-        this.playerGroup.position.y = this.playerY;
-        this.playerVY = 0;
-        this.isGrounded = true;
-        return;
+    // 1. SAFE ON RAMP: If train has ramp and player is entering or riding up the ramp incline
+    if (train.hasRamp && (tz + halfLen - 0.6) <= pPos.z && pPos.z <= (tz + halfLen + rampLen + 0.6)) {
+      return; // Safe on ramp!
+    }
+
+    // 2. SAFE ON ROOF: If player is running on or mantling onto the train roof
+    if (inZRange) {
+      if (pPos.y >= train.height - 0.55) {
+        return; // Safe on roof!
       }
 
       this.handleCrash('train');
@@ -2186,11 +2550,14 @@ export class SubwaySurgeEngine {
       this.activateHoverboard();
     } else if (type === 'jetpack') {
       this.jetpackActive = true;
-      this.jetpackTimer = 16;
+      this.jetpackLanding = false;
+      this.spawnSkyCoinHighway();
+      const effSpeed = Math.max(24, this.speed);
+      const flightTime = this.skyCoinsEndDist / effSpeed + 0.4;
+      this.jetpackTimer = flightTime;
       if (this.jetpackMesh) this.jetpackMesh.visible = true;
       subwayAudio.startJetpackLoop();
-      this.callbacks.onPowerupChange('jetpack', 16);
-      this.spawnSkyCoinHighway();
+      this.callbacks.onPowerupChange('jetpack', Math.ceil(flightTime));
     } else if (type === 'magnet') {
       this.magnetActive = true;
       this.magnetTimer = 20;
@@ -2209,11 +2576,19 @@ export class SubwaySurgeEngine {
   }
 
   spawnSkyCoinHighway() {
-    for (let z = -20; z >= -180; z -= 3.5) {
-      for (let lane of LANES) {
-        if (Math.random() > 0.25) {
-          this.spawnCoin(lane, 14, z);
-        }
+    const startZ = -22;
+    const endZ = -165;
+    this.skyCoinsEndDist = Math.abs(endZ);
+    this.jetpackLanding = false;
+
+    // Rhythmic 3-lane serpentine wave + arches
+    for (let z = startZ; z >= endZ; z -= 3.2) {
+      const idx = Math.floor(Math.abs(z - startZ) / 3.2);
+      const targetLaneIdx = Math.floor((Math.sin(idx * 0.4) + 1) * 1.49); // 0, 1, or 2
+      this.spawnCoin(LANES[targetLaneIdx], 14, z);
+      if (idx % 3 === 0) {
+        const sideLane = targetLaneIdx === 1 ? 0 : 1;
+        this.spawnCoin(LANES[sideLane], 14, z);
       }
     }
   }

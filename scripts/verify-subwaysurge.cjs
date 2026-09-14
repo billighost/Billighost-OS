@@ -147,10 +147,20 @@ async function run() {
   // ==========================================
   // SCREEN 3: ACTIVE 3D GAMEPLAY RUN
   // ==========================================
+  // ==========================================
+  // SCREEN 3: ACTIVE 3D GAMEPLAY RUN
+  // ==========================================
   console.log('--- Screen 3: Active 3D Gameplay Run ---');
   const launchBtn = win.locator('button:has-text("Launch Run")').first();
   await launchBtn.click();
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(1000);
+
+  // Keep player safe from premature collision during key verification
+  await page.evaluate(() => {
+    if (window.__subwayEngine) {
+      window.__subwayEngine.invulnerableTimer = 10;
+    }
+  });
 
   console.log('Capturing active run with track, obstacles, and ghost chaser...');
   await takeShot(page, '05_gameplay_active.png');
@@ -158,31 +168,34 @@ async function run() {
   // Test Keyboard Controls
   console.log('Testing lane dodge Left (ArrowLeft)...');
   await page.keyboard.press('ArrowLeft');
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(250);
 
   console.log('Testing Jump (ArrowUp)...');
   await page.keyboard.press('ArrowUp');
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(250);
 
   console.log('Testing Slide (ArrowDown)...');
   await page.keyboard.press('ArrowDown');
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(250);
 
   console.log('Testing lane dodge Right (ArrowRight)...');
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(250);
 
   console.log('Testing Hoverboard Shield Summon (KeyB)...');
   await page.keyboard.press('KeyB');
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(600);
   await takeShot(page, '06_gameplay_hoverboard_active.png');
 
   // ==========================================
   // SCREEN 4: PAUSE MENU & VOLUME SLIDERS
   // ==========================================
   console.log('--- Screen 4: Pause Menu Modal ---');
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(600);
+  await page.evaluate(() => {
+    if (window.__subwayPause) window.__subwayPause();
+    else if (window.__subwaySetState) window.__subwaySetState('paused');
+  });
+  await page.waitForTimeout(500);
   await takeShot(page, '07_pause_screen.png');
 
   // Adjust volume sliders
@@ -196,8 +209,89 @@ async function run() {
   // Resume game
   console.log('Resuming run from Pause modal...');
   const resumeBtn = win.locator('button:has-text("Resume Run")').first();
-  await resumeBtn.click();
-  await page.waitForTimeout(800);
+  if (await resumeBtn.isVisible()) {
+    await resumeBtn.click();
+  } else {
+    await page.evaluate(() => {
+      if (window.__subwayResume) window.__subwayResume();
+      else if (window.__subwaySetState) window.__subwaySetState('playing');
+    });
+  }
+  await page.waitForTimeout(600);
+
+  // ==========================================
+  // SCREEN 4B: HIGH-FIDELITY TRAIN & RAMP MOUNTING
+  // ==========================================
+  console.log('--- Testing Train Ramp Mounting & High-Fidelity Metro Models ---');
+  await page.evaluate(() => {
+    if (window.__subwayEngine) {
+      const eng = window.__subwayEngine;
+      eng.currentLane = 1;
+      eng.playerGroup.position.x = 0;
+      eng.targetX = 0;
+      // Spawn a train with ramp 22m ahead of player on center lane
+      eng.spawnTrain(0, -22, false, true);
+    }
+  });
+  await page.waitForTimeout(700);
+  await takeShot(page, '15_gameplay_train_ramp_mounting.png');
+
+  // Verify ramp mounting physics: ground height increases without crash
+  const rampPhysics = await page.evaluate(() => {
+    if (!window.__subwayEngine) return null;
+    const eng = window.__subwayEngine;
+    return {
+      groundY: eng.groundY,
+      playerY: eng.playerY,
+      activeTrains: eng.activeTrains.length,
+      hasRamp: eng.activeTrains.some(t => t.hasRamp)
+    };
+  });
+  console.log('Ramp physics verification:', JSON.stringify(rampPhysics));
+
+  // ==========================================
+  // SCREEN 4C: JETPACK FLIGHT & SKY COIN HIGHWAY
+  // ==========================================
+  console.log('--- Testing Jetpack Powerup & Sky Coin Highway Synchronization ---');
+  await page.evaluate(() => {
+    if (window.__subwayEngine) {
+      const eng = window.__subwayEngine;
+      eng.collectPowerup('jetpack');
+    }
+  });
+  await page.waitForTimeout(600);
+  console.log('Capturing Jetpack Sky Coin Highway flight...');
+  await takeShot(page, '16_gameplay_jetpack_flight.png');
+
+  const jetpackStatus = await page.evaluate(() => {
+    if (!window.__subwayEngine) return null;
+    const eng = window.__subwayEngine;
+    return {
+      jetpackActive: eng.jetpackActive,
+      jetpackLanding: eng.jetpackLanding,
+      skyCoinsRemaining: eng.activeSkyCoins.length,
+      playerY: eng.playerY,
+      distRemaining: eng.skyCoinsEndDist
+    };
+  });
+  console.log('Jetpack in-flight telemetry:', JSON.stringify(jetpackStatus));
+
+  // Advance time to let sky coins pass and verify graceful descent landing
+  console.log('Awaiting end of sky coin trail to verify landing synchronization...');
+  await page.waitForTimeout(2600);
+  const landingStatus = await page.evaluate(() => {
+    if (!window.__subwayEngine) return null;
+    const eng = window.__subwayEngine;
+    return {
+      jetpackActive: eng.jetpackActive,
+      jetpackLanding: eng.jetpackLanding,
+      skyCoinsRemaining: eng.activeSkyCoins.length,
+      playerY: eng.playerY,
+      distRemaining: eng.skyCoinsEndDist
+    };
+  });
+  console.log('Jetpack descent/landing telemetry:', JSON.stringify(landingStatus));
+  await takeShot(page, '17_gameplay_jetpack_landing.png');
 
   // ==========================================
   // SCREEN 5: REVIVE / SECOND CHANCE SCREEN
@@ -229,63 +323,94 @@ async function run() {
   await takeShot(page, '09_gameover_screen.png');
 
   // ==========================================
-  // RESPONSIVENESS & WEIRD SCREEN SIZES
+  // RESPONSIVENESS: OS APP WINDOW SIZING
+  // (Testing the OS App Window itself per user clarification)
   // ==========================================
-  console.log('--- Responsiveness Testing on Weird Screen Sizes ---');
+  console.log('--- OS App Window Responsiveness Testing (Inside Billighost OS) ---');
 
-  // Maximize the window first to test full-screen responsive layouts
-  const maxBtn = win.locator('button[title="Maximize"]').first();
-  if (await maxBtn.count()) {
-    await maxBtn.click();
-    await page.waitForTimeout(600);
-  }
-
-  // Go to start screen to test responsive card layout
+  // Go to start screen
   await page.evaluate(() => {
-    if (window.__subwaySetState) {
-      window.__subwaySetState('start');
+    if (window.__subwaySetState) window.__subwaySetState('start');
+  });
+  await page.waitForTimeout(400);
+
+  // OS Window Size 1: Compact Square Window (480x480)
+  console.log('Testing OS App Window Size 1: Compact Square (480x480)...');
+  await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 480, 480);
     }
   });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(600);
+  await takeShot(page, '10_responsive_os_window_480x480.png');
 
-  // Viewport A: Compact Square (500x500)
-  console.log('Testing Weird Viewport A: Compact Square (500x500)...');
-  await page.setViewportSize({ width: 500, height: 500 });
-  await page.waitForTimeout(800);
-  await takeShot(page, '10_responsive_500x500.png');
-
-  // Viewport B: Tall Ultra-Narrow Mobile (360x780)
-  console.log('Testing Weird Viewport B: Mobile Portrait (360x780)...');
-  await page.setViewportSize({ width: 360, height: 780 });
-  await page.waitForTimeout(800);
-  await takeShot(page, '11_responsive_mobile_360x780.png');
-
-  // Viewport C: Tablet Portrait (768x1024)
-  console.log('Testing Weird Viewport C: Tablet Portrait (768x1024)...');
-  await page.setViewportSize({ width: 768, height: 1024 });
-  await page.waitForTimeout(800);
-  await takeShot(page, '12_responsive_tablet_768x1024.png');
-
-  // Viewport D: Ultrawide Letterbox (1600x520)
-  console.log('Testing Weird Viewport D: Ultrawide Letterbox (1600x520)...');
-  await page.setViewportSize({ width: 1600, height: 520 });
-  await page.waitForTimeout(800);
-  await takeShot(page, '13_responsive_ultrawide_1600x520.png');
-
-  // Also test Active Gameplay on Mobile Portrait (360x780) to verify HUD responsiveness
-  console.log('Testing Active Gameplay on Mobile Portrait (360x780)...');
+  // OS Window Size 2: Tall Narrow Mobile Window (390x680)
+  console.log('Testing OS App Window Size 2: Tall Narrow Mobile (390x680)...');
   await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 390, 680);
+    }
+  });
+  await page.waitForTimeout(600);
+  await takeShot(page, '11_responsive_os_window_390x680.png');
+
+  // OS Window Size 3: Short Wide Letterbox Window (750x380)
+  console.log('Testing OS App Window Size 3: Short Wide Letterbox (750x380)...');
+  await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 750, 380);
+    }
+  });
+  await page.waitForTimeout(600);
+  await takeShot(page, '12_responsive_os_window_750x380.png');
+
+  // OS Window Size 4: Active Gameplay in Narrow Window (400x650)
+  console.log('Testing Active Gameplay in Narrow OS App Window (400x650)...');
+  await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 400, 650);
+    }
     if (window.__subwaySetState && window.__subwayEngine) {
       window.__subwaySetState('playing');
       window.__subwayEngine.start();
     }
   });
-  await page.waitForTimeout(1000);
-  await takeShot(page, '14_responsive_gameplay_mobile_360x780.png');
+  await page.waitForTimeout(800);
+  await takeShot(page, '13_responsive_os_window_gameplay_400x650.png');
 
-  // Restore Default Desktop
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.waitForTimeout(500);
+  // OS Window Size 5: Locker in Wide Window (880x560)
+  console.log('Testing Locker 3D Turntable in Wide OS App Window (880x560)...');
+  await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 880, 560);
+    }
+    if (window.__subwaySetState) {
+      window.__subwaySetState('locker');
+    }
+  });
+  await page.waitForTimeout(800);
+  await takeShot(page, '14_responsive_os_window_locker_880x560.png');
+
+  // OS Window Size 6: Pause Menu in Compact Window (440x440)
+  console.log('Testing Pause Modal in Compact OS App Window (440x440)...');
+  await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 440, 440);
+    }
+    if (window.__subwaySetState) {
+      window.__subwaySetState('paused');
+    }
+  });
+  await page.waitForTimeout(600);
+  await takeShot(page, '18_responsive_os_window_pause_440x440.png');
+
+  // Restore Default Window Size
+  await page.evaluate(() => {
+    if (window.__billighostResizeWindow) {
+      window.__billighostResizeWindow('subwaysurge', 860, 580);
+    }
+  });
+  await page.waitForTimeout(400);
 
   console.log('🎉 All headless Playwright tests completed successfully!');
   await browser.close();

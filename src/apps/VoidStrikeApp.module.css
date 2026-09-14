@@ -314,6 +314,13 @@
   transform: translateY(1px);
 }
 
+.hudButtonActive {
+  background: rgba(56, 189, 248, 0.25) !important;
+  border-color: #38bdf8 !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
 .radarCard {
   position: relative;
   width: 96px;
@@ -651,20 +658,20 @@
 .hangarGrid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 190px;
+  gap: 10px;
+  max-height: 220px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 6px;
 }
 
 .hangarCard {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  background: rgba(15, 23, 42, 0.5);
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   cursor: pointer;
   text-align: left;
   transition: all 0.15s ease;
@@ -676,9 +683,9 @@
 }
 
 .hangarCardSelected {
-  background: rgba(2, 132, 199, 0.15);
+  background: rgba(2, 132, 199, 0.18);
   border: 1.5px solid #38bdf8;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
 }
 
 .hangarCardTop {
@@ -688,7 +695,7 @@
 }
 
 .hangarShipName {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   color: #f1f5f9;
 }
@@ -700,15 +707,18 @@
 }
 
 .hangarShipDesc {
-  font-size: 10px;
+  font-size: 10.5px;
+  line-height: 1.35;
   color: #94a3b8;
-  margin: 0;
+  margin: 0 0 2px 0;
 }
 
 .statRadar {
   display: flex;
-  gap: 8px;
-  margin-top: 2px;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .statMini {
@@ -974,4 +984,104 @@
 @keyframes pulseLock {
   from { transform: scale(0.96); opacity: 0.75; }
   to { transform: scale(1.04); opacity: 1.0; }
+}
+
+/* Threat Edge Indicators & Off-Screen Directional Markers */
+.threatMarker {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+  animation: pulseThreat 0.7s ease-in-out infinite alternate;
+  transition: transform 0.1s linear;
+}
+
+.threatMarker:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+@keyframes pulseThreat {
+  0% { opacity: 0.75; }
+  100% { opacity: 1; filter: drop-shadow(0 0 12px rgba(239, 68, 68, 1)); }
+}
+
+.threatArrow {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 16px solid #ef4444;
+  transition: transform 0.08s linear;
+}
+
+.threatGhost .threatArrow {
+  border-bottom-color: #38bdf8;
+}
+
+.threatGunship .threatArrow {
+  border-bottom-color: #f59e0b;
+}
+
+.threatBoss .threatArrow {
+  border-bottom-color: #a855f7;
+  border-left-width: 10px;
+  border-right-width: 10px;
+  border-bottom-width: 20px;
+}
+
+.threatDist {
+  margin-top: 3px;
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.threatGhost .threatDist {
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.threatGunship .threatDist {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.threatBoss .threatDist {
+  border-color: #a855f7;
+  color: #c084fc;
+}
+
+/* Rear-View Camera Overlay Alert */
+.rearViewAlert {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(185, 28, 28, 0.6));
+  backdrop-filter: blur(8px);
+  border: 1.5px solid #ef4444;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.6);
+  color: #fee2e2;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 6px 20px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 30;
+  animation: pulseLock 0.4s ease-in-out infinite alternate;
 }

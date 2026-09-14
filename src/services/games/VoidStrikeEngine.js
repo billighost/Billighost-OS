@@ -53,6 +53,8 @@ export class VoidStrikeEngine {
       onNearMiss: () => {},
       onComboUpdate: () => {},
       onGhostSurgeUpdate: () => {},
+      onThreatsUpdate: () => {},
+      onCameraModeChange: () => {},
       ...callbacks,
     };
 
@@ -60,6 +62,7 @@ export class VoidStrikeEngine {
     this.isRunning = false;
     this.isPaused = false;
     this.isTurntable = false;
+    this.isRearView = false;
     this.wave = 1;
     this.score = 0;
     this.comboStreak = 0;
@@ -1015,33 +1018,50 @@ export class VoidStrikeEngine {
     this.player.wave = waveNum;
     this.callbacks.onStatsUpdate(this.player);
 
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.shipQuat);
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.shipQuat);
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.shipQuat);
+    const center = this.shipPos.clone().add(forward.clone().multiplyScalar(130));
+
     if (waveNum === 1) {
-      // 4 Scout Interceptors + 2 Spectral Ghost Phantoms
+      // 4 Scout Interceptors + 2 Spectral Ghost Phantoms in forward visual arc
       for (let i = 0; i < 4; i++) {
         const angle = (i / 4) * Math.PI * 2;
-        const x = Math.cos(angle) * 120;
-        const z = -160 + Math.sin(angle) * 35;
-        const y = (Math.random() - 0.5) * 45;
-        this.spawnEnemy('scout', x, y, z);
+        const pos = center.clone()
+          .add(right.clone().multiplyScalar(Math.cos(angle) * 55))
+          .add(up.clone().multiplyScalar(Math.sin(angle) * 28))
+          .add(forward.clone().multiplyScalar((i - 1.5) * 15));
+        this.spawnEnemy('scout', pos.x, pos.y, pos.z);
       }
-      this.spawnSpectralGhost(-40, 15, -180);
-      this.spawnSpectralGhost(40, -15, -180);
+      const g1 = center.clone().add(right.clone().multiplyScalar(-35)).add(up.clone().multiplyScalar(18));
+      const g2 = center.clone().add(right.clone().multiplyScalar(35)).add(up.clone().multiplyScalar(-18));
+      this.spawnSpectralGhost(g1.x, g1.y, g1.z);
+      this.spawnSpectralGhost(g2.x, g2.y, g2.z);
     } else if (waveNum === 2) {
-      // 6 Interceptors + 2 Heavy Gunships + 3 Spectral Ghosts
+      // 6 Interceptors + 2 Heavy Gunships + 3 Spectral Ghosts in forward/flank arc
       for (let i = 0; i < 6; i++) {
-        const x = (Math.random() - 0.5) * 180;
-        const y = (Math.random() - 0.5) * 60;
-        const z = -140 - Math.random() * 90;
-        this.spawnEnemy('scout', x, y, z);
+        const angle = (i / 6) * Math.PI * 2;
+        const pos = center.clone()
+          .add(right.clone().multiplyScalar(Math.cos(angle) * 75))
+          .add(up.clone().multiplyScalar(Math.sin(angle) * 35))
+          .add(forward.clone().multiplyScalar((i - 2.5) * 20));
+        this.spawnEnemy('scout', pos.x, pos.y, pos.z);
       }
-      this.spawnEnemy('gunship', -60, 20, -210);
-      this.spawnEnemy('gunship', 60, -20, -210);
-      this.spawnSpectralGhost(0, 30, -190);
-      this.spawnSpectralGhost(-50, -25, -230);
-      this.spawnSpectralGhost(50, 25, -230);
+      const gs1 = center.clone().add(right.clone().multiplyScalar(-60)).add(forward.clone().multiplyScalar(25));
+      const gs2 = center.clone().add(right.clone().multiplyScalar(60)).add(forward.clone().multiplyScalar(25));
+      this.spawnEnemy('gunship', gs1.x, gs1.y, gs1.z);
+      this.spawnEnemy('gunship', gs2.x, gs2.y, gs2.z);
+
+      const g1 = center.clone().add(up.clone().multiplyScalar(28));
+      const g2 = center.clone().add(right.clone().multiplyScalar(-45)).add(up.clone().multiplyScalar(-20));
+      const g3 = center.clone().add(right.clone().multiplyScalar(45)).add(up.clone().multiplyScalar(-20));
+      this.spawnSpectralGhost(g1.x, g1.y, g1.z);
+      this.spawnSpectralGhost(g2.x, g2.y, g2.z);
+      this.spawnSpectralGhost(g3.x, g3.y, g3.z);
     } else {
       // Wave 3+: Dreadnought Flagship Capital Boss!
-      this.spawnBossDreadnought();
+      const bossPos = center.clone().add(forward.clone().multiplyScalar(150)).add(up.clone().multiplyScalar(25));
+      this.spawnBossDreadnought(bossPos.x, bossPos.y, bossPos.z);
     }
   }
 
@@ -1129,9 +1149,9 @@ export class VoidStrikeEngine {
     }
   }
 
-  spawnBossDreadnought() {
+  spawnBossDreadnought(x = 0, y = 25, z = -300) {
     const group = new THREE.Group();
-    group.position.set(0, 25, -300);
+    group.position.set(x, y, z);
 
     const bossMat = new THREE.MeshStandardMaterial({
       color: 0x1e1b4b,
@@ -1287,8 +1307,38 @@ export class VoidStrikeEngine {
 
   toggleCameraMode() {
     this.cameraMode = this.cameraMode === 'chase' ? 'cockpit' : 'chase';
+    this.isRearView = false;
     if (this.cockpitInterior) {
       this.cockpitInterior.visible = this.cameraMode === 'cockpit';
+    }
+    this.callbacks.onCameraModeChange(this.cameraMode);
+  }
+
+  toggleRearView() {
+    this.isRearView = !this.isRearView;
+    this.callbacks.onCameraModeChange(this.isRearView ? 'rear' : this.cameraMode);
+  }
+
+  snapToNearestTarget() {
+    let nearest = null;
+    let minDist = Infinity;
+    const allTargets = [...this.enemies, ...this.spectralGhosts];
+    for (let t of allTargets) {
+      if (t.hp <= 0) continue;
+      const d = t.group.position.distanceTo(this.shipPos);
+      if (d < minDist) {
+        minDist = d;
+        nearest = t;
+      }
+    }
+    if (nearest) {
+      const dir = nearest.group.position.clone().sub(this.shipPos).normalize();
+      const targetQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, -1), dir);
+      this.shipQuat.slerp(targetQuat, 0.7);
+      this.currentTarget = nearest;
+      this.lockProgress = 1.0;
+      this.isLocked = true;
+      voidStrikeAudio.playLockOnTone(true);
     }
   }
 
@@ -1683,15 +1733,44 @@ export class VoidStrikeEngine {
   }
 
   updateEnemies(delta) {
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.shipQuat);
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.shipQuat);
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.shipQuat);
+
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const e = this.enemies[i];
       if (e.hp <= 0) continue;
 
-      const dist = e.group.position.distanceTo(this.shipPos);
+      const fromPlayer = e.group.position.clone().sub(this.shipPos);
+      const dist = fromPlayer.length();
+      const forwardDot = fromPlayer.dot(forward);
 
-      // Dogfight Pursuit AI
+      // 1. If enemy is behind player (forwardDot < 25) or too far away (dist > 200):
+      // Rapidly flank & boost ahead of the player into visible view! Never shoot from behind!
+      if (forwardDot < 25 || dist > 200) {
+        if (!e.waypointTimer || e.waypointTimer <= 0) {
+          e.waypointTimer = 2.5 + Math.random() * 2.0;
+          const flankSign = (i % 2 === 0) ? 1 : -1;
+          e.targetWaypoint = this.shipPos.clone()
+            .add(forward.clone().multiplyScalar(75 + Math.random() * 55))
+            .add(right.clone().multiplyScalar(flankSign * (35 + Math.random() * 35)))
+            .add(up.clone().multiplyScalar((Math.random() - 0.5) * 30));
+        }
+        e.waypointTimer -= delta;
+
+        const toWaypoint = e.targetWaypoint.clone().sub(e.group.position).normalize();
+        e.group.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), toWaypoint), 3.5 * delta);
+        const enemyForward = new THREE.Vector3(0, 0, 1).applyQuaternion(e.group.quaternion);
+        e.group.position.addScaledVector(enemyForward, (e.speed * 2.0) * delta);
+        continue;
+      }
+
+      // 2. Enemy is in front! Execute cinematic crossing strafes across player's canopy
       const toPlayer = this.shipPos.clone().sub(e.group.position).normalize();
-      e.group.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), toPlayer), 2.8 * delta);
+      const strafeOffset = right.clone().multiplyScalar(Math.sin((Date.now() * 0.002) + i) * 0.35);
+      const aimDir = toPlayer.clone().add(strafeOffset).normalize();
+
+      e.group.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), aimDir), 3.0 * delta);
 
       const enemyForward = new THREE.Vector3(0, 0, 1).applyQuaternion(e.group.quaternion);
       e.group.position.addScaledVector(enemyForward, e.speed * delta);
@@ -1702,34 +1781,59 @@ export class VoidStrikeEngine {
         e.turretR.rotation.y += 0.05;
       }
 
-      // Attack
+      // Attack ONLY when visibly in front of the player (forwardDot > 30)
       e.attackCooldown -= delta;
-      if (e.attackCooldown <= 0 && dist < 140) {
-        e.attackCooldown = e.type === 'scout' ? 1.6 : 2.2;
+      if (e.attackCooldown <= 0 && dist < 140 && forwardDot > 30) {
+        e.attackCooldown = e.type === 'scout' ? 1.8 : 2.5;
         this.enemyFire(e);
       }
     }
   }
 
   updateSpectralGhosts(delta) {
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.shipQuat);
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.shipQuat);
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.shipQuat);
+
     for (let i = this.spectralGhosts.length - 1; i >= 0; i--) {
       const g = this.spectralGhosts[i];
       if (g.hp <= 0) continue;
 
-      g.hoverOffset += delta * 2.5;
-      g.group.position.y += Math.sin(g.hoverOffset) * 0.08;
-      if (g.aura) g.aura.rotation.z += delta * 2.0;
+      g.hoverOffset += delta * 2.8;
+      g.group.position.addScaledVector(up, Math.sin(g.hoverOffset) * 0.08);
+      if (g.aura) g.aura.rotation.z += delta * 2.5;
 
-      const dist = g.group.position.distanceTo(this.shipPos);
+      const fromPlayer = g.group.position.clone().sub(this.shipPos);
+      const dist = fromPlayer.length();
+      const forwardDot = fromPlayer.dot(forward);
 
-      // Phasing pursuit AI (Phases through solid rocks)
-      const toPlayer = this.shipPos.clone().sub(g.group.position).normalize();
-      g.group.position.addScaledVector(toPlayer, g.speed * delta);
+      // If ghost drifted behind, glide ahead into visible front patrol zone
+      if (forwardDot < 25 || dist > 210) {
+        const targetPatrol = this.shipPos.clone()
+          .add(forward.clone().multiplyScalar(65 + (i * 20)))
+          .add(right.clone().multiplyScalar(((i % 2 === 0 ? 1 : -1)) * (30 + i * 15)))
+          .add(up.clone().multiplyScalar(Math.cos(g.hoverOffset) * 20));
+        
+        const toPatrol = targetPatrol.sub(g.group.position).normalize();
+        g.group.position.addScaledVector(toPatrol, (g.speed * 1.8) * delta);
+        continue;
+      }
 
-      // Spectral EMP Drain when close (< 14 units)
+      // Ghost is in front! Perform sweeping, undulating spectral passes across player screen
+      const weaveX = Math.sin(g.hoverOffset * 0.8 + i) * 18;
+      const weaveY = Math.cos(g.hoverOffset * 0.8 + i) * 12;
+      const toFront = this.shipPos.clone()
+        .add(forward.clone().multiplyScalar(45))
+        .add(right.clone().multiplyScalar(weaveX))
+        .add(up.clone().multiplyScalar(weaveY))
+        .sub(g.group.position).normalize();
+
+      g.group.position.addScaledVector(toFront, g.speed * delta);
+
+      // Spectral EMP Drain when close (< 16 units) and visibly in front
       g.attackCooldown -= delta;
-      if (g.attackCooldown <= 0 && dist < 14) {
-        g.attackCooldown = 2.0;
+      if (g.attackCooldown <= 0 && dist < 16 && forwardDot > 15) {
+        g.attackCooldown = 2.4;
         this.damagePlayer(25);
         this.createSparks(this.shipPos.x, this.shipPos.y, this.shipPos.z, 0x38bdf8);
       }
@@ -2094,6 +2198,20 @@ export class VoidStrikeEngine {
     this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFOV, 6.0 * delta);
     this.camera.updateProjectionMatrix();
 
+    if (this.isRearView) {
+      // Rear Glance Camera looking backward
+      const rearOffset = new THREE.Vector3(0, 2.0, -9.5).applyQuaternion(this.shipQuat);
+      const targetCamPos = this.shipPos.clone().add(rearOffset);
+      this.camera.position.lerp(targetCamPos, 16 * delta);
+
+      const lookTarget = this.shipPos.clone().add(new THREE.Vector3(0, 0.4, 25).applyQuaternion(this.shipQuat));
+      this.camera.lookAt(lookTarget);
+
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(this.shipQuat);
+      this.camera.up.copy(up);
+      return;
+    }
+
     if (this.cameraMode === 'cockpit') {
       const cockpitOffset = new THREE.Vector3(0, 0.48, -0.38).applyQuaternion(this.shipQuat);
       this.camera.position.copy(this.shipPos).add(cockpitOffset);
@@ -2193,7 +2311,7 @@ export class VoidStrikeEngine {
     }
   }
 
-  // --- RADAR TELEMETRY ---
+  // --- RADAR & THREAT TELEMETRY ---
 
   emitRadarData() {
     const invQuat = this.shipQuat.clone().invert();
@@ -2222,6 +2340,39 @@ export class VoidStrikeEngine {
         z: this.boss.group.position.clone().sub(this.shipPos).applyQuaternion(invQuat).z,
       } : null,
     });
+
+    // Calculate off-screen threat direction vectors for HUD Edge Arrows
+    const threats = [];
+    const allThreats = [...this.enemies, ...this.spectralGhosts];
+    if (this.boss) allThreats.push({ group: this.boss.group, type: 'boss', hp: this.boss.hullHp });
+
+    for (let t of allThreats) {
+      if (t.hp <= 0) continue;
+      const wp = new THREE.Vector3();
+      t.group.getWorldPosition(wp);
+      const dist = Math.round(wp.distanceTo(this.shipPos));
+
+      const ndc = wp.clone().project(this.camera);
+      const isBehind = ndc.z > 1.0;
+      let screenX = (ndc.x + 1) * 0.5;
+      let screenY = (1 - ndc.y) * 0.5;
+      const isOffscreen = isBehind || ndc.x < -0.85 || ndc.x > 0.85 || ndc.y < -0.85 || ndc.y > 0.85;
+
+      let angle = Math.atan2(ndc.y, ndc.x);
+      if (isBehind) angle += Math.PI;
+
+      threats.push({
+        id: t.id || t.type,
+        type: t.type,
+        dist,
+        isOffscreen,
+        angle,
+        screenX: Math.max(0.05, Math.min(0.95, screenX)),
+        screenY: Math.max(0.05, Math.min(0.95, screenY)),
+      });
+    }
+
+    this.callbacks.onThreatsUpdate(threats);
   }
 
   // --- FLIGHT INPUTS ---

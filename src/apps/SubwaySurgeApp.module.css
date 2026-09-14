@@ -9,6 +9,8 @@
   color: #f1f5f9;
   display: flex;
   flex-direction: column;
+  container-type: size;
+  container-name: subwayApp;
 }
 
 .canvas {
@@ -550,7 +552,200 @@
   gap: 3px;
 }
 
-/* RESPONSIVENESS TWEAKS FOR VERY SMALL WINDOWS */
+/* RESPONSIVENESS: CONTAINER QUERIES FOR OS APP WINDOW SIZING */
+@container (max-width: 560px) {
+  .hudOverlay {
+    padding: 6px;
+  }
+  .hudTop {
+    gap: 4px;
+  }
+  .hudTopLeft, .hudTopRight {
+    gap: 4px;
+  }
+  .modalCard {
+    padding: 12px;
+    gap: 8px;
+    max-height: 94%;
+    width: 95%;
+  }
+  .statLabel {
+    font-size: 0.62rem;
+  }
+  .statBadge {
+    padding: 3px 8px;
+    gap: 4px;
+  }
+  .ghostSurgeContainer {
+    padding: 3px 8px;
+    gap: 4px;
+  }
+  .ghostSurgeBar {
+    width: 50px;
+    height: 6px;
+  }
+  .instructionsGrid {
+    gap: 6px;
+  }
+  .instructionItem {
+    padding: 6px;
+  }
+  .keyTag {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+  }
+  .keyDesc {
+    font-size: 0.65rem;
+  }
+  .gameTitle {
+    font-size: 1.35rem;
+  }
+  .turntableContainer {
+    height: 140px;
+  }
+  .lockerGrid {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 8px;
+  }
+  .skinCard {
+    padding: 6px 4px;
+    gap: 4px;
+  }
+  .skinPreviewCircle {
+    width: 30px;
+    height: 30px;
+  }
+  .skinName {
+    font-size: 0.68rem;
+  }
+}
+
+@container (max-width: 420px) {
+  .statLabel {
+    display: none;
+  }
+  .ghostSurgeContainer {
+    display: none;
+  }
+  .highScoreBadge {
+    display: none;
+  }
+  .instructionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+  .keyTag {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+  }
+  .keyDesc {
+    font-size: 0.58rem;
+  }
+  .gameTitle {
+    font-size: 1.18rem;
+  }
+  .gameSubtitle {
+    display: none;
+  }
+  .touchControls {
+    gap: 4px;
+  }
+  .touchBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+  .hoverboardSummonBtn {
+    padding: 4px 8px;
+    font-size: 0.68rem;
+    gap: 4px;
+  }
+  .powerupTray {
+    top: 36px;
+    gap: 3px;
+  }
+  .powerupMeter {
+    min-width: 85px;
+    padding: 2px 6px;
+  }
+  .turntableContainer {
+    height: 120px;
+  }
+  .lockerGrid {
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 6px;
+  }
+}
+
+@container (max-height: 500px) {
+  .hudOverlay {
+    padding: 4px 8px;
+  }
+  .brandHeader {
+    gap: 2px;
+  }
+  .brandIcon {
+    display: none;
+  }
+  .gameTitle {
+    font-size: 1.22rem;
+  }
+  .instructionsGrid {
+    display: none;
+  }
+  .missionsCard {
+    display: none;
+  }
+  .turntableContainer {
+    height: 115px;
+  }
+  .modalCard {
+    padding: 8px 12px;
+    gap: 6px;
+    max-height: 96%;
+  }
+  .primaryBtn {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+  }
+  .secondaryBtn {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+  .statsGrid {
+    gap: 6px;
+  }
+  .statCard {
+    padding: 4px 8px;
+  }
+  .powerupTray {
+    max-height: 90px;
+  }
+}
+
+@container (max-height: 380px) {
+  .hudOverlay {
+    padding: 2px 6px;
+  }
+  .gameSubtitle {
+    display: none;
+  }
+  .turntableContainer {
+    height: 90px;
+  }
+  .modalCard {
+    padding: 6px 10px;
+    gap: 4px;
+    max-height: 98%;
+  }
+  .primaryBtn {
+    padding: 5px 10px;
+    font-size: 0.76rem;
+  }
+}
+
+/* Media Query Fallbacks for Environments without Container Query Support */
 @media (max-width: 480px), (max-height: 440px) {
   .hudOverlay {
     padding: 6px;
@@ -563,10 +758,6 @@
   .statLabel {
     display: none;
   }
-  .statBadge {
-    padding: 3px 8px;
-    gap: 4px;
-  }
   .instructionsGrid {
     display: none;
   }
@@ -575,55 +766,6 @@
   }
   .gameSubtitle {
     display: none;
-  }
-  .touchControls {
-    gap: 4px;
-  }
-  .touchBtn {
-    width: 30px;
-    height: 30px;
-    font-size: 0.75rem;
-    border-radius: 8px;
-  }
-  .hoverboardSummonBtn {
-    padding: 4px 10px;
-    font-size: 0.72rem;
-  }
-  .powerupTray {
-    top: 36px;
-    gap: 3px;
-  }
-  .powerupMeter {
-    min-width: 90px;
-    padding: 2px 6px;
-  }
-}
-
-@media (max-height: 360px) {
-  .hudOverlay {
-    padding: 4px 6px;
-  }
-  .powerupTray {
-    top: 30px;
-  }
-  .modalCard {
-    padding: 8px 12px;
-    gap: 6px;
-    max-height: 96%;
-  }
-  .primaryBtn {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-  .secondaryBtn {
-    padding: 5px 10px;
-    font-size: 0.72rem;
-  }
-  .statsGrid {
-    gap: 6px;
-  }
-  .statCard {
-    padding: 4px 8px;
   }
 }
 
