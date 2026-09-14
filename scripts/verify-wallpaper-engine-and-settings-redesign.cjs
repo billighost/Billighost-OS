@@ -232,22 +232,22 @@ if (!fs.existsSync(SHOTS_DIR)) {
     await page.waitForTimeout(500);
 
     // Click Appearance tab at 1280x390
-    const appNav = settingsWin.locator('nav button', { hasText: 'Theme' });
+    const appNav = settingsWin.locator('nav button', { hasText: 'Appearance' });
     await appNav.click();
     await page.waitForTimeout(300);
-    console.log('  ✓ Switched to Theme & Glassmorphism tab at 1280x390');
+    console.log('  ✓ Switched to Appearance tab at 1280x390');
 
     // Click Sound tab at 1280x390
     const sndNav = settingsWin.locator('nav button', { hasText: 'Audio' });
     await sndNav.click();
     await page.waitForTimeout(300);
-    console.log('  ✓ Switched to Audio & Synth Schemes tab at 1280x390');
+    console.log('  ✓ Switched to Audio tab at 1280x390');
 
-    // Click System Telemetry tab at 1280x390
-    const specNav = settingsWin.locator('nav button', { hasText: 'Telemetry' });
+    // Click System Telemetry / About tab at 1280x390
+    const specNav = settingsWin.locator('nav button', { hasText: 'About' });
     await specNav.click();
     await page.waitForTimeout(300);
-    console.log('  ✓ Switched to System Telemetry & Specs tab at 1280x390');
+    console.log('  ✓ Switched to About tab at 1280x390');
 
     await page.screenshot({ path: path.join(SHOTS_DIR, 'settings-half-height-1280x390.png') });
     console.log('  📸 Saved compact laptop half-height screenshot (1280x390)');
