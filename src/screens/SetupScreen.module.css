@@ -1,252 +1,564 @@
 /* ============================================
-   BILLIGHOST OS — First-run Setup
+   BILLIGHOST OS — Nordic Obsidian First-run Setup
+   High-end dark liquid glass, spatial depth &
+   dual-axis fluid height/width responsiveness.
    ============================================ */
 
-.container {
-  position: absolute;
+/* ── Viewport Container ───────────────────── */
+.viewportContainer {
+  position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: var(--bg-void);
-  overflow: hidden;
-  animation: setupIn 0.6s var(--ease-out-expo);
+  justify-content: flex-start;
+  padding: clamp(12px, 3vh, 36px) clamp(14px, 3vw, 36px);
+  background: var(--bg-void, #050505);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  animation: fadeInContainer 0.6s var(--ease-out-expo);
+  -webkit-overflow-scrolling: touch;
 }
 
 .leaving {
-  animation: setupOut 0.6s var(--ease-in-out-smooth) forwards;
+  animation: fadeOutContainer 0.6s var(--ease-in-out-smooth) forwards;
 }
 
-/* ── Live wallpaper preview behind the card ── */
+/* Custom sleek scrollbar for short viewports */
+.viewportContainer::-webkit-scrollbar {
+  width: 6px;
+}
+.viewportContainer::-webkit-scrollbar-track {
+  background: transparent;
+}
+.viewportContainer::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+.viewportContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(126, 184, 255, 0.35);
+}
 
-.preview {
-  position: absolute;
+/* ── Ambient Backdrop Layer ───────────────── */
+.backdropLayer {
+  position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  transition: background 0.5s ease;
 }
 
-.previewCss,
-.previewImg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.4s ease;
-}
-
-/* Darkens the backdrop so the card stays readable over any image. */
-.previewScrim {
+.backdropMeshOverlay {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 60% at 50% 50%, rgba(5, 5, 8, 0.55) 0%, rgba(5, 5, 8, 0.86) 70%);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+    radial-gradient(ellipse 90% 70% at 50% 40%, rgba(5, 6, 10, 0.55) 0%, rgba(5, 6, 10, 0.9) 75%),
+    linear-gradient(180deg, rgba(5, 6, 10, 0.4) 0%, rgba(5, 6, 10, 0.85) 100%);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
 }
 
-/* ── Card ──────────────────────────────────── */
+.backdropRadialGlow {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70vw;
+  height: 50vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(126, 184, 255, 0.08) 0%, rgba(167, 139, 250, 0.05) 45%, transparent 70%);
+  filter: blur(50px);
+  pointer-events: none;
+}
 
-.card {
+/* ── Main Nordic Obsidian Card ───────────── */
+.setupCard {
   position: relative;
   z-index: 1;
-  width: min(560px, 100%);
-  max-height: 100%;
+  margin: auto 0;
+  width: min(860px, 100%);
+  max-width: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 30px 32px 24px;
-  border-radius: var(--radius-xl);
-
-  background: rgba(14, 16, 26, 0.72);
-  backdrop-filter: blur(30px) saturate(1.6);
-  -webkit-backdrop-filter: blur(30px) saturate(1.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(9, 11, 17, 0.82);
+  backdrop-filter: blur(48px) saturate(1.8);
+  -webkit-backdrop-filter: blur(48px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 28px 80px rgba(0, 0, 0, 0.62);
-
-  overflow-y: auto;
-  min-height: 0;
+    0 32px 90px rgba(0, 0, 0, 0.72),
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-out-expo);
 }
 
-/* ── Brand ─────────────────────────────────── */
+/* Prismatic top rim */
+.prismaticBorder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(126, 184, 255, 0.6) 35%, rgba(167, 139, 250, 0.6) 65%, transparent 100%);
+  z-index: 2;
+}
 
-.brand {
+/* ── Header: Brand & Progress Breadcrumb ─── */
+.header {
   display: flex;
   align-items: center;
-  gap: 13px;
+  justify-content: space-between;
+  gap: 16px;
+  padding: clamp(16px, 2.5vh, 24px) clamp(18px, 3vw, 32px) clamp(12px, 1.8vh, 18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.015);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
-.brandText {
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.markWrapper {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.ghostMark {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 10px rgba(126, 184, 255, 0.4));
+}
+
+.markGlowRing {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(126, 184, 255, 0.25) 0%, transparent 70%);
+  filter: blur(4px);
+  z-index: 0;
+}
+
+.brandInfo {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  min-width: 0;
 }
 
-.brandName {
-  font-size: 0.82rem;
+.brandLogoRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brandTitle {
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #fff;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+}
+
+.brandBadge {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.26em;
-  color: var(--text-primary);
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(126, 184, 255, 0.16);
+  border: 1px solid rgba(126, 184, 255, 0.35);
+  color: #cfe4ff;
+  letter-spacing: 0.08em;
 }
 
-.brandSub {
-  font-size: 0.7rem;
-  color: var(--text-ghost);
-  letter-spacing: 0.02em;
+.brandSubtitle {
+  font-size: 0.68rem;
+  color: var(--text-ghost, rgba(255, 255, 255, 0.4));
+  letter-spacing: 0.03em;
 }
 
-/* ── Step indicator ────────────────────────── */
-
-.steps {
+/* Stepper Breadcrumbs */
+.stepperNav {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
-  flex-shrink: 0;
 }
 
-.stepDot {
-  display: inline-flex;
+.stepPill {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
+  gap: 7px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  color: var(--text-ghost);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
+  transition: all 0.25s var(--ease-out-expo);
 }
 
-.stepActive {
-  background: rgba(126, 184, 255, 0.16);
-  border-color: rgba(126, 184, 255, 0.4);
-  color: #cfe4ff;
+.stepPillIcon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: all 0.25s ease;
 }
 
-.stepDone {
-  color: var(--accent-success);
-  border-color: rgba(52, 211, 153, 0.3);
-}
-
-.stepIcon {
-  display: inline-flex;
-}
-
-/* ── Body ──────────────────────────────────── */
-
-.body {
+.stepPillText {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  min-height: 0;
-  animation: stepIn 0.34s var(--ease-out-expo);
 }
 
-.title {
-  font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+.stepPillLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-ghost);
+  letter-spacing: 0.02em;
+}
+
+.stepPillSub {
+  font-size: 0.58rem;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.stepPillActive {
+  background: rgba(126, 184, 255, 0.14);
+  border-color: rgba(126, 184, 255, 0.45);
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.16);
+}
+
+.stepPillActive .stepPillIcon {
+  background: var(--accent-glow, #7eb8ff);
+  color: #05060b;
+  box-shadow: 0 0 10px rgba(126, 184, 255, 0.5);
+}
+
+.stepPillActive .stepPillLabel {
+  color: #eaf3ff;
   font-weight: 700;
+}
+
+.stepPillActive .stepPillSub {
+  color: rgba(126, 184, 255, 0.75);
+}
+
+.stepPillDone {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+.stepPillDone .stepPillIcon {
+  background: rgba(52, 211, 153, 0.2);
+  color: var(--accent-success, #34d399);
+}
+
+.stepPillDone .stepPillLabel {
+  color: #a7f3d0;
+}
+
+/* ── Content Stage ────────────────────────── */
+.mainStage {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(18px, 3vh, 32px) clamp(18px, 3vw, 36px);
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: visible;
+}
+
+.stageBody {
+  display: flex;
+  flex-direction: column;
+  animation: stageEnter 0.38s var(--ease-out-expo);
+  width: 100%;
+}
+
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.sectionHeaderCentered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.stageHeading {
+  font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+  font-weight: 700;
+  color: #fff;
   letter-spacing: -0.01em;
-  color: var(--text-primary);
   line-height: 1.25;
 }
 
-.desc {
-  font-size: 0.8rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  max-width: 46ch;
+.stageDesc {
+  font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+  line-height: 1.55;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  max-width: 58ch;
 }
 
-/* ── Fields ────────────────────────────────── */
+/* ── STEP 1: Identity (Split Stage) ──────── */
+.splitStage {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: clamp(20px, 3vw, 36px);
+  align-items: center;
+}
 
-.field {
+.profileBadgeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: clamp(20px, 2.8vh, 32px) 20px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.avatarOrb {
+  position: relative;
+  width: clamp(64px, 8vw, 84px);
+  height: clamp(64px, 8vw, 84px);
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.22), rgba(167, 139, 250, 0.28));
+  border: 2px solid rgba(126, 184, 255, 0.5);
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  box-shadow: 0 0 28px rgba(126, 184, 255, 0.22);
+}
+
+.avatarInitials {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 2vw, 1.6rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.06em;
+}
+
+.avatarRing {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px dashed rgba(126, 184, 255, 0.35);
+  animation: rotateRing 20s linear infinite;
+}
+
+.avatarTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatarSubtitle {
+  font-size: 0.74rem;
+  color: var(--text-ghost);
+  margin-bottom: 16px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.privacyPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: #6ee7b7;
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inputGroup {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.fieldLabel {
-  font-size: 0.7rem;
+.inputLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-ghost);
 }
 
-.input {
-  width: 100%;
-  padding: 10px 13px;
-  border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
-  font-family: var(--font-display);
-  font-size: 0.88rem;
-  outline: none;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+.validTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--accent-success);
+  font-weight: 700;
 }
 
-.input::placeholder {
-  color: rgba(255, 255, 255, 0.24);
-}
-
-.input:focus {
-  border-color: rgba(126, 184, 255, 0.5);
-  box-shadow: 0 0 0 3px rgba(126, 184, 255, 0.12);
-}
-
-.hintError,
-.errorText {
-  font-size: 0.72rem;
-  color: var(--accent-error);
-}
-
-/* ── PIN ───────────────────────────────────── */
-
-.pinRow {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  padding: 6px 0;
-}
-
-.pinBox {
+.inputWrapper {
   position: relative;
-  width: 56px;
-  height: 64px;
-  border-radius: var(--radius-md);
-  background: rgba(0, 0, 0, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-ghost);
+  pointer-events: none;
   display: grid;
   place-items: center;
-  transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.pinBox:focus-within {
-  border-color: rgba(126, 184, 255, 0.55);
-  box-shadow: 0 0 0 3px rgba(126, 184, 255, 0.12);
+.textInput {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.pinBoxError {
-  border-color: rgba(255, 77, 106, 0.55);
-  animation: shake 0.36s ease;
+.textInput:focus {
+  border-color: rgba(126, 184, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(126, 184, 255, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
 }
 
-/*
-  The input is transparent and the dot below does the visual work — so the
-  field can be type="text" (no password-manager prompt, no Chrome warning)
-  while still reading as masked.
-*/
-.pinInput {
+.textInput::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.inlineErrorText {
+  font-size: 0.72rem;
+  color: var(--accent-error, #ff4d6a);
+}
+
+/* ── STEP 2: Security PIN ─────────────────── */
+.pinStageLayout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(14px, 2.2vh, 22px);
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.pinHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.pinStagePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(126, 184, 255, 0.12);
+  border: 1px solid rgba(126, 184, 255, 0.3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #cfe4ff;
+  letter-spacing: 0.04em;
+}
+
+.pinBoxesRow {
+  display: flex;
+  gap: clamp(10px, 2vw, 18px);
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.pinDigitCell {
+  position: relative;
+  width: clamp(52px, 7vw, 68px);
+  height: clamp(58px, 8vh, 74px);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  display: grid;
+  place-items: center;
+  transition: all 0.2s var(--ease-out-back);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.pinDigitCell:focus-within {
+  border-color: rgba(126, 184, 255, 0.75);
+  box-shadow: 0 0 0 3px rgba(126, 184, 255, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.pinDigitFilled {
+  border-color: rgba(126, 184, 255, 0.5);
+  background: rgba(126, 184, 255, 0.08);
+}
+
+.pinDigitFilled .pinGlowDot {
+  transform: scale(1.3);
+  background: var(--accent-glow, #7eb8ff);
+  box-shadow: 0 0 14px rgba(126, 184, 255, 0.8);
+}
+
+.pinDigitError {
+  border-color: rgba(255, 77, 106, 0.65) !important;
+  background: rgba(255, 77, 106, 0.08);
+}
+
+.hiddenPinInput {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -255,251 +567,731 @@
   border: none;
   outline: none;
   text-align: center;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   color: transparent;
   caret-color: transparent;
+  cursor: pointer;
 }
 
-.pinDot {
+.pinGlowDot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
-  transition: background 0.18s ease, transform 0.22s var(--ease-out-back), box-shadow 0.18s ease;
+  background: rgba(255, 255, 255, 0.18);
+  transition: all 0.2s var(--ease-out-back);
   pointer-events: none;
 }
 
-.pinDotFilled {
-  background: var(--accent-glow);
-  transform: scale(1.18);
-  box-shadow: 0 0 12px rgba(126, 184, 255, 0.55);
-}
-
-/* ── Wallpaper grid ────────────────────────── */
-
-.wallGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
-  gap: 10px;
-}
-
-.wallOption {
-  position: relative;
-  height: 82px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 8px 10px;
-  transition: transform 0.18s var(--ease-out-expo), border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.wallOption:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.26);
-}
-
-.wallActive {
-  border-color: rgba(126, 184, 255, 0.65);
-  box-shadow: 0 0 0 2px rgba(126, 184, 255, 0.22), 0 10px 26px rgba(0, 0, 0, 0.45);
-}
-
-.wallName {
-  position: relative;
-  font-size: 0.7rem;
-  font-weight: 600;
+.pinDigitChar {
+  position: absolute;
+  font-size: 1.8rem;
   color: #fff;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  pointer-events: none;
+  display: none; /* masked by dot */
 }
 
-.wallBadge {
-  position: absolute;
-  top: 7px;
-  left: 8px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgba(52, 211, 153, 0.22);
-  border: 1px solid rgba(52, 211, 153, 0.42);
-  color: #6ee7b7;
-  font-family: var(--font-mono);
-  font-size: 0.54rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.pinShake {
+  animation: shakeError 0.4s ease;
 }
 
-.wallCheck {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  background: rgba(126, 184, 255, 0.9);
-  color: #05070d;
+.pinErrorBanner {
+  padding: 6px 16px;
+  border-radius: 8px;
+  background: rgba(255, 77, 106, 0.15);
+  border: 1px solid rgba(255, 77, 106, 0.35);
+  color: #ff8b9e;
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Numpad */
+.numpadGrid {
+  display: grid;
+  grid-template-columns: repeat(3, clamp(56px, 8vw, 76px));
+  gap: clamp(6px, 1.2vh, 10px);
+  justify-content: center;
+}
+
+.numpadBtn {
+  height: clamp(38px, 5.5vh, 48px);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  font-weight: 600;
+  cursor: pointer;
   display: grid;
   place-items: center;
+  transition: all 0.16s ease;
 }
 
-.wallUpload {
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border-style: dashed;
-  color: var(--text-secondary);
-  background-position: center;
-}
-
-/* ── Summary ───────────────────────────────── */
-
-.summary {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-}
-
-.summaryRow {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 10px 14px;
-  font-size: 0.78rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.summaryRow:last-child {
-  border-bottom: none;
-}
-
-.summaryRow span:first-child {
-  color: var(--text-ghost);
-}
-
-.summaryRow span:last-child {
-  color: var(--text-primary);
-  font-weight: 500;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 60%;
-}
-
-/* ── Footer ────────────────────────────────── */
-
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 4px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-.footerHint {
-  font-size: 0.68rem;
-  color: var(--text-ghost);
-  flex: 1 1 auto;
-  text-align: center;
-  min-width: 0;
-}
-
-.ghostBtn,
-.primaryBtn {
-  padding: 9px 18px;
-  border-radius: var(--radius-md);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.16s ease, border-color 0.16s ease, transform 0.14s ease, opacity 0.16s ease;
-}
-
-.ghostBtn {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-secondary);
-}
-
-.ghostBtn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
-}
-
-.primaryBtn {
-  background: linear-gradient(135deg, rgba(126, 184, 255, 0.32), rgba(167, 139, 250, 0.28));
-  border: 1px solid rgba(126, 184, 255, 0.5);
-  color: #eaf3ff;
-}
-
-.primaryBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(126, 184, 255, 0.45), rgba(167, 139, 250, 0.4));
+.numpadBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
-.ghostBtn:disabled,
-.primaryBtn:disabled {
-  opacity: 0.34;
-  cursor: not-allowed;
-  transform: none;
+.numpadBtn:active {
+  transform: translateY(1px);
+  background: rgba(126, 184, 255, 0.2);
 }
 
-/* ── Motion ────────────────────────────────── */
+.numpadActionBtn {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
 
-@keyframes setupIn {
+/* ── STEP 3: Wallpaper / Atmosphere ──────── */
+.wallpaperLayout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: clamp(18px, 2.5vw, 32px);
+  align-items: start;
+}
+
+/* Miniature Desktop Live Preview */
+.desktopMiniPreviewContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.desktopMiniBezel {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  background: #020306;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 0, 0, 0.8);
+  padding: 5px;
+  overflow: hidden;
+}
+
+.desktopMiniScreen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px;
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.5);
+  transition: background 0.4s ease;
+}
+
+.miniStatusBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.52rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.miniLogo {
+  letter-spacing: 0.1em;
+}
+
+.miniStatusRight {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+}
+
+.miniDotOnline {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-success);
+}
+
+.miniDesktopGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.miniIconItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  font-size: 0.52rem;
+  color: #fff;
+  width: fit-content;
+}
+
+.miniTaskbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(10, 12, 18, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.miniDockPill {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(126, 184, 255, 0.5);
+}
+
+.previewCaptionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  font-size: 0.72rem;
+}
+
+.previewCaptionName {
+  font-weight: 600;
+  color: #fff;
+}
+
+.previewLivePill {
+  font-size: 0.62rem;
+  color: var(--accent-glow);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.wallpaperGalleryWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.wallpaperGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  max-height: clamp(160px, 32vh, 320px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Custom scrollbar for grid */
+.wallpaperGrid::-webkit-scrollbar {
+  width: 4px;
+}
+.wallpaperGrid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.wallCard {
+  position: relative;
+  height: clamp(64px, 10vh, 76px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px;
+  transition: all 0.2s var(--ease-out-expo);
+  text-align: left;
+}
+
+.wallCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.wallCardActive {
+  border-color: var(--accent-glow, #7eb8ff) !important;
+  box-shadow: 0 0 0 2px rgba(126, 184, 255, 0.4), 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.wallCardContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.wallTitle {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallLiveTag {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(52, 211, 153, 0.25);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  color: #a7f3d0;
+  letter-spacing: 0.05em;
+}
+
+.wallSelectedRing {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-glow, #7eb8ff);
+  color: #05060b;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 10px rgba(126, 184, 255, 0.7);
+}
+
+.wallCardUpload {
+  background: rgba(255, 255, 255, 0.04);
+  border-style: dashed;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploadOverlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── STEP 4: Finalize ────────────────────── */
+.finalizeLayout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+.successPulseBadge {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.25);
+}
+
+.summaryTelemetryCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.telemetryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.telemetryRow:last-child {
+  border-bottom: none;
+}
+
+.telemetryLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.telemetryRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: #fff;
+}
+
+.telemetrySub {
+  font-size: 0.72rem;
+  color: var(--text-ghost);
+}
+
+.pinMaskedChip {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+}
+
+.telemetryWallChip {
+  width: 28px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-size: cover;
+  background-position: center;
+}
+
+.readinessChecklist {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.checkItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-ghost);
+}
+
+/* ── Sticky Action Bar Footer ────────────── */
+.footerBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: clamp(12px, 2vh, 18px) clamp(18px, 3vw, 32px);
+  background: linear-gradient(180deg, rgba(9, 11, 17, 0) 0%, rgba(9, 11, 17, 0.85) 30%, rgba(9, 11, 17, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin-top: auto;
+}
+
+.secondaryBtn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.footerCenterHint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-ghost);
+}
+
+.kbdShortcut {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.primaryActionBtn {
+  position: relative;
+  overflow: hidden;
+  padding: 11px 26px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.35) 0%, rgba(167, 139, 250, 0.3) 100%);
+  border: 1px solid rgba(126, 184, 255, 0.55);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.22s var(--ease-out-expo);
+  box-shadow: 0 4px 18px rgba(126, 184, 255, 0.2);
+}
+
+.primaryActionBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.5) 0%, rgba(167, 139, 250, 0.45) 100%);
+  border-color: rgba(126, 184, 255, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 26px rgba(126, 184, 255, 0.32);
+}
+
+.primaryActionBtn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.primaryActionBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btnShimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: skewX(-20deg);
+  animation: shimmerSweep 4s infinite;
+}
+
+/* ── Animations ───────────────────────────── */
+@keyframes fadeInContainer {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-@keyframes setupOut {
+@keyframes fadeOutContainer {
   from { opacity: 1; transform: scale(1); filter: blur(0); }
-  to   { opacity: 0; transform: scale(1.03); filter: blur(10px); }
+  to   { opacity: 0; transform: scale(1.03); filter: blur(12px); }
 }
 
-@keyframes stepIn {
-  from { opacity: 0; transform: translateY(8px); }
+@keyframes stageEnter {
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .container,
-  .leaving,
-  .body {
-    animation: none;
-  }
+@keyframes rotateRing {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
-  .wallOption:hover,
-  .primaryBtn:hover:not(:disabled) {
-    transform: none;
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+@keyframes shimmerSweep {
+  0% { left: -100%; }
+  35%, 100% { left: 150%; }
+}
+
+/* ══════════════════════════════════════════════
+   HEIGHT & WIDTH RESPONSIVE SYSTEM
+   Strict non-cropping rules for half-height laptop
+   screens (e.g. 1366x420, 1440x450, etc.)
+   ══════════════════════════════════════════════ */
+
+/* Moderate short height (640px and below) */
+@media (max-height: 640px) {
+  .viewportContainer {
+    padding: 10px 16px;
+  }
+  .setupCard {
+    border-radius: 20px;
+  }
+  .header {
+    padding: 12px 20px 10px;
+  }
+  .mainStage {
+    padding: 14px 20px;
+  }
+  .sectionHeader {
+    margin-bottom: 12px;
+  }
+  .stageHeading {
+    font-size: 1.25rem;
+  }
+  .stageDesc {
+    font-size: 0.78rem;
+  }
+  .profileBadgeCard {
+    padding: 16px 14px;
+  }
+  .avatarOrb {
+    width: 58px;
+    height: 58px;
+    margin-bottom: 8px;
+  }
+  .pinDigitCell {
+    width: 52px;
+    height: 56px;
+  }
+  .numpadBtn {
+    height: 38px;
+  }
+  .desktopMiniBezel {
+    max-height: 140px;
+  }
+  .wallpaperGrid {
+    max-height: 160px;
+  }
+  .footerBar {
+    padding: 10px 20px;
   }
 }
 
-/* ── Narrow viewports ──────────────────────── */
-
-@media (max-width: 520px), (max-height: 620px) {
-  .card {
-    padding: 20px 20px 16px;
+/* Half-height laptop screen (480px and below) - e.g. 1366x420 */
+@media (max-height: 480px) {
+  .viewportContainer {
+    padding: 6px 12px;
+    justify-content: flex-start;
+  }
+  .setupCard {
+    margin: 4px 0;
+    border-radius: 16px;
+  }
+  .header {
+    padding: 8px 16px 6px;
+    gap: 10px;
+  }
+  .markWrapper {
+    display: none; /* Hide mark on ultra-short screens to save vertical space */
+  }
+  .stepPillSub {
+    display: none; /* Hide subtitle to keep breadcrumbs slim */
+  }
+  .stepPill {
+    padding: 4px 8px;
+  }
+  .mainStage {
+    padding: 10px 16px;
+  }
+  .sectionHeader {
+    margin-bottom: 8px;
+  }
+  .stageHeading {
+    font-size: 1.1rem;
+  }
+  .stageDesc {
+    display: none; /* Hide verbose descriptions on ultra short screens */
+  }
+  .splitStage {
+    grid-template-columns: 180px 1fr;
     gap: 16px;
   }
-
-  .pinBox {
-    width: 48px;
-    height: 56px;
+  .profileBadgeCard {
+    padding: 10px;
   }
+  .avatarOrb {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 4px;
+  }
+  .avatarInitials {
+    font-size: 1rem;
+  }
+  .avatarTitle {
+    font-size: 0.9rem;
+  }
+  .privacyPill {
+    display: none;
+  }
+  .pinStageLayout {
+    gap: 10px;
+  }
+  .pinDigitCell {
+    width: 44px;
+    height: 48px;
+  }
+  .numpadGrid {
+    display: none; /* Hide on-screen numpad when height is <= 480px; physical keyboard is used */
+  }
+  .wallpaperLayout {
+    grid-template-columns: 160px 1fr;
+    gap: 14px;
+  }
+  .desktopMiniBezel {
+    max-height: 110px;
+  }
+  .wallpaperGrid {
+    max-height: 120px;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+  .wallCard {
+    height: 52px;
+    padding: 4px 6px;
+  }
+  .telemetryRow {
+    padding: 8px 12px;
+  }
+  .readinessChecklist {
+    display: none;
+  }
+  .footerBar {
+    padding: 8px 16px;
+  }
+  .secondaryBtn,
+  .primaryActionBtn {
+    padding: 7px 18px;
+    font-size: 0.78rem;
+  }
+}
 
-  .stepLabel {
-    display: none;   /* dots only; the labels are the first thing to go */
+/* Width breakdown for mobile or narrow split-screen windows */
+@media (max-width: 768px) {
+  .splitStage {
+    grid-template-columns: 1fr;
+  }
+  .profileBadgeCard {
+    display: none;
+  }
+  .wallpaperLayout {
+    grid-template-columns: 1fr;
+  }
+  .desktopMiniPreviewContainer {
+    display: none;
+  }
+  .stepperNav {
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 4px;
   }
 }

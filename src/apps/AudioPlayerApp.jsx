@@ -848,6 +848,7 @@ export default function AudioPlayerApp({ playClick = () => {}, filePath = null }
 
   return (
     <div className={styles.playerContainer} data-testid="audio-player-app">
+      <div className={styles.prismaticBorder} />
       {/* Header Navigation Tabs */}
       <div className={styles.navBar}>
         <div className={styles.navTabs}>

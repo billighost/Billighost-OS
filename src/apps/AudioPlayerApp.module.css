@@ -1,112 +1,129 @@
-/* ============================================
-   BILLIGHOST OS — Audio & Synth Station CSS
-   ============================================ */
+.pelas give met your best worka dn then /* ====================================================
+   BILLIGHOST OS — Nordic Obsidian Audio & Synth Station
+   Hi-Fi luxury dark obsidian liquid glass, prismatic lighting,
+   tactile acoustic EQ and responsive turntable deck.
+   ==================================================== */
 
 .playerContainer {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #08090f;
-  color: var(--text-primary);
-  font-family: var(--font-display);
+  background: #07080e;
+  color: var(--text-primary, #e2e8f0);
+  font-family: var(--font-display, "Plus Jakarta Sans Variable", -apple-system, sans-serif);
   overflow: hidden;
   user-select: none;
+  container-type: inline-size;
+  container-name: player;
 }
 
-/* Navigation & Visualizer Mode Bar */
+/* Prismatic top rim */
+.prismaticBorder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(126, 184, 255, 0.6) 30%, rgba(167, 139, 250, 0.6) 70%, transparent 100%);
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* ── Navigation & Visualizer Mode Bar ─────────── */
 .navBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: rgba(18, 20, 30, 0.85);
-  backdrop-filter: blur(12px);
+  padding: 10px 16px;
+  background: rgba(12, 14, 22, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 10px;
-  /* A non-wrapping flex row forces its full intrinsic width and overflows
-     the frame. Wrapping lets the toolbar reflow as the window narrows. */
+  gap: 12px;
   flex-wrap: wrap;
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .navTabs {
   display: flex;
   gap: 4px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   flex-wrap: wrap;
   min-width: 0;
 }
 
 .navBtn {
-  padding: 5px 12px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
   background: transparent;
   border: none;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 500;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.74rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
 .navBtn:hover {
-  color: var(--text-primary);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .navBtnActive {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(126, 184, 255, 0.16) !important;
   color: #fff !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 0 12px rgba(126, 184, 255, 0.2);
+  border: 1px solid rgba(126, 184, 255, 0.35);
 }
 
 .visSwitcher {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   flex-wrap: wrap;
   min-width: 0;
-  /* Right-aligned so it collapses toward the tabs, not away from them. */
   justify-content: flex-end;
 }
 
 .visBtn {
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  color: var(--text-ghost);
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-ghost, rgba(255, 255, 255, 0.4));
+  font-size: 0.68rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 
 .visBtn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
 }
 
 .visBtnActive {
-  background: rgba(0, 243, 255, 0.15) !important;
-  border-color: rgba(0, 243, 255, 0.4) !important;
-  color: #00f3ff !important;
+  background: rgba(126, 184, 255, 0.18) !important;
+  border-color: rgba(126, 184, 255, 0.5) !important;
+  color: #7eb8ff !important;
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.25);
 }
 
-/* ====================================================
-   STAGE: VINYL & VISUALIZER
-   ==================================================== */
+/* ── Main Stage: Visualizer & Vinyl ──────────── */
 .mainStage {
-  /* flex-basis 0 + min-height 0: the stage yields space to the fixed-height
-     transport deck instead of pushing it out of the frame. */
   flex: 1 1 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .stageVisualArea {
@@ -116,17 +133,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 50%, rgba(126, 184, 255, 0.07) 0%, #06070a 75%);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(126, 184, 255, 0.08) 0%, transparent 70%),
+    linear-gradient(180deg, #07080e 0%, #050508 100%);
   overflow: hidden;
 }
 
 .visualizerCanvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 /* Turntable Vinyl Assembly */
@@ -136,27 +154,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /*
-   * Sized against the window rather than fixed at 170px: a hard pixel size
-   * cannot shrink, so the platter was the last thing punching through the
-   * frame at small sizes. min() keeps it from ever exceeding its own box.
-   */
-  width: min(170px, 38vh, 42vw);
-  height: min(170px, 38vh, 42vw);
+  width: min(180px, 38vh, 42vw);
+  height: min(180px, 38vh, 42vw);
   aspect-ratio: 1;
   flex-shrink: 1;
 }
 
 .vinylPlatter {
-  width: 82%;
-  height: 82%;
+  width: 86%;
+  height: 86%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #1a1a24 0%, #0d0e14 70%, #050508 100%);
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 12px 36px rgba(0, 0, 0, 0.8),
-    inset 0 0 16px rgba(255, 255, 255, 0.05);
+  background: radial-gradient(circle at 50% 50%, #171822 0%, #0c0d13 65%, #040407 100%);
+  border: 4px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.85),
+    inset 0 0 20px rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,7 +182,7 @@
 
 @keyframes spinVinyl {
   from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .vinylGrooves {
@@ -180,7 +193,7 @@
     circle at 50% 50%,
     transparent 0,
     transparent 4px,
-    rgba(255, 255, 255, 0.03) 5px,
+    rgba(255, 255, 255, 0.035) 5px,
     transparent 6px
   );
   display: flex;
@@ -189,42 +202,42 @@
 }
 
 .vinylLabel {
-  width: 54px;
-  height: 54px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
-  background: radial-gradient(circle, #ff007f 0%, #7928ca 100%);
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.85) 0%, rgba(167, 139, 250, 0.85) 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 16px rgba(126, 184, 255, 0.4);
   position: relative;
 }
 
 .vinylHole {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #08090f;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
 }
 
 .vinylLabelText {
-  font-size: 0.42rem;
+  font-size: 0.44rem;
   font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #05060b;
   margin-top: 2px;
 }
 
 /* Tonearm */
 .tonearm {
   position: absolute;
-  top: 10px;
+  top: 8px;
   right: -8px;
-  width: 40px;
-  height: 100px;
+  width: 44px;
+  height: 110px;
   transform-origin: top right;
   transform: rotate(-25deg);
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -236,11 +249,11 @@
 }
 
 .tonearmPivot {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #94a3b8;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
   position: absolute;
   top: 0;
   right: 0;
@@ -251,52 +264,39 @@
   height: 80px;
   background: linear-gradient(to bottom, #cbd5e1, #64748b);
   position: absolute;
-  top: 7px;
+  top: 8px;
   right: 6px;
-  border-radius: 2px;
+  transform: rotate(8deg);
+  transform-origin: top;
 }
 
 .tonearmHead {
-  width: 8px;
-  height: 16px;
+  width: 10px;
+  height: 18px;
   background: #00f3ff;
   border-radius: 2px;
   position: absolute;
   bottom: 12px;
-  right: 3px;
+  right: -2px;
   box-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
 }
 
-/* Dual VU Meter */
-.vuMeterBlock {
+/* VU Meter */
+.vuMeterGroup {
   position: absolute;
-  right: 20px;
-  bottom: 20px;
+  right: 18px;
+  bottom: 16px;
   display: flex;
   gap: 6px;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  height: 50px;
+  z-index: 3;
 }
 
 .vuChannel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.vuLabel {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  color: var(--text-ghost);
-}
-
-.vuBar {
-  width: 6px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.08);
+  width: 5px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 3px;
   overflow: hidden;
   display: flex;
@@ -310,88 +310,89 @@
   transition: height 0.08s ease;
 }
 
-/* Track Overlay */
+/* Track Information Overlay */
 .trackOverlay {
   position: absolute;
-  top: 14px;
+  top: 16px;
   left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   z-index: 3;
 }
 
 .trackTitle {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
 .trackArtist {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: #7eb8ff;
+  font-size: 0.74rem;
+  color: var(--accent-glow, #7eb8ff);
   letter-spacing: 0.04em;
 }
 
-/* Progress Section */
+/* ── Progress Section ────────────────────────── */
 .progressSection {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 20px 4px 20px;
-  background: rgba(14, 16, 24, 0.9);
+  gap: 14px;
+  padding: 12px 22px 6px 22px;
+  background: rgba(12, 14, 22, 0.92);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .timeLabel {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  width: 36px;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #94a3b8);
+  width: 38px;
 }
 
 .progressBarTrack {
   flex: 1;
-  height: 5px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 999px;
   overflow: hidden;
   cursor: pointer;
   position: relative;
+  transition: height 0.15s ease;
 }
 
 .progressBarTrack:hover {
-  height: 7px;
+  height: 8px;
 }
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #00f3ff, #7eb8ff);
+  background: linear-gradient(90deg, #7eb8ff, #a78bfa);
   border-radius: 999px;
-  box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.6);
   transition: width 0.1s linear;
 }
 
-/* Control Deck */
+/* ── Control Transport Deck ──────────────────── */
 .controlDeck {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px 14px 16px;
-  background: rgba(14, 16, 24, 0.95);
+  padding: 12px 20px 16px 20px;
+  background: rgba(10, 12, 18, 0.96);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 10px 16px;
   flex-shrink: 0;
 }
 
 .deckLeft, .deckRight {
   display: flex;
   align-items: center;
-  gap: 8px;
-  /* min-width: 0 lets these shrink; flex:1 alone keeps `min-width: auto`,
-     which is what pushed the volume readout past the frame. */
+  gap: 10px;
   flex: 1 1 0;
   min-width: 0;
   flex-wrap: wrap;
@@ -404,109 +405,119 @@
 .deckCenter {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   justify-content: center;
 }
 
 .importBtn {
-  padding: 5px 10px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  font-size: 0.72rem;
-  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
 .importBtn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .iconBtn {
   background: transparent;
   border: none;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   cursor: pointer;
-  opacity: 0.5;
-  transition: all 0.15s ease;
+  opacity: 0.55;
+  transition: all 0.18s ease;
+  color: #fff;
 }
 
 .iconBtn:hover {
   opacity: 1;
+  transform: scale(1.1);
 }
 
 .iconBtnActive {
   opacity: 1 !important;
-  filter: drop-shadow(0 0 6px #7eb8ff);
+  color: var(--accent-glow, #7eb8ff);
+  filter: drop-shadow(0 0 8px rgba(126, 184, 255, 0.7));
 }
 
 .stepBtn {
   background: transparent;
   border: none;
-  font-size: 1.15rem;
-  color: var(--text-primary);
+  font-size: 1.25rem;
+  color: var(--text-primary, #e2e8f0);
   cursor: pointer;
-  transition: transform 0.12s ease;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .stepBtn:hover {
   transform: scale(1.15);
-  color: #7eb8ff;
+  color: var(--accent-glow, #7eb8ff);
 }
 
 .playBtn {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(126, 184, 255, 0.25) 0%, rgba(0, 243, 255, 0.15) 100%);
-  border: 1.5px solid rgba(126, 184, 255, 0.45);
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.35) 0%, rgba(167, 139, 250, 0.3) 100%);
+  border: 1.5px solid rgba(126, 184, 255, 0.6);
   color: #fff;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 243, 255, 0.25);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(126, 184, 255, 0.35);
+  transition: all 0.22s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .playBtn:hover {
   transform: scale(1.08);
-  border-color: #00f3ff;
-  box-shadow: 0 0 24px rgba(0, 243, 255, 0.5);
+  border-color: #7eb8ff;
+  box-shadow: 0 0 28px rgba(126, 184, 255, 0.6);
+  background: linear-gradient(135deg, rgba(126, 184, 255, 0.5) 0%, rgba(167, 139, 250, 0.45) 100%);
+}
+
+.playBtn:active {
+  transform: scale(0.96);
 }
 
 .muteBtn {
   background: transparent;
   border: none;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
+  color: var(--text-secondary);
 }
 
 .volumeSlider {
-  width: 80px;
-  accent-color: #7eb8ff;
+  width: 85px;
+  accent-color: var(--accent-glow, #7eb8ff);
   cursor: pointer;
 }
 
 .volumeVal {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-secondary);
-  width: 32px;
+  width: 34px;
 }
 
-/* ====================================================
-   EQUALIZER PANE
-   ==================================================== */
+/* ── Equalizer Pane ──────────────────────────── */
 .eqPane {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 18px 24px;
-  gap: 20px;
+  padding: 20px 26px;
+  gap: 22px;
   overflow-y: auto;
 }
 
@@ -517,26 +528,28 @@
 }
 
 .eqTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: #fff;
 }
 
 .eqSubtitle {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   color: var(--text-ghost);
   font-family: var(--font-mono);
   margin-top: 2px;
 }
 
 .resetEqBtn {
-  padding: 5px 12px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.18s ease;
 }
 
 .resetEqBtn:hover {
@@ -548,25 +561,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 40px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 24px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 48px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .eqChannel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .eqDbLabel {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: #7eb8ff;
-  min-width: 48px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-glow, #7eb8ff);
+  min-width: 52px;
   text-align: center;
 }
 
@@ -582,20 +597,20 @@
   direction: rtl;
   width: 6px;
   height: 130px;
-  accent-color: #00f3ff;
+  accent-color: var(--accent-glow, #7eb8ff);
   cursor: pointer;
 }
 
 .eqFreq {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
   color: #fff;
 }
 
 .eqSubFreq {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--text-ghost);
 }
 
@@ -603,48 +618,50 @@
 .acousticsRow {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .acousticCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
-  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.028);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .acousticTitle {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: #fff;
 }
 
 .acousticDesc {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   color: var(--text-ghost);
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
 .toggleSwitch {
   margin-top: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
 }
 
 .toggleActive {
-  background: rgba(126, 184, 255, 0.25) !important;
-  border-color: #7eb8ff !important;
+  background: rgba(126, 184, 255, 0.22) !important;
+  border-color: var(--accent-glow, #7eb8ff) !important;
   color: #fff !important;
+  box-shadow: 0 0 12px rgba(126, 184, 255, 0.2);
 }
 
 .speedButtons {
@@ -655,49 +672,49 @@
 
 .speedBtn {
   flex: 1;
-  padding: 5px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-family: var(--font-mono);
+  font-weight: 600;
   cursor: pointer;
 }
 
 .speedBtnActive {
-  background: rgba(0, 243, 255, 0.2) !important;
-  border-color: #00f3ff !important;
+  background: rgba(126, 184, 255, 0.22) !important;
+  border-color: var(--accent-glow, #7eb8ff) !important;
   color: #fff !important;
 }
 
 .timerSelect {
-  background: #10121a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  background: #0f111a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
   color: #fff;
-  padding: 5px 8px;
-  font-size: 0.72rem;
+  padding: 6px 10px;
+  font-size: 0.74rem;
   outline: none;
   margin-top: 4px;
 }
 
 .timerCountdown {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: #34d399;
-  margin-top: 2px;
+  font-size: 0.7rem;
+  color: var(--accent-success, #34d399);
+  margin-top: 3px;
+  font-weight: 700;
 }
 
-/* ====================================================
-   SYNTHESIZER VAULT PANE
-   ==================================================== */
+/* ── Synthesizer Vault Pane ───────────────────── */
 .vaultPane {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px 20px;
-  gap: 12px;
+  padding: 18px 24px;
+  gap: 14px;
   overflow-y: auto;
 }
 
@@ -708,59 +725,60 @@
 }
 
 .vaultTitle {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: #fff;
 }
 
 .vaultCount {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   color: var(--text-ghost);
 }
 
 .presetList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .presetCard {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 8px;
-  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .presetCard:hover {
   background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateX(3px);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateX(4px);
 }
 
 .presetCardActive {
   background: rgba(126, 184, 255, 0.15) !important;
-  border-color: rgba(126, 184, 255, 0.4) !important;
-  box-shadow: 0 4px 16px rgba(126, 184, 255, 0.15);
+  border-color: rgba(126, 184, 255, 0.45) !important;
+  box-shadow: 0 4px 18px rgba(126, 184, 255, 0.18);
 }
 
 .presetIndicator {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: #7eb8ff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent-glow, #7eb8ff);
 }
 
 .presetDetails {
@@ -768,57 +786,44 @@
 }
 
 .presetName {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
   color: #fff;
 }
 
 .presetDesc {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   color: var(--text-ghost);
   margin-top: 2px;
 }
 
 .presetFrequencies {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  color: #00f3ff;
-  background: rgba(0, 243, 255, 0.08);
-  padding: 3px 8px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 243, 255, 0.2);
+  font-size: 0.68rem;
+  color: var(--accent-glow, #7eb8ff);
+  background: rgba(126, 184, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(126, 184, 255, 0.25);
+  font-weight: 600;
 }
 
-/* ─────────────────────────────────────────────
-   Adaptive chrome
-   Below these widths the secondary controls are dropped rather than
-   wrapped into a taller stack — clean beats complete at small sizes.
-   ───────────────────────────────────────────── */
-
-.playerContainer {
-  container-type: inline-size;
-  container-name: player;
-}
-
+/* ── Adaptive Chrome ─────────────────────────── */
 @container player (max-width: 520px) {
-  /* Visualiser mode labels become a single active chip. */
   .visSwitcher .visBtn:not(.visBtnActive) {
     display: none;
   }
 }
 
 @container player (max-width: 420px) {
-  /* Drop the volume readout and import affordance; transport is what matters. */
   .volumeVal,
   .importBtn {
     display: none;
   }
-
   .controlDeck {
-    padding: 8px 12px 10px 12px;
-    gap: 6px 8px;
+    padding: 10px 14px 12px 14px;
+    gap: 8px 10px;
   }
-
   .deckLeft,
   .deckRight {
     flex: 0 1 auto;

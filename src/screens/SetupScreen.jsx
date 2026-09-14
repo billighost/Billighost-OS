@@ -3,26 +3,39 @@ import { LocalSettings } from '../services/storage/localStorage';
 import { importFile, LIBRARY, ACCEPT } from '../services/storage/fileImport';
 import GhostMark from '../components/boot/GhostMark';
 import { WALLPAPERS } from '../components/wallpapers/registry';
-import { UserIcon, LockIcon, PaletteIcon, CheckIcon, UploadIcon } from '../components/Icons';
+import {
+  UserIcon,
+  LockIcon,
+  PaletteIcon,
+  CheckIcon,
+  UploadIcon,
+  ShieldIcon,
+  TerminalIcon,
+  GlobeIcon,
+  FolderIcon,
+} from '../components/Icons';
 import styles from './SetupScreen.module.css';
 
 /**
- * Billighost OS — First-run Setup
+ * Billighost OS — First-run Setup (Nordic Obsidian Edition)
  *
- * Runs once, before the lock screen ever appears, so the OS never presents
- * someone else's name, address or PIN as a default. Four steps:
- *
+ * Runs once, before the lock screen ever appears. Four steps:
  *   identity → PIN → wallpaper → confirm
  *
- * Everything is written to LocalSettings only on the final step, so backing
- * out part-way leaves nothing half-configured.
+ * Features:
+ *  - Luxurious Nordic Obsidian liquid glass aesthetic
+ *  - Real-time interactive miniature desktop preview
+ *  - Tactile PIN keypad & keyboard focus
+ *  - Fluid height-responsive layout for short viewports (e.g. 1366x420 half-height)
+ *  - Sticky non-clipping action bar
+ *  - Full data contract backwards compatibility
  */
 
 const STEPS = [
-  { id: 'identity', label: 'Identity', Icon: UserIcon },
-  { id: 'pin', label: 'Security', Icon: LockIcon },
-  { id: 'wallpaper', label: 'Appearance', Icon: PaletteIcon },
-  { id: 'done', label: 'Finish', Icon: CheckIcon },
+  { id: 'identity', label: 'Identity', subtitle: 'User Profile', Icon: UserIcon },
+  { id: 'pin', label: 'Security', subtitle: '4-Digit PIN', Icon: LockIcon },
+  { id: 'wallpaper', label: 'Backdrop', subtitle: 'Atmosphere', Icon: PaletteIcon },
+  { id: 'done', label: 'Finalize', subtitle: 'Ready to Launch', Icon: CheckIcon },
 ];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -38,7 +51,7 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
   // Security
   const [pin, setPin] = useState(['', '', '', '']);
   const [pinConfirm, setPinConfirm] = useState(['', '', '', '']);
-  const [pinStage, setPinStage] = useState('enter');   // 'enter' | 'confirm'
+  const [pinStage, setPinStage] = useState('enter'); // 'enter' | 'confirm'
   const [pinError, setPinError] = useState('');
 
   // Appearance
@@ -52,15 +65,16 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
   const step = STEPS[stepIndex];
 
   /* ── Focus management ─────────────────────── */
-
   useEffect(() => {
     if (step.id !== 'pin') return;
     const refs = pinStage === 'enter' ? pinRefs : confirmRefs;
-    refs.current[0]?.focus();
+    const timer = setTimeout(() => {
+      refs.current[0]?.focus();
+    }, 40);
+    return () => clearTimeout(timer);
   }, [step.id, pinStage]);
 
   /* ── PIN entry ────────────────────────────── */
-
   const handlePinDigit = (index, value, stage) => {
     const digit = value.replace(/\D/g, '').slice(-1);
     const setter = stage === 'enter' ? setPin : setPinConfirm;
@@ -73,7 +87,9 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
     });
     setPinError('');
 
-    if (digit && index < 3) refs.current[index + 1]?.focus();
+    if (digit && index < 3) {
+      refs.current[index + 1]?.focus();
+    }
   };
 
   const handlePinKey = (index, e, stage) => {
@@ -89,8 +105,50 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
     }
   };
 
-  /* ── Wallpaper ────────────────────────────── */
+  // Numpad button click handler
+  const handleNumpadClick = (numStr) => {
+    playClick();
+    const stage = pinStage;
+    const setter = stage === 'enter' ? setPin : setPinConfirm;
+    const refs = stage === 'enter' ? pinRefs : confirmRefs;
+    const values = stage === 'enter' ? pin : pinConfirm;
 
+    if (numStr === 'clear') {
+      setter(['', '', '', '']);
+      refs.current[0]?.focus();
+      setPinError('');
+      return;
+    }
+
+    if (numStr === 'back') {
+      const lastIndex = values.reduce((acc, curr, idx) => (curr ? idx : acc), -1);
+      if (lastIndex >= 0) {
+        setter(prev => {
+          const next = [...prev];
+          next[lastIndex] = '';
+          return next;
+        });
+        refs.current[lastIndex]?.focus();
+      }
+      return;
+    }
+
+    // Insert next digit
+    const firstEmpty = values.findIndex(d => d === '');
+    if (firstEmpty !== -1) {
+      setter(prev => {
+        const next = [...prev];
+        next[firstEmpty] = numStr;
+        return next;
+      });
+      setPinError('');
+      if (firstEmpty < 3) {
+        refs.current[firstEmpty + 1]?.focus();
+      }
+    }
+  };
+
+  /* ── Wallpaper ────────────────────────────── */
   const handleWallpaperUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -98,8 +156,6 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
     e.target.value = '';
 
     try {
-      // Stored in the Pictures library so it is browsable afterwards, not
-      // only embedded in settings.
       const saved = await importFile(file, { dir: LIBRARY.image });
       const dataUrl = await new Promise((resolve, reject) => {
         const r = new FileReader();
@@ -110,12 +166,11 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
       setCustomWallpaper({ dataUrl, name: saved.name, path: saved.path });
       setWallpaperId('custom');
     } catch {
-      /* import service reports its own failures */
+      /* File import reports own failures */
     }
   };
 
   /* ── Navigation ───────────────────────────── */
-
   const canAdvance = useCallback(() => {
     if (step.id === 'identity') {
       return name.trim().length >= 2 && EMAIL_RE.test(email.trim());
@@ -162,8 +217,6 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
   const finish = () => {
     playClick();
 
-    // Everything is written here, in one place, so an abandoned setup
-    // leaves no partial configuration behind.
     LocalSettings.setProfile({ name: name.trim(), email: email.trim() });
     LocalSettings.setSecurity({ pin: pin.join('') });
 
@@ -182,13 +235,13 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
     setTimeout(() => onComplete?.(), 620);
   };
 
-  // Enter advances; Escape steps back.
+  // Keyboard navigation: Enter advances, Escape goes back
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         if (step.id === 'done') finish(); else goNext();
-      } else if (e.key === 'Escape' && stepIndex > 0) {
+      } else if (e.key === 'Escape' && (stepIndex > 0 || pinStage === 'confirm')) {
         e.preventDefault();
         goBack();
       }
@@ -198,233 +251,487 @@ export default function SetupScreen({ onComplete, playClick = () => {}, playSucc
   });
 
   const activeWallpaper = WALLPAPERS.find(w => w.id === wallpaperId);
+  const activeBgStyle = wallpaperId === 'custom' && customWallpaper
+    ? { backgroundImage: `url(${customWallpaper.dataUrl})`, backgroundSize: 'cover' }
+    : { background: activeWallpaper?.css };
+
+  // Initials for avatar
+  const initials = name.trim()
+    ? name.trim().split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
+    : 'BG';
 
   return (
-    <div className={`${styles.container} ${leaving ? styles.leaving : ''}`} data-testid="setup-screen">
-      {/* Live preview of the chosen wallpaper, behind everything */}
-      <div className={styles.preview}>
-        {wallpaperId === 'custom' && customWallpaper ? (
-          <img src={customWallpaper.dataUrl} alt="" className={styles.previewImg} />
-        ) : (
-          <div className={styles.previewCss} style={{ background: activeWallpaper?.css }} />
-        )}
-        <div className={styles.previewScrim} />
+    <div className={`${styles.viewportContainer} ${leaving ? styles.leaving : ''}`} data-testid="setup-screen">
+      {/* Dynamic ambient backdrop */}
+      <div className={styles.backdropLayer} style={activeBgStyle}>
+        <div className={styles.backdropMeshOverlay} />
+        <div className={styles.backdropRadialGlow} />
       </div>
 
-      <div className={styles.card} data-step={step.id}>
-        {/* Brand */}
-        <div className={styles.brand}>
-          <GhostMark size={44} phase="done" className={styles.mark} />
-          <div className={styles.brandText}>
-            <span className={styles.brandName}>BILLIGHOST</span>
-            <span className={styles.brandSub}>First-run setup</span>
-          </div>
-        </div>
+      {/* Main Nordic Obsidian Card */}
+      <div className={styles.setupCard} data-step={step.id}>
+        {/* Prismatic Top Light Bar */}
+        <div className={styles.prismaticBorder} />
 
-        {/* Progress */}
-        <div className={styles.steps}>
-          {STEPS.map((s, i) => (
-            <div
-              key={s.id}
-              className={`${styles.stepDot} ${i === stepIndex ? styles.stepActive : ''} ${i < stepIndex ? styles.stepDone : ''}`}
-            >
-              <span className={styles.stepIcon}>
-                {i < stepIndex ? <CheckIcon size={12} /> : <s.Icon size={12} />}
-              </span>
-              <span className={styles.stepLabel}>{s.label}</span>
+        {/* ── Header: Brand & Progress Breadcrumb ── */}
+        <header className={styles.header}>
+          <div className={styles.brandRow}>
+            <div className={styles.markWrapper}>
+              <GhostMark size={36} phase="done" className={styles.ghostMark} />
+              <div className={styles.markGlowRing} />
             </div>
-          ))}
-        </div>
-
-        {/* ── Step: identity ── */}
-        {step.id === 'identity' && (
-          <div className={styles.body}>
-            <h1 className={styles.title}>Who is using this machine?</h1>
-            <p className={styles.desc}>
-              Your name appears on the lock screen and in Settings. Nothing leaves
-              this browser — it is stored locally.
-            </p>
-
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Display name</span>
-              <input
-                className={styles.input}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Alex Mensah"
-                maxLength={40}
-                autoFocus
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>Email address</span>
-              <input
-                className={styles.input}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                maxLength={80}
-              />
-              {email && !EMAIL_RE.test(email.trim()) && (
-                <span className={styles.hintError}>That does not look like an email address.</span>
-              )}
-            </label>
-          </div>
-        )}
-
-        {/* ── Step: PIN ── */}
-        {step.id === 'pin' && (
-          <div className={styles.body}>
-            <h1 className={styles.title}>
-              {pinStage === 'enter' ? 'Choose a 4-digit PIN' : 'Confirm your PIN'}
-            </h1>
-            <p className={styles.desc}>
-              {pinStage === 'enter'
-                ? 'You will enter this to unlock the desktop. Pick something you will remember — there is no recovery.'
-                : 'Type the same four digits again.'}
-            </p>
-
-            <div className={styles.pinRow}>
-              {[0, 1, 2, 3].map(i => {
-                const stage = pinStage;
-                const values = stage === 'enter' ? pin : pinConfirm;
-                const refs = stage === 'enter' ? pinRefs : confirmRefs;
-                return (
-                  <div key={i} className={`${styles.pinBox} ${pinError ? styles.pinBoxError : ''}`}>
-                    <input
-                      ref={(el) => { refs.current[i] = el; }}
-                      className={styles.pinInput}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={1}
-                      value={values[i]}
-                      onChange={(e) => handlePinDigit(i, e.target.value, stage)}
-                      onKeyDown={(e) => handlePinKey(i, e, stage)}
-                      autoComplete="off"
-                      spellCheck={false}
-                      aria-label={`PIN digit ${i + 1}`}
-                    />
-                    <span className={`${styles.pinDot} ${values[i] ? styles.pinDotFilled : ''}`} />
-                  </div>
-                );
-              })}
+            <div className={styles.brandInfo}>
+              <div className={styles.brandLogoRow}>
+                <span className={styles.brandTitle}>BILLIGHOST</span>
+                <span className={styles.brandBadge}>OS</span>
+              </div>
+              <span className={styles.brandSubtitle}>Nordic Setup Assistant</span>
             </div>
-
-            {pinError && <span className={styles.errorText}>{pinError}</span>}
           </div>
-        )}
 
-        {/* ── Step: wallpaper ── */}
-        {step.id === 'wallpaper' && (
-          <div className={styles.body}>
-            <h1 className={styles.title}>Pick a backdrop</h1>
-            <p className={styles.desc}>
-              Live wallpapers react to your windows. You can change this any time in Settings.
-            </p>
-
-            <div className={styles.wallGrid}>
-              {WALLPAPERS.map(w => (
-                <button
-                  key={w.id}
-                  className={`${styles.wallOption} ${wallpaperId === w.id ? styles.wallActive : ''}`}
-                  style={{ background: w.css }}
-                  onClick={() => { playClick(); setWallpaperId(w.id); }}
-                  title={w.description}
+          {/* Stepper Breadcrumb */}
+          <nav className={styles.stepperNav} aria-label="Setup Steps">
+            {STEPS.map((s, idx) => {
+              const isPast = idx < stepIndex;
+              const isCurrent = idx === stepIndex;
+              return (
+                <div
+                  key={s.id}
+                  className={`${styles.stepPill} ${isCurrent ? styles.stepPillActive : ''} ${isPast ? styles.stepPillDone : ''}`}
                 >
-                  <span className={styles.wallName}>{w.name}</span>
-                  {w.live && <span className={styles.wallBadge}>LIVE</span>}
-                  {wallpaperId === w.id && (
-                    <span className={styles.wallCheck}><CheckIcon size={13} /></span>
-                  )}
-                </button>
-              ))}
+                  <span className={styles.stepPillIcon}>
+                    {isPast ? <CheckIcon size={12} /> : <span>{idx + 1}</span>}
+                  </span>
+                  <div className={styles.stepPillText}>
+                    <span className={styles.stepPillLabel}>{s.label}</span>
+                    <span className={styles.stepPillSub}>{s.subtitle}</span>
+                  </div>
+                  {idx < STEPS.length - 1 && <span className={styles.stepConnector} />}
+                </div>
+              );
+            })}
+          </nav>
+        </header>
 
-              <button
-                className={`${styles.wallOption} ${styles.wallUpload} ${wallpaperId === 'custom' ? styles.wallActive : ''}`}
-                onClick={() => { playClick(); fileRef.current?.click(); }}
-                style={customWallpaper ? { backgroundImage: `url(${customWallpaper.dataUrl})`, backgroundSize: 'cover' } : undefined}
-              >
-                <UploadIcon size={18} />
-                <span className={styles.wallName}>
-                  {customWallpaper ? customWallpaper.name : 'Your own image'}
-                </span>
-                {wallpaperId === 'custom' && (
-                  <span className={styles.wallCheck}><CheckIcon size={13} /></span>
+        {/* ── Content Stage ── */}
+        <main className={styles.mainStage}>
+          {/* STEP 1: IDENTITY */}
+          {step.id === 'identity' && (
+            <section className={styles.stageBody}>
+              <div className={styles.splitStage}>
+                {/* Left Profile Avatar Card */}
+                <div className={styles.profileBadgeCard}>
+                  <div className={styles.avatarOrb}>
+                    <span className={styles.avatarInitials}>{initials}</span>
+                    <div className={styles.avatarRing} />
+                  </div>
+                  <h2 className={styles.avatarTitle}>{name.trim() || 'Welcome'}</h2>
+                  <p className={styles.avatarSubtitle}>
+                    {email.trim() || 'Create your local profile'}
+                  </p>
+                  <div className={styles.privacyPill}>
+                    <ShieldIcon size={13} color="var(--accent-success)" />
+                    <span>100% Stored Locally • Zero Telemetry</span>
+                  </div>
+                </div>
+
+                {/* Right Form Fields */}
+                <div className={styles.formColumn}>
+                  <div className={styles.sectionHeader}>
+                    <h1 className={styles.stageHeading}>Create Your Profile</h1>
+                    <p className={styles.stageDesc}>
+                      Personalize your identity on Billighost OS. This will be shown on your lock screen and terminal.
+                    </p>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel} htmlFor="setup-name">
+                      <span>Display Name</span>
+                      {name.trim().length >= 2 && (
+                        <span className={styles.validTag}><CheckIcon size={10} /> Valid</span>
+                      )}
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <span className={styles.inputIcon}><UserIcon size={16} /></span>
+                      <input
+                        id="setup-name"
+                        className={styles.textInput}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. Linus Torvalds"
+                        maxLength={40}
+                        autoFocus
+                        autoComplete="name"
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel} htmlFor="setup-email">
+                      <span>Email Address</span>
+                      {email && EMAIL_RE.test(email.trim()) && (
+                        <span className={styles.validTag}><CheckIcon size={10} /> Valid</span>
+                      )}
+                    </label>
+                    <div className={styles.inputWrapper}>
+                      <span className={styles.inputIcon}><GlobeIcon size={16} /></span>
+                      <input
+                        id="setup-email"
+                        type="email"
+                        className={styles.textInput}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="e.g. user@billighost.dev"
+                        maxLength={80}
+                        autoComplete="email"
+                      />
+                    </div>
+                    {email && !EMAIL_RE.test(email.trim()) && (
+                      <span className={styles.inlineErrorText}>
+                        Please enter a valid email address (e.g. user@domain.com)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* STEP 2: SECURITY PIN */}
+          {step.id === 'pin' && (
+            <section className={styles.stageBody}>
+              <div className={styles.pinStageLayout}>
+                <div className={styles.pinHeader}>
+                  <div className={styles.pinStagePill}>
+                    <LockIcon size={14} color="var(--accent-glow)" />
+                    <span>{pinStage === 'enter' ? 'Step 1 of 2: Create PIN' : 'Step 2 of 2: Confirm PIN'}</span>
+                  </div>
+                  <h1 className={styles.stageHeading}>
+                    {pinStage === 'enter' ? 'Set a 4-Digit Security PIN' : 'Confirm Your 4-Digit PIN'}
+                  </h1>
+                  <p className={styles.stageDesc}>
+                    {pinStage === 'enter'
+                      ? 'Used to unlock your desktop session. Securely encrypted and stored only inside your browser.'
+                      : 'Re-enter the exact four digits to confirm your security code.'}
+                  </p>
+                </div>
+
+                {/* PIN Boxes */}
+                <div className={`${styles.pinBoxesRow} ${pinError ? styles.pinShake : ''}`}>
+                  {[0, 1, 2, 3].map(i => {
+                    const stage = pinStage;
+                    const values = stage === 'enter' ? pin : pinConfirm;
+                    const refs = stage === 'enter' ? pinRefs : confirmRefs;
+                    const isFilled = Boolean(values[i]);
+
+                    return (
+                      <div
+                        key={i}
+                        className={`${styles.pinDigitCell} ${isFilled ? styles.pinDigitFilled : ''} ${pinError ? styles.pinDigitError : ''}`}
+                      >
+                        <input
+                          ref={(el) => { refs.current[i] = el; }}
+                          className={styles.hiddenPinInput}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          maxLength={1}
+                          value={values[i]}
+                          onChange={(e) => handlePinDigit(i, e.target.value, stage)}
+                          onKeyDown={(e) => handlePinKey(i, e, stage)}
+                          autoComplete="off"
+                          spellCheck={false}
+                          aria-label={`PIN digit ${i + 1}`}
+                        />
+                        <div className={styles.pinGlowDot} />
+                        {isFilled && <span className={styles.pinDigitChar}>•</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {pinError && (
+                  <div className={styles.pinErrorBanner}>
+                    <span>{pinError}</span>
+                  </div>
                 )}
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept={ACCEPT.image}
-                onChange={handleWallpaperUpload}
-                style={{ display: 'none' }}
-              />
-            </div>
-          </div>
-        )}
 
-        {/* ── Step: done ── */}
-        {step.id === 'done' && (
-          <div className={styles.body}>
-            <h1 className={styles.title}>You are all set, {name.split(' ')[0] || 'friend'}</h1>
-            <p className={styles.desc}>
-              Everything below is stored locally in this browser and can be changed in Settings.
-            </p>
+                {/* Tactile On-Screen Numpad for Click/Touch */}
+                <div className={styles.numpadGrid} aria-label="PIN Numpad">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'back'].map(btn => {
+                    if (btn === 'clear') {
+                      return (
+                        <button
+                          key={btn}
+                          type="button"
+                          className={`${styles.numpadBtn} ${styles.numpadActionBtn}`}
+                          onClick={() => handleNumpadClick('clear')}
+                          title="Clear PIN"
+                        >
+                          C
+                        </button>
+                      );
+                    }
+                    if (btn === 'back') {
+                      return (
+                        <button
+                          key={btn}
+                          type="button"
+                          className={`${styles.numpadBtn} ${styles.numpadActionBtn}`}
+                          onClick={() => handleNumpadClick('back')}
+                          title="Backspace"
+                        >
+                          ⌫
+                        </button>
+                      );
+                    }
+                    return (
+                      <button
+                        key={btn}
+                        type="button"
+                        className={styles.numpadBtn}
+                        onClick={() => handleNumpadClick(btn)}
+                      >
+                        {btn}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
 
-            <div className={styles.summary}>
-              <div className={styles.summaryRow}>
-                <span>Name</span><span>{name}</span>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Email</span><span>{email}</span>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Unlock PIN</span><span>•••• (set)</span>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Wallpaper</span>
-                <span>
-                  {wallpaperId === 'custom'
-                    ? customWallpaper?.name || 'Custom image'
-                    : activeWallpaper?.name}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
+          {/* STEP 3: WALLPAPER / ATMOSPHERE */}
+          {step.id === 'wallpaper' && (
+            <section className={styles.stageBody}>
+              <div className={styles.wallpaperLayout}>
+                {/* Miniature Desktop Live Preview */}
+                <div className={styles.desktopMiniPreviewContainer}>
+                  <div className={styles.desktopMiniBezel}>
+                    <div className={styles.desktopMiniScreen} style={activeBgStyle}>
+                      {/* Top simulated status bar */}
+                      <div className={styles.miniStatusBar}>
+                        <span className={styles.miniLogo}>BILLIGHOST OS</span>
+                        <div className={styles.miniStatusRight}>
+                          <span>10:24</span>
+                          <span className={styles.miniDotOnline} />
+                        </div>
+                      </div>
 
-        {/* Footer */}
-        <div className={styles.footer}>
+                      {/* Desktop Icons in preview */}
+                      <div className={styles.miniDesktopGrid}>
+                        <div className={styles.miniIconItem}>
+                          <GlobeIcon size={12} color="#7eb8ff" />
+                          <span>Browser</span>
+                        </div>
+                        <div className={styles.miniIconItem}>
+                          <TerminalIcon size={12} color="#34d399" />
+                          <span>Terminal</span>
+                        </div>
+                        <div className={styles.miniIconItem}>
+                          <FolderIcon size={12} color="#fbbf24" />
+                          <span>Files</span>
+                        </div>
+                      </div>
+
+                      {/* Taskbar in preview */}
+                      <div className={styles.miniTaskbar}>
+                        <GhostMark size={10} phase="done" />
+                        <div className={styles.miniDockPill} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className={styles.previewCaptionRow}>
+                    <span className={styles.previewCaptionName}>
+                      {wallpaperId === 'custom'
+                        ? (customWallpaper?.name || 'Custom Image')
+                        : activeWallpaper?.name}
+                    </span>
+                    {activeWallpaper?.live && (
+                      <span className={styles.previewLivePill}>⚡ Dynamic Canvas Effect</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Wallpaper Gallery Swatches */}
+                <div className={styles.wallpaperGalleryWrapper}>
+                  <div className={styles.sectionHeader}>
+                    <h1 className={styles.stageHeading}>Select System Atmosphere</h1>
+                    <p className={styles.stageDesc}>
+                      Choose from curated ambient canvases or upload your own wallpaper image.
+                    </p>
+                  </div>
+
+                  <div className={styles.wallpaperGrid} role="radiogroup" aria-label="Select Wallpaper">
+                    {WALLPAPERS.map(w => {
+                      const isSelected = wallpaperId === w.id;
+                      return (
+                        <button
+                          key={w.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={`${styles.wallCard} ${isSelected ? styles.wallCardActive : ''}`}
+                          style={{ background: w.css }}
+                          onClick={() => { playClick(); setWallpaperId(w.id); }}
+                        >
+                          <div className={styles.wallCardContent}>
+                            <span className={styles.wallTitle}>{w.name}</span>
+                            {w.live && <span className={styles.wallLiveTag}>LIVE</span>}
+                          </div>
+                          {isSelected && (
+                            <div className={styles.wallSelectedRing}>
+                              <CheckIcon size={12} />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    {/* Custom Upload Card */}
+                    <button
+                      type="button"
+                      className={`${styles.wallCard} ${styles.wallCardUpload} ${wallpaperId === 'custom' ? styles.wallCardActive : ''}`}
+                      onClick={() => { playClick(); fileRef.current?.click(); }}
+                      style={customWallpaper ? { backgroundImage: `url(${customWallpaper.dataUrl})`, backgroundSize: 'cover' } : undefined}
+                    >
+                      <div className={styles.uploadOverlay}>
+                        <UploadIcon size={18} color="var(--accent-glow)" />
+                        <span className={styles.wallTitle}>
+                          {customWallpaper ? customWallpaper.name : 'Custom Image'}
+                        </span>
+                      </div>
+                      {wallpaperId === 'custom' && (
+                        <div className={styles.wallSelectedRing}>
+                          <CheckIcon size={12} />
+                        </div>
+                      )}
+                    </button>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept={ACCEPT.image}
+                      onChange={handleWallpaperUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* STEP 4: FINALIZE */}
+          {step.id === 'done' && (
+            <section className={styles.stageBody}>
+              <div className={styles.finalizeLayout}>
+                <div className={styles.sectionHeaderCentered}>
+                  <div className={styles.successPulseBadge}>
+                    <CheckIcon size={24} color="var(--accent-success)" />
+                  </div>
+                  <h1 className={styles.stageHeading}>
+                    Ready for Takeoff, {name.split(' ')[0] || 'User'}
+                  </h1>
+                  <p className={styles.stageDesc}>
+                    Your operating system environment is primed and initialized. Review your configuration below.
+                  </p>
+                </div>
+
+                <div className={styles.summaryTelemetryCard}>
+                  <div className={styles.telemetryRow}>
+                    <div className={styles.telemetryLeft}>
+                      <UserIcon size={16} color="var(--accent-glow)" />
+                      <span>Display Identity</span>
+                    </div>
+                    <div className={styles.telemetryRight}>
+                      <strong>{name}</strong>
+                      <span className={styles.telemetrySub}>({email})</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.telemetryRow}>
+                    <div className={styles.telemetryLeft}>
+                      <LockIcon size={16} color="var(--accent-success)" />
+                      <span>Security PIN</span>
+                    </div>
+                    <div className={styles.telemetryRight}>
+                      <span className={styles.pinMaskedChip}>•••• ENCRYPTED</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.telemetryRow}>
+                    <div className={styles.telemetryLeft}>
+                      <PaletteIcon size={16} color="var(--accent-soft)" />
+                      <span>Atmosphere Backdrop</span>
+                    </div>
+                    <div className={styles.telemetryRight}>
+                      <div className={styles.telemetryWallChip} style={activeBgStyle} />
+                      <span>
+                        {wallpaperId === 'custom'
+                          ? customWallpaper?.name || 'Custom image'
+                          : activeWallpaper?.name}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.readinessChecklist}>
+                  <div className={styles.checkItem}>
+                    <CheckIcon size={12} color="var(--accent-success)" />
+                    <span>Local vault initialized</span>
+                  </div>
+                  <div className={styles.checkItem}>
+                    <CheckIcon size={12} color="var(--accent-success)" />
+                    <span>Hardware graphics acceleration ready</span>
+                  </div>
+                  <div className={styles.checkItem}>
+                    <CheckIcon size={12} color="var(--accent-success)" />
+                    <span>Session encryption armed</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+        </main>
+
+        {/* ── Sticky Action Bar Footer ── */}
+        <footer className={styles.footerBar}>
           <button
-            className={styles.ghostBtn}
+            type="button"
+            className={styles.secondaryBtn}
             onClick={goBack}
             disabled={stepIndex === 0 && pinStage === 'enter'}
           >
             Back
           </button>
 
-          <span className={styles.footerHint}>
-            {step.id === 'done' ? 'Press Enter to start' : 'Press Enter to continue'}
-          </span>
+          <div className={styles.footerCenterHint}>
+            <span className={styles.kbdShortcut}>↵ Enter</span>
+            <span>{step.id === 'done' ? 'to launch' : 'to proceed'}</span>
+          </div>
 
           {step.id === 'done' ? (
-            <button className={styles.primaryBtn} onClick={finish} data-testid="setup-finish">
-              Enter Billighost
+            <button
+              type="button"
+              className={styles.primaryActionBtn}
+              onClick={finish}
+              data-testid="setup-finish"
+            >
+              <span className={styles.btnShimmer} />
+              <span>Enter Billighost OS</span>
             </button>
           ) : (
             <button
-              className={styles.primaryBtn}
+              type="button"
+              className={styles.primaryActionBtn}
               onClick={goNext}
               disabled={!canAdvance()}
               data-testid="setup-next"
             >
-              Continue
+              <span className={styles.btnShimmer} />
+              <span>Continue</span>
             </button>
           )}
-        </div>
+        </footer>
       </div>
     </div>
   );

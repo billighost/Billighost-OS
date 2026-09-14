@@ -696,6 +696,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
 
   return (
     <div className={styles.settingsLayout}>
+      <div className={styles.prismaticBorder} />
       {/* Sidebar Navigation */}
       <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
