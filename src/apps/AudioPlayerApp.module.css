@@ -1,7 +1,7 @@
-.pelas give met your best worka dn then /* ====================================================
+/* ====================================================
    BILLIGHOST OS — Nordic Obsidian Audio & Synth Station
    Hi-Fi luxury dark obsidian liquid glass, prismatic lighting,
-   tactile acoustic EQ and responsive turntable deck.
+   tactile acoustic 3-band EQ, synchronized visualizer and turntable deck.
    ==================================================== */
 
 .playerContainer {
@@ -10,13 +10,12 @@
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background: #07080e;
+  background: #070911;
   color: var(--text-primary, #e2e8f0);
   font-family: var(--font-display, "Plus Jakarta Sans Variable", -apple-system, sans-serif);
   overflow: hidden;
   user-select: none;
-  container-type: inline-size;
-  container-name: player;
+  border-radius: 18px;
 }
 
 /* Prismatic top rim */
@@ -26,812 +25,547 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(126, 184, 255, 0.6) 30%, rgba(167, 139, 250, 0.6) 70%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 243, 255, 0.7) 25%, rgba(167, 139, 250, 0.7) 75%, transparent 100%);
   z-index: 25;
   pointer-events: none;
 }
 
-/* ── Navigation & Visualizer Mode Bar ─────────── */
-.navBar {
+/* ── Top Header Bar ────────────────────────────── */
+.appHeaderBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  background: rgba(12, 14, 22, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  gap: 12px;
-  flex-wrap: wrap;
+  padding: 12px 20px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
   z-index: 10;
+  background: rgba(10, 13, 22, 0.6);
+  backdrop-filter: blur(20px);
 }
 
-.navTabs {
+.brandStream {
   display: flex;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  flex-wrap: wrap;
-  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+  color: #fff;
 }
 
-.navBtn {
-  padding: 6px 14px;
-  border-radius: 8px;
-  background: transparent;
+.waveLogoBars {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 16px;
+}
+
+.waveBar {
+  width: 2.5px;
+  background: #00f3ff;
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(0, 243, 255, 0.8);
+}
+
+.navCapsulePill {
+  display: flex;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navPillBtn {
+  padding: 5px 16px;
+  border-radius: 999px;
   border: none;
-  color: var(--text-secondary, #94a3b8);
-  font-size: 0.74rem;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.18s ease;
 }
 
-.navBtn:hover {
+.navPillBtn:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.05);
 }
 
-.navBtnActive {
-  background: rgba(126, 184, 255, 0.16) !important;
+.navPillBtnActive {
+  background: rgba(255, 255, 255, 0.16);
   color: #fff !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4), 0 0 12px rgba(126, 184, 255, 0.2);
-  border: 1px solid rgba(126, 184, 255, 0.35);
-}
-
-.visSwitcher {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  min-width: 0;
-  justify-content: flex-end;
-}
-
-.visBtn {
-  padding: 5px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-ghost, rgba(255, 255, 255, 0.4));
-  font-size: 0.68rem;
-  font-family: var(--font-mono, monospace);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.visBtn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-}
-
-.visBtnActive {
-  background: rgba(126, 184, 255, 0.18) !important;
-  border-color: rgba(126, 184, 255, 0.5) !important;
-  color: #7eb8ff !important;
   box-shadow: 0 0 12px rgba(126, 184, 255, 0.25);
 }
 
-/* ── Main Stage: Visualizer & Vinyl ──────────── */
-.mainStage {
-  flex: 1 1 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-}
-
-.stageVisualArea {
-  flex: 1 1 0;
-  min-height: 0;
-  position: relative;
+.headerActions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(126, 184, 255, 0.08) 0%, transparent 70%),
-    linear-gradient(180deg, #07080e 0%, #050508 100%);
-  overflow: hidden;
+  gap: 12px;
+  color: #94a3b8;
 }
 
-.visualizerCanvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.9;
-}
-
-/* Turntable Vinyl Assembly */
-.turntableUnit {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: min(180px, 38vh, 42vw);
-  height: min(180px, 38vh, 42vw);
-  aspect-ratio: 1;
-  flex-shrink: 1;
-}
-
-.vinylPlatter {
-  width: 86%;
-  height: 86%;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, #171822 0%, #0c0d13 65%, #040407 100%);
-  border: 4px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 16px 44px rgba(0, 0, 0, 0.85),
-    inset 0 0 20px rgba(255, 255, 255, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.spinning {
-  animation: spinVinyl 3.5s linear infinite;
-}
-
-@keyframes spinVinyl {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-.vinylGrooves {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: repeating-radial-gradient(
-    circle at 50% 50%,
-    transparent 0,
-    transparent 4px,
-    rgba(255, 255, 255, 0.035) 5px,
-    transparent 6px
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.vinylLabel {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(126, 184, 255, 0.85) 0%, rgba(167, 139, 250, 0.85) 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 16px rgba(126, 184, 255, 0.4);
-  position: relative;
-}
-
-.vinylHole {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #08090f;
-  border: 1.5px solid rgba(255, 255, 255, 0.3);
-}
-
-.vinylLabelText {
-  font-size: 0.44rem;
-  font-family: var(--font-mono);
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: #05060b;
-  margin-top: 2px;
-}
-
-/* Tonearm */
-.tonearm {
-  position: absolute;
-  top: 8px;
-  right: -8px;
-  width: 44px;
-  height: 110px;
-  transform-origin: top right;
-  transform: rotate(-25deg);
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-}
-
-.tonearmPlaying {
-  transform: rotate(4deg);
-}
-
-.tonearmPivot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #94a3b8;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.tonearmArm {
-  width: 3px;
-  height: 80px;
-  background: linear-gradient(to bottom, #cbd5e1, #64748b);
-  position: absolute;
-  top: 8px;
-  right: 6px;
-  transform: rotate(8deg);
-  transform-origin: top;
-}
-
-.tonearmHead {
-  width: 10px;
-  height: 18px;
-  background: #00f3ff;
-  border-radius: 2px;
-  position: absolute;
-  bottom: 12px;
-  right: -2px;
-  box-shadow: 0 0 8px rgba(0, 243, 255, 0.6);
-}
-
-/* VU Meter */
-.vuMeterGroup {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
-  display: flex;
-  gap: 6px;
-  height: 50px;
-  z-index: 3;
-}
-
-.vuChannel {
-  width: 5px;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column-reverse;
-}
-
-.vuLevel {
-  width: 100%;
-  background: linear-gradient(to top, #10b981 60%, #fbbf24 85%, #ff4d6a 100%);
-  border-radius: 3px;
-  transition: height 0.08s ease;
-}
-
-/* Track Information Overlay */
-.trackOverlay {
-  position: absolute;
-  top: 16px;
-  left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  z-index: 3;
-}
-
-.trackTitle {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
-}
-
-.trackArtist {
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  color: var(--accent-glow, #7eb8ff);
-  letter-spacing: 0.04em;
-}
-
-/* ── Progress Section ────────────────────────── */
-.progressSection {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 12px 22px 6px 22px;
-  background: rgba(12, 14, 22, 0.92);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.timeLabel {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-secondary, #94a3b8);
-  width: 38px;
-}
-
-.progressBarTrack {
-  flex: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  overflow: hidden;
+.headerIconBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
-  position: relative;
-  transition: height 0.15s ease;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  transition: color 0.15s ease;
+  padding: 4px;
 }
 
-.progressBarTrack:hover {
-  height: 8px;
+.headerIconBtn:hover {
+  color: #fff;
 }
 
-.progressBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, #7eb8ff, #a78bfa);
-  border-radius: 999px;
-  box-shadow: 0 0 12px rgba(126, 184, 255, 0.6);
-  transition: width 0.1s linear;
-}
-
-/* ── Control Transport Deck ──────────────────── */
-.controlDeck {
+/* ── Main Hi-Fi Studio Stage ───────────────────── */
+.hifiMainStage {
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 20px 16px 20px;
-  background: rgba(10, 12, 18, 0.96);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  flex-shrink: 0;
-}
-
-.deckLeft, .deckRight {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1 1 0;
-  min-width: 0;
-  flex-wrap: wrap;
-}
-
-.deckRight {
-  justify-content: flex-end;
-}
-
-.deckCenter {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  justify-content: center;
-}
-
-.importBtn {
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: var(--text-secondary, #94a3b8);
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.importBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.22);
-}
-
-.iconBtn {
-  background: transparent;
-  border: none;
-  font-size: 0.95rem;
-  cursor: pointer;
-  opacity: 0.55;
-  transition: all 0.18s ease;
-  color: #fff;
-}
-
-.iconBtn:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.iconBtnActive {
-  opacity: 1 !important;
-  color: var(--accent-glow, #7eb8ff);
-  filter: drop-shadow(0 0 8px rgba(126, 184, 255, 0.7));
-}
-
-.stepBtn {
-  background: transparent;
-  border: none;
-  font-size: 1.25rem;
-  color: var(--text-primary, #e2e8f0);
-  cursor: pointer;
-  transition: transform 0.15s ease, color 0.15s ease;
-}
-
-.stepBtn:hover {
-  transform: scale(1.15);
-  color: var(--accent-glow, #7eb8ff);
-}
-
-.playBtn {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(126, 184, 255, 0.35) 0%, rgba(167, 139, 250, 0.3) 100%);
-  border: 1.5px solid rgba(126, 184, 255, 0.6);
-  color: #fff;
-  font-size: 1.35rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(126, 184, 255, 0.35);
-  transition: all 0.22s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
-}
-
-.playBtn:hover {
-  transform: scale(1.08);
-  border-color: #7eb8ff;
-  box-shadow: 0 0 28px rgba(126, 184, 255, 0.6);
-  background: linear-gradient(135deg, rgba(126, 184, 255, 0.5) 0%, rgba(167, 139, 250, 0.45) 100%);
-}
-
-.playBtn:active {
-  transform: scale(0.96);
-}
-
-.muteBtn {
-  background: transparent;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  color: var(--text-secondary);
-}
-
-.volumeSlider {
-  width: 85px;
-  accent-color: var(--accent-glow, #7eb8ff);
-  cursor: pointer;
-}
-
-.volumeVal {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  width: 34px;
-}
-
-/* ── Equalizer Pane ──────────────────────────── */
-.eqPane {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 20px 26px;
-  gap: 22px;
+  padding: 10px 24px;
+  gap: 20px;
+  position: relative;
   overflow-y: auto;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 45%, rgba(0, 243, 255, 0.06) 0%, transparent 70%),
+    linear-gradient(180deg, #070911 0%, #05060b 100%);
 }
 
-.eqHeader {
+/* Left: 3-band Equalizer Card */
+.eqCard {
+  width: 170px;
+  flex-shrink: 0;
+  background: rgba(14, 18, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  padding: 14px 12px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .eqTitle {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #fff;
-}
-
-.eqSubtitle {
-  font-size: 0.74rem;
-  color: var(--text-ghost);
-  font-family: var(--font-mono);
-  margin-top: 2px;
-}
-
-.resetEqBtn {
-  padding: 6px 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-secondary);
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.resetEqBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.eqSlidersGrid {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 48px;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 28px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-
-.eqChannel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-
-.eqDbLabel {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
-  color: var(--accent-glow, #7eb8ff);
-  min-width: 52px;
+  color: #cbd5e1;
   text-align: center;
+  letter-spacing: 0.02em;
 }
 
-.eqSliderWrapper {
-  height: 140px;
+.eqSlidersRow {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 120px;
+  padding: 4px 0;
 }
 
-.verticalSlider {
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 6px;
-  height: 130px;
-  accent-color: var(--accent-glow, #7eb8ff);
-  cursor: pointer;
-}
-
-.eqFreq {
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #fff;
-}
-
-.eqSubFreq {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--text-ghost);
-}
-
-/* Acoustics Row */
-.acousticsRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.acousticCard {
-  background: rgba(255, 255, 255, 0.028);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 14px 16px;
+.eqFaderColumn {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-}
-
-.acousticTitle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #fff;
-}
-
-.acousticDesc {
-  font-size: 0.7rem;
-  color: var(--text-ghost);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.toggleSwitch {
-  margin-top: 6px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.toggleActive {
-  background: rgba(126, 184, 255, 0.22) !important;
-  border-color: var(--accent-glow, #7eb8ff) !important;
-  color: #fff !important;
-  box-shadow: 0 0 12px rgba(126, 184, 255, 0.2);
-}
-
-.speedButtons {
-  display: flex;
+  align-items: center;
   gap: 6px;
-  margin-top: 4px;
+  height: 100%;
 }
 
-.speedBtn {
-  flex: 1;
-  padding: 6px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.speedBtnActive {
-  background: rgba(126, 184, 255, 0.22) !important;
-  border-color: var(--accent-glow, #7eb8ff) !important;
-  color: #fff !important;
-}
-
-.timerSelect {
-  background: #0f111a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  color: #fff;
-  padding: 6px 10px;
-  font-size: 0.74rem;
-  outline: none;
-  margin-top: 4px;
-}
-
-.timerCountdown {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--accent-success, #34d399);
-  margin-top: 3px;
+.eqDbValue {
+  font-size: 0.68rem;
+  font-family: monospace;
+  color: #00f3ff;
   font-weight: 700;
 }
 
-/* ── Synthesizer Vault Pane ───────────────────── */
-.vaultPane {
+.verticalFaderTrack {
+  position: relative;
+  width: 5px;
   flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
   display: flex;
-  flex-direction: column;
-  padding: 18px 24px;
-  gap: 14px;
-  overflow-y: auto;
+  align-items: flex-end;
 }
 
-.vaultHeader {
+.verticalFaderFill {
+  width: 100%;
+  background: linear-gradient(180deg, #a78bfa 0%, #00f3ff 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(0, 243, 255, 0.7);
+}
+
+.verticalFaderRange {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.faderThumb {
+  position: absolute;
+  width: 20px;
+  height: 9px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.eqBandLabel {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Center: Visualizer Box & Track Title */
+.centerConsoleStage {
+  flex: 1 1 320px;
+  min-width: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-}
-
-.vaultTitle {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #fff;
-}
-
-.vaultCount {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--text-ghost);
-}
-
-.presetList {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
-.presetCard {
+.trackHeader {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mainTrackTitle {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #00f3ff;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 20px rgba(0, 243, 255, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+  margin: 0;
+}
+
+.mainTrackArtist {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.visualizerContainer {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  height: 130px;
+  background: rgba(10, 13, 22, 0.8);
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 0 24px rgba(0, 243, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.visualizerCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.seekBarRow {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.timeText {
+  font-size: 0.74rem;
+  font-family: monospace;
+  color: #94a3b8;
+  min-width: 34px;
+}
+
+.timeTextRight {
+  text-align: right;
+}
+
+.seekTrack {
+  flex: 1;
+  height: 4.5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  position: relative;
   cursor: pointer;
-  transition: all 0.2s var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
-.presetCard:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateX(4px);
+.seekFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00f3ff, #7eb8ff);
+  border-radius: 999px;
+  box-shadow: 0 0 8px #00f3ff;
 }
 
-.presetCardActive {
-  background: rgba(126, 184, 255, 0.15) !important;
-  border-color: rgba(126, 184, 255, 0.45) !important;
-  box-shadow: 0 4px 18px rgba(126, 184, 255, 0.18);
-}
-
-.presetIndicator {
-  width: 32px;
-  height: 32px;
+.seekKnob {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #fff;
+  border: 2px solid #00f3ff;
+  box-shadow: 0 0 10px #00f3ff;
+}
+
+/* Right: 3D Spinning Vinyl Disc */
+.vinylStageUnit {
+  width: 175px;
+  height: 175px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--accent-glow, #7eb8ff);
+  position: relative;
 }
 
-.presetDetails {
-  flex: 1;
+.vinylDisc {
+  width: 165px;
+  height: 165px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle at 50% 50%, #0d0d12 0px, #16161c 2px, #0a0a0e 3px, #14141a 4px);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.85), inset 0 0 8px rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  display: grid;
+  place-items: center;
+  transition: transform 0.5s ease;
 }
 
-.presetName {
-  font-size: 0.88rem;
+.vinylSpinning {
+  animation: spinVinyl 6s linear infinite;
+}
+
+@keyframes spinVinyl {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.vinylCenterLabel {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #252836 0%, #10121a 100%);
+  border: 1.5px solid rgba(0, 243, 255, 0.35);
+  display: grid;
+  place-items: center;
+}
+
+.vinylSpindleHole {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #070911;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.vinylGleam {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 40%, rgba(255, 255, 255, 0.08) 70%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ── Bottom Floating Transport Console ──────────── */
+.bottomTransportHub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px 16px;
+  position: relative;
+  flex-shrink: 0;
+  background: rgba(10, 13, 22, 0.7);
+  backdrop-filter: blur(20px);
+}
+
+.floatingConsolePill {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(13, 16, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 24px;
+  border-radius: 999px;
+  backdrop-filter: blur(28px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.transportBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.18s ease;
+  font-size: 1.05rem;
+  position: relative;
+  padding: 6px;
+}
+
+.transportBtn:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.shuffleActive {
+  color: #00f3ff !important;
+  filter: drop-shadow(0 0 6px #00f3ff);
+}
+
+.loopActive {
+  color: #a78bfa !important;
+  filter: drop-shadow(0 0 6px #a78bfa);
+}
+
+.bigPlayCircle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(18, 24, 38, 0.95);
+  border: 2.5px solid #00f3ff;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.45);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.15rem;
+}
+
+.bigPlayCircle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 28px rgba(0, 243, 255, 0.65);
+}
+
+.bottomRightControls {
+  position: absolute;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.volumeGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.volumeTrackVertical {
+  height: 34px;
+  width: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+}
+
+.volumeFillVertical {
+  width: 100%;
+  background: #00f3ff;
+  border-radius: 999px;
+  box-shadow: 0 0 8px #00f3ff;
+  position: absolute;
+  bottom: 0;
+}
+
+.volumePercentText {
+  font-size: 0.68rem;
+  font-family: monospace;
+  color: #cbd5e1;
+}
+
+.sleepTimerBadge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sleepTimerBadge:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Secondary Vault Tab Content */
+.vaultTabContent {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.presetCard {
+  background: rgba(18, 22, 34, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.presetCard:hover {
+  border-color: rgba(0, 243, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.presetCardActive {
+  border-color: #00f3ff !important;
+  box-shadow: 0 0 16px rgba(0, 243, 255, 0.3) !important;
+}
+
+.presetCardTitle {
+  font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
 }
 
-.presetDesc {
-  font-size: 0.72rem;
-  color: var(--text-ghost);
+.presetCardArtist {
+  font-size: 0.75rem;
+  color: #00f3ff;
   margin-top: 2px;
 }
 
-.presetFrequencies {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--accent-glow, #7eb8ff);
-  background: rgba(126, 184, 255, 0.1);
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(126, 184, 255, 0.25);
-  font-weight: 600;
-}
-
-/* ── Adaptive Chrome ─────────────────────────── */
-@container player (max-width: 520px) {
-  .visSwitcher .visBtn:not(.visBtnActive) {
-    display: none;
-  }
-}
-
-@container player (max-width: 420px) {
-  .volumeVal,
-  .importBtn {
-    display: none;
-  }
-  .controlDeck {
-    padding: 10px 14px 12px 14px;
-    gap: 8px 10px;
-  }
-  .deckLeft,
-  .deckRight {
-    flex: 0 1 auto;
-  }
-}
-
-@container player (max-width: 340px) {
-  .visSwitcher {
-    display: none;
-  }
+.presetCardDesc {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 6px;
 }
