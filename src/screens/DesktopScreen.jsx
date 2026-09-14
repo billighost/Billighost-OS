@@ -355,7 +355,7 @@ export default function DesktopScreen({ wallpaperSrc: externalWallpaper, onLock,
       };
 
       const defaultSizes = {
-        settings: { w: 740, h: 480 },
+        settings: { w: Math.min(880, typeof window !== 'undefined' ? window.innerWidth - 60 : 880), h: Math.min(530, typeof window !== 'undefined' ? window.innerHeight - 80 : 530) },
         files: { w: 680, h: 440 },
         terminal: { w: 640, h: 400 },
         notepad: { w: 600, h: 420 },

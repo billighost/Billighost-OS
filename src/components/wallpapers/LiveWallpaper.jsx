@@ -1,5 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { RENDERERS } from './renderers';
+import { WallpaperAudio } from '../../services/wallpaperAudio';
+import { LocalSettings } from '../../services/storage/localStorage';
 import styles from './LiveWallpaper.module.css';
 
 /**
@@ -123,12 +125,50 @@ export default function LiveWallpaper({ effect, paused = false }) {
     };
     document.addEventListener('visibilitychange', onVisibility);
 
+    // Wallpaper Ambient Sound (Rain & Thunder)
+    const isRain = effect === 'rain';
+    const appSettings = LocalSettings.getAppearance();
+    let audioEnabled = appSettings.wallpaperAudio !== false;
+
+    if (isRain && audioEnabled) {
+      WallpaperAudio.startRain();
+    }
+
+    const onLightningStrike = (e) => {
+      if (!isRain) return;
+      const currentApp = LocalSettings.getAppearance();
+      if (currentApp.wallpaperAudio === false) return;
+      const intensity = e.detail?.intensity || 1.0;
+      // Delay thunder slightly for speed-of-sound realism
+      setTimeout(() => {
+        WallpaperAudio.playThunder(intensity);
+      }, 260);
+    };
+    window.addEventListener('billighost:lightning-strike', onLightningStrike);
+
+    const onAppearanceChange = (e) => {
+      const next = e.detail || {};
+      if (isRain) {
+        if (next.wallpaperAudio === false) {
+          WallpaperAudio.stopRain();
+        } else if (next.wallpaperAudio !== false) {
+          WallpaperAudio.startRain();
+        }
+      }
+    };
+    window.addEventListener('billighost:appearance-change', onAppearanceChange);
+
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('billighost:lightning-strike', onLightningStrike);
+      window.removeEventListener('billighost:appearance-change', onAppearanceChange);
       document.removeEventListener('visibilitychange', onVisibility);
+      if (isRain) {
+        WallpaperAudio.stopRain();
+      }
       renderer.destroy?.();
       rendererRef.current = null;
     };
@@ -136,10 +176,18 @@ export default function LiveWallpaper({ effect, paused = false }) {
 
   // Honour an explicit pause (e.g. battery saver) without tearing down.
   useEffect(() => {
+    if (paused) {
+      WallpaperAudio.stopRain();
+    } else if (effect === 'rain') {
+      const appSettings = LocalSettings.getAppearance();
+      if (appSettings.wallpaperAudio !== false) {
+        WallpaperAudio.startRain();
+      }
+    }
     if (!paused || !rafRef.current) return;
     cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
-  }, [paused]);
+  }, [paused, effect]);
 
   if (!effect || !RENDERERS[effect]) return null;
 

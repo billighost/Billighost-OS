@@ -1,94 +1,34 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LocalSettings } from '../services/storage/localStorage';
 import { NotificationService } from '../services/notificationService';
-import { WALLPAPERS } from '../components/wallpapers/registry';
+import { WALLPAPERS, getWallpaper } from '../components/wallpapers/registry';
+import { RENDERERS } from '../components/wallpapers/renderers';
+import { WallpaperAudio } from '../services/wallpaperAudio';
 import { VFS } from '../services/storage/indexedDB';
 import { CacheStorageService } from '../services/storage/cacheStorage';
 import { useStorageQuota } from '../hooks/useStorageQuota';
 import { useBattery } from '../hooks/useBattery';
 import { useNetwork } from '../hooks/useNetwork';
 import {
-  GearIcon, UserIcon, ImageIcon, PaletteIcon, SaveIcon,
+  UserIcon, ImageIcon, PaletteIcon, SaveIcon,
   SpeakerIcon, LockIcon, InfoIcon, BellIcon,
   UploadIcon, RefreshIcon, DownloadIcon, CheckIcon,
   SearchIcon, GridHashIcon, BatteryChargingIcon,
-  VolumeIcon, GaugeIcon, TrashIcon,
+  VolumeIcon, GaugeIcon, TrashIcon, PlayIcon, PauseIcon,
 } from '../components/Icons';
+
 import styles from './SettingsApp.module.css';
 
-// --- Wallpapers Catalog (Static & Dynamic) ---
-/*
- * Settings shows the shared registry FIRST (including the live wallpapers),
- * then its own canvas-preview presets. Keeping one source for the live set
- * means a wallpaper chosen at setup and one chosen here behave identically.
- */
-const WALLPAPER_PRESETS = [
-  ...WALLPAPERS.map(w => ({
-    id: w.id,
-    name: w.name,
-    type: w.live ? 'live' : 'static',
-    live: w.live,
-    css: w.css,
-    description: w.description,
-  })),
-
-  {
-    id: 'matrix',
-    name: 'Matrix Code Rain',
-    type: 'dynamic',
-    css: 'radial-gradient(ellipse at 50% 50%, #062817 0%, #02120a 50%, #000000 100%)',
-    description: 'Animated stream of luminous jade glyphs falling through digital cyberspace.',
-  },
-  {
-    id: 'starfield',
-    name: 'Deep Space Starfield',
-    type: 'dynamic',
-    css: 'radial-gradient(ellipse at 50% 50%, #0f172a 0%, #070913 55%, #020307 100%)',
-    description: 'Hyperspeed deep space warp with procedural moving star particles.',
-  },
-  {
-    id: 'quantum',
-    name: 'Quantum Cyber Mesh',
-    type: 'dynamic',
-    css: 'radial-gradient(ellipse at 30% 40%, #0d1b2a 0%, #050505 50%), radial-gradient(ellipse at 70% 60%, #1a0a2e 0%, transparent 50%)',
-    description: 'Floating energy nodes with real-time geometric synaptic connections.',
-  },
-  {
-    id: 'cyber-pulse',
-    name: 'Cyber Neon Horizon',
-    type: 'dynamic',
-    css: 'radial-gradient(circle at 50% 30%, #311042 0%, #100520 45%, #05020a 100%)',
-    description: 'Pulsing synthwave vector wireframe grid receding to infinity.',
-  },
-  {
-    id: 'default',
-    name: 'Deep Void',
-    type: 'gradient',
-    css: 'radial-gradient(ellipse at 30% 40%, #0d1b2a 0%, #050505 50%), radial-gradient(ellipse at 70% 60%, #1a0a2e 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, #0a1628 0%, transparent 40%)',
-    description: 'Default deep atmospheric navy obsidian gradient.',
-  },
-  {
-    id: 'obsidian-flow',
-    name: 'Obsidian Flow',
-    type: 'gradient',
-    css: 'linear-gradient(135deg, #090a0f 0%, #111422 50%, #050608 100%)',
-    description: 'Dark mineral tones tailored for extended low-light coding sessions.',
-  },
-  {
-    id: 'quantum-aurora',
-    name: 'Quantum Aurora',
-    type: 'gradient',
-    css: 'radial-gradient(ellipse at top left, #064e3b 0%, #022c22 30%, #020617 70%)',
-    description: 'Emerald atmospheric glow reminiscent of polar ionospheric waves.',
-  },
-  {
-    id: 'crimson-noir',
-    name: 'Crimson Noir',
-    type: 'gradient',
-    css: 'radial-gradient(circle at 50% 30%, #4c0519 0%, #1f0208 40%, #050505 90%)',
-    description: 'Sleek luxury crimson dark mode with velvet deep accents.',
-  },
-];
+// --- Wallpapers Catalog (Unified Registry) ---
+const WALLPAPER_PRESETS = WALLPAPERS.map(w => ({
+  id: w.id,
+  name: w.name,
+  type: w.live ? 'live' : (w.category || 'gradient'),
+  live: w.live,
+  css: w.css,
+  description: w.description,
+  category: w.category || (w.live ? 'live' : 'gradient'),
+}));
 
 const AVATAR_PRESETS = [
   { id: 'av1', label: 'Ghost', bg: 'linear-gradient(135deg, #7eb8ff, #a78bfa)' },
@@ -100,15 +40,16 @@ const AVATAR_PRESETS = [
 ];
 
 const ACCENT_COLORS = [
-  { name: 'Cyan Glow', hex: '#7eb8ff', glow: 'rgba(126, 184, 255, 0.4)' },
-  { name: 'Amethyst', hex: '#a78bfa', glow: 'rgba(167, 139, 250, 0.4)' },
-  { name: 'Emerald', hex: '#34d399', glow: 'rgba(52, 211, 153, 0.4)' },
-  { name: 'Solar Gold', hex: '#fbbf24', glow: 'rgba(251, 191, 36, 0.4)' },
-  { name: 'Crimson Rose', hex: '#ff4d6a', glow: 'rgba(255, 77, 106, 0.4)' },
-  { name: 'Electric Orange', hex: '#fb923c', glow: 'rgba(251, 146, 60, 0.4)' },
-  { name: 'Glacier Ice', hex: '#38bdf8', glow: 'rgba(56, 189, 248, 0.4)' },
-  { name: 'Hyper Violet', hex: '#c084fc', glow: 'rgba(192, 132, 252, 0.4)' },
+  { name: 'Crimson', hex: '#ff4d6a', glow: 'rgba(255, 77, 106, 0.55)' },
+  { name: 'Amber Orange', hex: '#fb923c', glow: 'rgba(251, 146, 60, 0.55)' },
+  { name: 'Solar Gold', hex: '#fbbf24', glow: 'rgba(251, 191, 36, 0.55)' },
+  { name: 'Emerald', hex: '#34d399', glow: 'rgba(52, 211, 153, 0.55)' },
+  { name: 'Cyan Glow', hex: '#00f3ff', glow: 'rgba(0, 243, 255, 0.65)' },
+  { name: 'Sapphire Blue', hex: '#3b82f6', glow: 'rgba(59, 130, 246, 0.55)' },
+  { name: 'Hyper Violet', hex: '#a78bfa', glow: 'rgba(167, 139, 250, 0.55)' },
+  { name: 'Neon Magenta', hex: '#f43f5e', glow: 'rgba(244, 63, 94, 0.55)' },
 ];
+
 
 const USER_STATUS_OPTIONS = [
   { id: 'online', label: 'Online', color: '#34d399' },
@@ -226,7 +167,7 @@ function playSynthesizedSound(type, volume = 80) {
   }
 }
 
-export default function SettingsApp({ initialTab = 'profile', playClick = () => {}, osModal = null, onLock = () => {} }) {
+export default function SettingsApp({ initialTab = 'appearance', playClick = () => {}, osModal = null, onLock = () => {} }) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
   const [saveBanner, setSaveBanner] = useState('');
@@ -246,9 +187,16 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
       showWidgetsBtn: true,
       showTaskViewBtn: true,
       performanceProfile: 'balanced',
+      themeMode: 'dark',
+      brightness: 78,
+      trueTone: true,
+      nightShift: false,
+      autoBrightness: true,
+      reducedMotion: true,
       ...app,
     };
   });
+
   const [sound, setSound] = useState(() => {
     const s = LocalSettings.getSound();
     return {
@@ -273,6 +221,12 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
   const wallpaperInputRef = useRef(null);
   const restoreFileInputRef = useRef(null);
   const previewCanvasRef = useRef(null);
+  const previewRendererRef = useRef(null);
+
+  // Wallpaper Studio State
+  const [wpCategory, setWpCategory] = useState('all');
+  const [previewPaused, setPreviewPaused] = useState(false);
+  const [rainAudioVolume, setRainAudioVolume] = useState(() => Math.round(WallpaperAudio.getVolume() * 100));
 
   // System Telemetry Hooks
   const storageQuota = useStorageQuota();
@@ -310,7 +264,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
     return full;
   }, [appearance, syncVisualTokens]);
 
-  // Live Wallpaper Preview Canvas Animation Engine
+  // Live Wallpaper Preview Canvas Animation Engine (Runs true RENDERERS)
   /* Release the shared preview AudioContext when Settings closes. */
   useEffect(() => {
     return () => closePreviewAudio();
@@ -323,138 +277,117 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
     if (!ctx) return;
 
     let animId = null;
-    let frame = 0;
-    const currentWp = appearance.wallpaper || 'default';
+    let lastTime = 0;
+    const currentWpId = appearance.wallpaper || 'default';
+    const wpObj = getWallpaper(currentWpId);
+    const liveEffect = appearance.customWallpaperData ? null : (appearance.liveWallpaper || wpObj?.live || null);
 
-    // Particle state for starfield / quantum
-    const stars = Array.from({ length: 90 }, () => ({
-      x: (Math.random() - 0.5) * 400,
-      y: (Math.random() - 0.5) * 260,
-      z: Math.random() * 400 + 1,
-    }));
+    let renderer = null;
+    if (liveEffect && RENDERERS[liveEffect]) {
+      renderer = RENDERERS[liveEffect]();
+      previewRendererRef.current = renderer;
+    } else {
+      previewRendererRef.current = null;
+    }
 
-    const nodes = Array.from({ length: 18 }, () => ({
-      x: Math.random() * 260,
-      y: Math.random() * 150,
-      vx: (Math.random() - 0.5) * 0.8,
-      vy: (Math.random() - 0.5) * 0.8,
-    }));
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(300, Math.floor(rect.width || 480));
+    const h = Math.max(140, Math.floor(rect.height || 180));
+    canvas.width = Math.floor(w * dpr);
+    canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const render = () => {
-      frame++;
-      const w = canvas.width = 260;
-      const h = canvas.height = 150;
+    if (renderer) {
+      renderer.resize(w, h);
+    }
 
-      if (currentWp === 'matrix') {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#34d399';
-        ctx.font = '10px monospace';
-        const cols = 26;
-        for (let i = 0; i < cols; i++) {
-          const char = String.fromCharCode(0x30a0 + Math.floor(Math.sin(frame * 0.05 + i) * 40 + 40));
-          const y = (frame * 3 + i * 28) % h;
-          ctx.fillText(char, i * 10, y);
-        }
-      } else if (currentWp === 'starfield') {
-        ctx.fillStyle = '#05070e';
-        ctx.fillRect(0, 0, w, h);
-        const cx = w / 2;
-        const cy = h / 2;
-        ctx.fillStyle = '#7eb8ff';
-        for (let s of stars) {
-          s.z -= 2;
-          if (s.z <= 0) s.z = 400;
-          const k = 140 / s.z;
-          const px = s.x * k + cx;
-          const py = s.y * k + cy;
-          if (px >= 0 && px < w && py >= 0 && py < h) {
-            const size = Math.max(1, (1 - s.z / 400) * 3);
-            ctx.beginPath();
-            ctx.arc(px, py, size / 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      } else if (currentWp === 'quantum') {
-        ctx.fillStyle = '#090b12';
-        ctx.fillRect(0, 0, w, h);
-        for (let i = 0; i < nodes.length; i++) {
-          const n = nodes[i];
-          n.x += n.vx;
-          n.y += n.vy;
-          if (n.x < 0 || n.x > w) n.vx *= -1;
-          if (n.y < 0 || n.y > h) n.vy *= -1;
+    // Simulated desktop obstacle window in preview
+    const previewObstacles = [
+      { x: Math.round(w * 0.2), y: Math.round(h * 0.24), w: Math.round(w * 0.54), h: Math.round(h * 0.48), kind: 'window' }
+    ];
 
-          ctx.fillStyle = '#a78bfa';
+    const onPreviewMouseMove = (e) => {
+      const b = canvas.getBoundingClientRect();
+      const mx = e.clientX - b.left;
+      const my = e.clientY - b.top;
+      renderer?.setMouse?.(mx, my);
+    };
+    canvas.addEventListener('mousemove', onPreviewMouseMove, { passive: true });
+
+    const renderLoop = (now) => {
+      const dt = Math.min(48, now - (lastTime || now));
+      lastTime = now;
+
+      if (!previewPaused) {
+        if (renderer) {
+          renderer.step(ctx, previewObstacles, dt);
+
+          // Draw simulated glass window over preview
+          ctx.save();
+          const win = previewObstacles[0];
+          ctx.fillStyle = 'rgba(15, 18, 28, 0.65)';
+          ctx.strokeStyle = 'rgba(126, 184, 255, 0.35)';
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(n.x, n.y, 2, 0, Math.PI * 2);
+          if (ctx.roundRect) {
+            ctx.roundRect(win.x, win.y, win.w, win.h, 8);
+          } else {
+            ctx.rect(win.x, win.y, win.w, win.h);
+          }
           ctx.fill();
-
-          for (let j = i + 1; j < nodes.length; j++) {
-            const n2 = nodes[j];
-            const dist = Math.hypot(n.x - n2.x, n.y - n2.y);
-            if (dist < 60) {
-              ctx.strokeStyle = `rgba(167, 139, 250, ${1 - dist / 60})`;
-              ctx.lineWidth = 0.8;
-              ctx.beginPath();
-              ctx.moveTo(n.x, n.y);
-              ctx.lineTo(n2.x, n2.y);
-              ctx.stroke();
-            }
-          }
-        }
-      } else if (currentWp === 'cyber-pulse') {
-        ctx.fillStyle = '#0a0314';
-        ctx.fillRect(0, 0, w, h);
-        const horizon = h * 0.45;
-        // Sun glow
-        const sunGlow = ctx.createRadialGradient(w / 2, horizon, 5, w / 2, horizon, 60);
-        sunGlow.addColorStop(0, 'rgba(255, 77, 106, 0.7)');
-        sunGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = sunGlow;
-        ctx.fillRect(0, 0, w, h);
-
-        // Grid lines
-        ctx.strokeStyle = 'rgba(126, 184, 255, 0.4)';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < w; x += 20) {
-          ctx.beginPath();
-          ctx.moveTo(w / 2 + (x - w / 2) * 0.2, horizon);
-          ctx.lineTo(x, h);
           ctx.stroke();
-        }
-        const offset = (frame * 0.8) % 15;
-        for (let y = horizon; y < h; y += 10) {
-          const py = y + offset;
-          if (py < h) {
-            ctx.beginPath();
-            ctx.moveTo(0, py);
-            ctx.lineTo(w, py);
-            ctx.stroke();
+
+          // Window mini dots
+          ctx.fillStyle = '#f43f5e';
+          ctx.beginPath(); ctx.arc(win.x + 12, win.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath(); ctx.arc(win.x + 20, win.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#34d399';
+          ctx.beginPath(); ctx.arc(win.x + 28, win.y + 10, 2.5, 0, Math.PI * 2); ctx.fill();
+
+          // Window mini content bars
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.fillRect(win.x + 12, win.y + 22, win.w - 24, 4);
+          ctx.fillRect(win.x + 12, win.y + 32, (win.w - 24) * 0.65, 4);
+          ctx.restore();
+        } else {
+          // Static wallpaper or custom photo preview
+          ctx.clearRect(0, 0, w, h);
+          if (appearance.customWallpaperData) {
+            const img = new Image();
+            img.src = appearance.customWallpaperData;
+            if (img.complete) {
+              ctx.drawImage(img, 0, 0, w, h);
+            }
+          } else {
+            const grad = ctx.createLinearGradient(0, 0, w, h);
+            grad.addColorStop(0, '#090b14');
+            grad.addColorStop(0.5, '#121626');
+            grad.addColorStop(1, '#05060a');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.font = '600 13px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(wpObj?.name || 'Curated Wallpaper', w / 2, h / 2);
           }
         }
-      } else {
-        // Static gradient or custom image preview
-        const grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, '#0d1b2a');
-        grad.addColorStop(0.5, '#1a0a2e');
-        grad.addColorStop(1, '#050505');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.font = '11px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Static High-Res Preset', w / 2, h / 2);
       }
 
-      animId = requestAnimationFrame(render);
+      animId = requestAnimationFrame(renderLoop);
     };
 
-    render();
+    animId = requestAnimationFrame(renderLoop);
+
     return () => {
       if (animId) cancelAnimationFrame(animId);
+      canvas.removeEventListener('mousemove', onPreviewMouseMove);
+      renderer?.destroy?.();
+      previewRendererRef.current = null;
     };
-  }, [activeTab, appearance.wallpaper]);
+  }, [activeTab, appearance.wallpaper, appearance.liveWallpaper, appearance.customWallpaperData, previewPaused]);
 
   // Live CPU Benchmark Runner
   const handleRunBenchmark = () => {
@@ -602,17 +535,8 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
     showSavedMessage(`Accent color set to ${accent.name}`);
   };
 
-  const handleCustomHexChange = (hex) => {
-    setCustomHex(hex);
-    if (/^#[0-9A-F]{6}$/i.test(hex)) {
-      updateAppearanceState({
-        accentColor: hex,
-        accentGlow: `${hex}66`,
-      });
-    }
-  };
-
   // --- Full System Backup & Restore ---
+
   const handleExportSystemImage = async () => {
     playClick();
     try {
@@ -673,16 +597,16 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
 
   // Navigation Items
   const NAV_ITEMS = useMemo(() => [
-    { id: 'profile', label: 'Profile & Account', icon: <UserIcon size={15} /> },
-    { id: 'wallpaper', label: 'Wallpaper & Canvases', icon: <ImageIcon size={15} /> },
-    { id: 'appearance', label: 'Theme & Glassmorphism', icon: <PaletteIcon size={15} /> },
-    { id: 'taskbar', label: 'Taskbar & Dock', icon: <GridHashIcon size={15} /> },
-    { id: 'performance', label: 'Performance & Power', icon: <GaugeIcon size={15} /> },
-    { id: 'sound', label: 'Audio & Synth Schemes', icon: <SpeakerIcon size={15} /> },
-    { id: 'security', label: 'Security & Session PIN', icon: <LockIcon size={15} /> },
-    { id: 'storage', label: 'Storage & Virtual Disk', icon: <SaveIcon size={15} /> },
-    { id: 'backup', label: 'Backup & Recovery', icon: <DownloadIcon size={15} /> },
-    { id: 'about', label: 'System Telemetry & Specs', icon: <InfoIcon size={15} /> },
+    { id: 'appearance', label: 'Appearance', icon: <PaletteIcon size={16} /> },
+    { id: 'sound', label: 'Audio', icon: <SpeakerIcon size={16} /> },
+    { id: 'security', label: 'Security', icon: <LockIcon size={16} /> },
+    { id: 'storage', label: 'Storage', icon: <SaveIcon size={16} /> },
+    { id: 'about', label: 'About', icon: <InfoIcon size={16} /> },
+    { id: 'profile', label: 'User Profile & ID', icon: <UserIcon size={16} /> },
+    { id: 'wallpaper', label: 'Wallpapers & FX', icon: <ImageIcon size={16} /> },
+    { id: 'taskbar', label: 'Taskbar & Dock', icon: <GridHashIcon size={16} /> },
+    { id: 'performance', label: 'Performance & Power', icon: <GaugeIcon size={16} /> },
+    { id: 'backup', label: 'Backup & Recovery', icon: <DownloadIcon size={16} /> },
   ], []);
 
   const filteredNavItems = useMemo(() => {
@@ -691,17 +615,36 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
     return NAV_ITEMS.filter(item => item.label.toLowerCase().includes(q));
   }, [NAV_ITEMS, searchQuery]);
 
-  // Contrast Calculation
-  const contrastRatio = useMemo(() => getContrastRatio(customHex), [customHex]);
-
   return (
+
     <div className={styles.settingsLayout}>
       <div className={styles.prismaticBorder} />
       {/* Sidebar Navigation */}
       <div className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <span className={styles.sidebarLogo}><GearIcon size={18} /></span>
-          <span>OS Control Center</span>
+        {/* macOS Style Traffic Dots */}
+        <div className={styles.trafficLights}>
+          <span className={`${styles.trafficDot} ${styles.dotClose}`} />
+          <span className={`${styles.trafficDot} ${styles.dotMin}`} />
+          <span className={`${styles.trafficDot} ${styles.dotMax}`} />
+        </div>
+
+        {/* Mini User Profile Row (Concept Mockup) */}
+        <div
+          className={styles.miniProfileRow}
+          onClick={() => { playClick(); setActiveTab('profile'); }}
+          title="Open Profile Studio"
+        >
+          <div className={styles.miniAvatar}>
+            {profile.avatar ? (
+              <img src={profile.avatar} alt="Avatar" className={styles.miniAvatarImg} />
+            ) : (
+              <span>{profile.name?.slice(0, 2).toUpperCase() || 'AC'}</span>
+            )}
+          </div>
+          <div className={styles.miniProfileText}>
+            <span className={styles.miniProfileName}>{profile.name || 'Alexander Croft'}</span>
+            <span className={styles.miniProfileSub}>SF Pro <span className={styles.miniChevron}>▾</span></span>
+          </div>
         </div>
 
         <div className={styles.searchContainer}>
@@ -729,6 +672,7 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
             </button>
           ))}
         </nav>
+
 
         <div className={styles.sidebarFooter}>
           <div className={styles.systemBadge}>
@@ -883,12 +827,42 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
               <p>Select living dynamic animations or high-resolution ambient gradients for your desktop.</p>
             </div>
 
+            <div className={styles.categoryFilterRow}>
+              {[
+                { id: 'all', label: 'All Wallpapers' },
+                { id: 'live', label: '⚡ Live 60FPS Canvases' },
+                { id: 'gradient', label: '🌌 Cosmic & Gradients' },
+                { id: 'minimal', label: '🌑 Minimal Focus' },
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`${styles.filterPill} ${wpCategory === cat.id ? styles.filterPillActive : ''}`}
+                  onClick={() => { playClick(); setWpCategory(cat.id); }}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
             <div className={styles.card}>
-              <div className={styles.sectionTitle}><ImageIcon size={16} /> Live Simulation Canvas</div>
+              <div className={styles.sectionTitleRow}>
+                <div className={styles.sectionTitle}><ImageIcon size={16} /> Live Simulation Showcase</div>
+                <div className={styles.previewMeta}>
+                  {appearance.liveWallpaper || getWallpaper(appearance.wallpaper)?.live ? (
+                    <span className={styles.wallpaperLiveTag}>
+                      <span className={styles.liveDotPulse} /> Active 60 FPS Simulation
+                    </span>
+                  ) : (
+                    <span className={styles.wallpaperStaticTag}>Ambient Theme</span>
+                  )}
+                </div>
+              </div>
+
               <div className={styles.wallpaperLivePreview}>
                 <canvas ref={previewCanvasRef} className={styles.wallpaperCanvas} />
-                <div className={styles.wallpaperLiveTag}>
-                  <span className={styles.liveDotPulse} /> Active Wallpaper Canvas
+                <div className={styles.previewOverlayWatermark}>
+                  <span>{appearance.customWallpaperData ? 'Custom Photo' : (getWallpaper(appearance.wallpaper)?.name || 'Billighost Atmosphere')}</span>
                 </div>
               </div>
 
@@ -903,34 +877,154 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
                 <button className={styles.btnPrimary} onClick={() => wallpaperInputRef.current?.click()}>
                   <UploadIcon size={14} /> Upload Custom Photo
                 </button>
+
+                {(appearance.liveWallpaper || getWallpaper(appearance.wallpaper)?.live) && (
+                  <button
+                    className={styles.btnSecondary}
+                    onClick={() => {
+                      playClick();
+                      setPreviewPaused(p => !p);
+                    }}
+                  >
+                    {previewPaused ? <PlayIcon size={14} /> : <PauseIcon size={14} />}
+                    {previewPaused ? 'Resume Simulation' : 'Pause Simulation'}
+                  </button>
+                )}
+
+                {(appearance.wallpaper === 'rain' || appearance.liveWallpaper === 'rain') && (
+                  <button
+                    className={styles.btnLightning}
+                    onClick={() => {
+                      playClick();
+                      previewRendererRef.current?.strike?.(1.4);
+                      window.dispatchEvent(new CustomEvent('billighost:lightning-strike', { detail: { intensity: 1.4 } }));
+                      setTimeout(() => WallpaperAudio.playThunder(1.4), 260);
+                      showSavedMessage('⚡ Lightning Strike & Thunder Triggered!');
+                    }}
+                    title="Trigger a realistic branching lightning bolt and rolling thunder audio"
+                  >
+                    ⚡ Strike Lightning & Thunder
+                  </button>
+                )}
+
                 <button
                   className={styles.btnSecondary}
                   onClick={() => {
                     playClick();
-                    // Looked up by id: an index breaks whenever the list is reordered.
                     const def = WALLPAPER_PRESETS.find(w => w.id === 'default') || WALLPAPER_PRESETS[0];
                     handleSelectWallpaper(def);
                   }}
                 >
-                  <RefreshIcon size={14} /> Restore Default Wallpaper
+                  <RefreshIcon size={14} /> Restore Default
                 </button>
               </div>
+            </div>
 
-              <div className={styles.sectionSubtitle}>Curated Living & Static Themes:</div>
-              <div className={styles.wallpaperGrid}>
-                {WALLPAPER_PRESETS.map((wp) => (
-                  <div
-                    key={wp.id}
-                    className={`${styles.wallpaperCard} ${appearance.wallpaper === wp.id ? styles.wallpaperActive : ''}`}
-                    onClick={() => handleSelectWallpaper(wp)}
-                  >
-                    <div className={styles.wallpaperThumb} style={{ background: wp.css }}>
-                      {wp.type === 'live' && <span className={styles.wallpaperDynamicBadge}>LIVE</span>}
-                      {wp.type === 'dynamic' && <span className={styles.wallpaperDynamicBadge}>ANIMATED</span>}
-                    </div>
-                    <span className={styles.wallpaperName}>{wp.name}</span>
+            {/* Exclusive Atmosphere Storm Audio & Lighting Controls when Rainfall is Selected */}
+            {(appearance.wallpaper === 'rain' || appearance.liveWallpaper === 'rain') && (
+              <div className={styles.cardHighlight}>
+                <div className={styles.sectionTitleRow}>
+                  <div className={styles.sectionTitle}>
+                    <SpeakerIcon size={16} /> Rainfall Atmosphere & Thunder Acoustics
                   </div>
-                ))}
+                  <span className={styles.pillBadgeActive}>Web Audio Synthesizer</span>
+                </div>
+                <p className={styles.sectionDesc}>
+                  Hyper-realistic synthesized rainfall with window glass rivulets, window collision splashes, and periodic branching lightning strikes with acoustic thunder.
+                </p>
+
+                <div className={styles.toggleRow}>
+                  <div>
+                    <div className={styles.labelTitle}>Natural Rain & Thunder Audio</div>
+                    <div className={styles.labelSubtitle}>Procedural brown-noise rainbed + sub-bass thunder booms</div>
+                  </div>
+                  <label className={styles.switch}>
+                    <input
+                      type="checkbox"
+                      checked={appearance.wallpaperAudio !== false}
+                      onChange={(e) => {
+                        playClick();
+                        const nextAudio = e.target.checked;
+                        updateAppearanceState({ wallpaperAudio: nextAudio });
+                        if (nextAudio) {
+                          WallpaperAudio.startRain();
+                        } else {
+                          WallpaperAudio.stopRain();
+                        }
+                      }}
+                    />
+                    <span className={styles.slider} />
+                  </label>
+                </div>
+
+                {appearance.wallpaperAudio !== false && (
+                  <div className={styles.sliderGroup}>
+                    <div className={styles.sliderHeader}>
+                      <span>Storm Ambience Volume</span>
+                      <span className={styles.sliderValue}>{rainAudioVolume}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={rainAudioVolume}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setRainAudioVolume(val);
+                        WallpaperAudio.setVolume(val / 100);
+                        updateAppearanceState({ wallpaperAudioVolume: val });
+                      }}
+                      className={styles.rangeInput}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className={styles.card}>
+              <div className={styles.sectionSubtitle}>
+                Select System Backdrop ({WALLPAPER_PRESETS.filter(wp => {
+                  if (wpCategory === 'all') return true;
+                  if (wpCategory === 'live') return wp.live;
+                  if (wpCategory === 'gradient') return wp.category === 'gradient';
+                  if (wpCategory === 'minimal') return wp.category === 'minimal';
+                  return true;
+                }).length} Available):
+              </div>
+              <div className={styles.wallpaperGrid}>
+                {WALLPAPER_PRESETS.filter(wp => {
+                  if (wpCategory === 'all') return true;
+                  if (wpCategory === 'live') return wp.live;
+                  if (wpCategory === 'gradient') return wp.category === 'gradient';
+                  if (wpCategory === 'minimal') return wp.category === 'minimal';
+                  return true;
+                }).map((wp) => {
+                  const isSelected = appearance.wallpaper === wp.id && !appearance.customWallpaperData;
+                  return (
+                    <div
+                      key={wp.id}
+                      className={`${styles.wallpaperCard} ${isSelected ? styles.wallpaperActive : ''}`}
+                      onClick={() => handleSelectWallpaper(wp)}
+                    >
+                      <div className={styles.wallpaperThumb} style={{ background: wp.css }}>
+                        {wp.live && (
+                          <span className={styles.wallpaperDynamicBadge}>
+                            <span className={styles.miniDotGreen} /> LIVE
+                          </span>
+                        )}
+                        {isSelected && (
+                          <div className={styles.wallpaperSelectedIndicator}>
+                            <CheckIcon size={14} />
+                          </div>
+                        )}
+                      </div>
+                      <div className={styles.wallpaperCardInfo}>
+                        <span className={styles.wallpaperName}>{wp.name}</span>
+                        <span className={styles.wallpaperDesc}>{wp.description}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -969,143 +1063,191 @@ export default function SettingsApp({ initialTab = 'profile', playClick = () => 
           </div>
         )}
 
-        {/* 3. THEME & GLASSMORPHISM */}
+        {/* 3. APPEARANCE & NORDIC OBSIDIAN SHOWCASE */}
         {activeTab === 'appearance' && (
-          <div className={styles.tabContent}>
-            <div className={styles.tabHeader}>
-              <h2>Theme & Glassmorphism Studio</h2>
-              <p>Calibrate system glow accents, window blur intensity, and interactive surface translucency.</p>
-            </div>
+          <div className={styles.appearanceLayoutStage}>
+            {/* Column 1: User Profile Floating Card (Directly from Mockup) */}
+            <div className={styles.profileCardColumn}>
+              <div className={styles.columnTitle}>User Profile</div>
+              <div className={styles.profileGlassCard}>
+                <div className={styles.profileUserHeader}>
+                  <div className={styles.profileAvatarWrapper}>
+                    {profile.avatar ? (
+                      <img src={profile.avatar} alt="Profile" className={styles.cardAvatarImg} />
+                    ) : (
+                      <div className={styles.cardAvatarInitial}>
+                        {profile.name?.slice(0, 2).toUpperCase() || 'AC'}
+                      </div>
+                    )}
+                    <span className={styles.verifiedBadge} title="Verified Billighost Pro">✓</span>
+                  </div>
+                  <div className={styles.profileUserInfo}>
+                    <div className={styles.profileUserName}>{profile.name || 'Alexander Croft'}</div>
+                    <div className={styles.profileUserEmail}>{profile.email || 'alexander3@gmail.com'}</div>
+                    <span className={styles.proPillBadge}>Billighost Pro</span>
+                  </div>
+                </div>
 
-            <div className={styles.card}>
-              <div className={styles.sectionTitle}><PaletteIcon size={16} /> Accent Glow Swatches</div>
-              <div className={styles.accentGrid}>
-                {ACCENT_COLORS.map((c) => (
-                  <button
-                    key={c.hex}
-                    className={`${styles.accentBtn} ${appearance.accentColor === c.hex ? styles.accentActive : ''}`}
-                    style={{ '--btn-color': c.hex }}
-                    onClick={() => handleSelectAccent(c)}
-                  >
-                    <span className={styles.accentDot} style={{ background: c.hex }} />
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-
-              <div className={styles.customColorRow}>
-                <div className={styles.colorPickerGroup}>
-                  <input
-                    type="color"
-                    value={customHex}
-                    onChange={(e) => handleCustomHexChange(e.target.value)}
-                    className={styles.colorPickerInput}
-                  />
-                  <div>
-                    <div className={styles.labelTitle}>Custom Hex Color</div>
-                    <input
-                      type="text"
-                      maxLength={7}
-                      value={customHex}
-                      onChange={(e) => handleCustomHexChange(e.target.value)}
-                      className={styles.inputField}
-                      style={{ width: 90, padding: '4px 8px', marginTop: 4 }}
+                <div className={styles.profileStorageSection}>
+                  <div className={styles.storageLabelRow}>
+                    <span>Storage</span>
+                    <span className={styles.storageQuotaText}>
+                      {storageQuota.quota ? `${(storageQuota.quota / (1024**3)).toFixed(0)} GB / ${(storageQuota.used / (1024**3)).toFixed(2)} GB` : '100 GB / 43.54 GB'}
+                    </span>
+                  </div>
+                  <div className={styles.storageMeterTrack}>
+                    <div
+                      className={styles.storageMeterFill}
+                      style={{ width: `${Math.max(15, storageQuota.percentUsed || 43.5)}%` }}
                     />
                   </div>
                 </div>
-
-                <div className={styles.contrastBadge}>
-                  WCAG {contrastRatio}:1 AAA Contrast
-                </div>
               </div>
             </div>
 
-            <div className={styles.card}>
-              <div className={styles.sectionTitle}>Interactive Glassmorphism Preview</div>
-              <div className={styles.glassPreviewCard}>
-                <div
-                  className={styles.miniWindow}
-                  style={{
-                    borderRadius: appearance.borderRadius,
-                    backdropFilter: `blur(${appearance.glassBlur}px)`,
-                    background: `rgba(15, 17, 26, ${appearance.glassOpacity / 100})`,
-                    borderColor: appearance.accentColor,
-                  }}
-                >
-                  <div className={styles.miniWindowTitlebar}>
-                    <div className={styles.miniWindowDots}>
-                      <span className={`${styles.miniDot} ${styles.miniDotClose}`} />
-                      <span className={`${styles.miniDot} ${styles.miniDotMin}`} />
-                      <span className={`${styles.miniDot} ${styles.miniDotMax}`} />
+            {/* Column 2: Appearance Controls (Directly from Mockup) */}
+            <div className={styles.appearanceControlsColumn}>
+              {/* Header with Theme Capsule Pill */}
+              <div className={styles.appearanceTopHeader}>
+                <h2 className={styles.appearanceHeading}>Appearance</h2>
+                <div className={styles.themeSelectorGroup}>
+                  <span className={styles.themeLabel}>Theme</span>
+                  <div className={styles.themeCapsulePill}>
+                    {['Light', 'Dark', 'Auto'].map((m) => {
+                      const lower = m.toLowerCase();
+                      const isActive = (appearance.themeMode || 'dark') === lower;
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          className={`${styles.themePillBtn} ${isActive ? styles.themePillBtnActive : ''}`}
+                          onClick={() => {
+                            playClick();
+                            updateAppearanceState({ themeMode: lower });
+                          }}
+                        >
+                          {m}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Accent Color Selector: 8 radiant glowing jewels */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeaderTitle}>Accent Color Selector</div>
+                <div className={styles.jewelGridRow}>
+                  {ACCENT_COLORS.map((c) => {
+                    const isSelected = appearance.accentColor?.toLowerCase() === c.hex.toLowerCase();
+                    return (
+                      <button
+                        key={c.hex}
+                        type="button"
+                        className={`${styles.jewelChip} ${isSelected ? styles.jewelChipActive : ''}`}
+                        style={{
+                          '--jewel-color': c.hex,
+                          '--halo-glow': c.glow,
+                        }}
+                        onClick={() => handleSelectAccent(c)}
+                        title={c.name}
+                        aria-label={c.name}
+                      >
+                        <span className={styles.jewelGleam} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Wallpaper Showcase: Wide cards with Live / Static tags */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeaderTitle}>Wallpaper</div>
+                <div className={styles.featuredWallpapersRow}>
+                  {[
+                    { id: 'flow', name: 'Abstract Flow', type: 'Live', isLive: true, css: 'linear-gradient(135deg, #180e29 0%, #30174e 40%, #0c3358 100%)' },
+                    { id: 'aurora', name: 'Aurora Borealis', type: 'Live', isLive: true, css: 'linear-gradient(135deg, #031e21 0%, #054848 50%, #03151f 100%)' },
+                    { id: 'midnight', name: 'Midnight City', type: 'Static', isLive: false, css: 'linear-gradient(180deg, #0a0d16 0%, #06111e 60%, #020408 100%)' },
+                  ].map((wp) => {
+                    const isCurrent = (appearance.wallpaper === wp.id) ||
+                      (wp.id === 'flow' && (!appearance.wallpaper || appearance.wallpaper === 'default' || appearance.wallpaper === 'flow')) ||
+                      (wp.id === 'aurora' && appearance.wallpaper === 'aurora') ||
+                      (wp.id === 'midnight' && appearance.wallpaper === 'midnight');
+                    return (
+                      <div
+                        key={wp.id}
+                        className={`${styles.wideWpCard} ${isCurrent ? styles.wideWpCardActive : ''}`}
+                        style={{ background: wp.css }}
+                        onClick={() => {
+                          playClick();
+                          const registryWp = WALLPAPER_PRESETS.find(p => p.id === wp.id) || WALLPAPER_PRESETS[0];
+                          handleSelectWallpaper(registryWp);
+                        }}
+                      >
+                        <div className={styles.wpGradientOverlay} />
+                        <span className={`${styles.wpBadgePill} ${wp.isLive ? styles.wpBadgeLive : styles.wpBadgeStatic}`}>
+                          {wp.isLive && <span className={styles.liveDotCircle} />}
+                          {wp.type}
+                        </span>
+                        <div className={styles.wpCardFooter}>
+                          <span className={styles.wpCardTitle}>{wp.name}</span>
+                          {isCurrent && (
+                            <span className={styles.wpCheckmarkCircle}>
+                              <CheckIcon size={12} />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Display Controls: Brightness slider & Glass switches */}
+              <div className={styles.sectionBlock}>
+                <div className={styles.sectionHeaderTitle}>Display</div>
+                
+                {/* Brightness with Glowing Cyan Track */}
+                <div className={styles.displayControlRow}>
+                  <span className={styles.displayRowLabel}>Brightness</span>
+                  <div className={styles.sliderWithReadout}>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={appearance.brightness || 78}
+                      onChange={(e) => updateAppearanceState({ brightness: parseInt(e.target.value, 10) })}
+                      className={styles.cyanGlowRange}
+                    />
+                    <span className={styles.readoutPercentage}>{appearance.brightness || 78}%</span>
+                  </div>
+                </div>
+
+                {/* Tactile iOS Glass Switches */}
+                {[
+                  { key: 'trueTone', label: 'True Tone', defaultVal: true },
+                  { key: 'nightShift', label: 'Night Shift', defaultVal: false },
+                  { key: 'autoBrightness', label: 'Auto-Brightness', defaultVal: true },
+                  { key: 'reducedMotion', label: 'reduced motion', defaultVal: true },
+                ].map((item) => {
+                  const val = appearance[item.key] !== undefined ? appearance[item.key] : item.defaultVal;
+                  return (
+                    <div key={item.key} className={styles.displayToggleRow}>
+                      <span className={styles.displayRowLabel}>{item.label}</span>
+                      <label className={styles.glassSwitch}>
+                        <input
+                          type="checkbox"
+                          checked={val}
+                          onChange={(e) => {
+                            playClick();
+                            updateAppearanceState({ [item.key]: e.target.checked });
+                          }}
+                        />
+                        <span className={styles.glassSwitchSlider} />
+                      </label>
                     </div>
-                    <span>Mini Window Preview</span>
-                  </div>
-                  <div className={styles.miniWindowBody}>
-                    <div className={styles.miniBar} style={{ width: '80%' }} />
-                    <div className={styles.miniBar} style={{ width: '55%' }} />
-                    <div className={styles.miniBar} style={{ width: '90%' }} />
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.sliderGroup}>
-                <div className={styles.sliderHeader}>
-                  <span>Window Backdrop Glass Blur</span>
-                  <span className={styles.sliderValue}>{appearance.glassBlur}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="4"
-                  max="32"
-                  value={appearance.glassBlur}
-                  onChange={(e) => updateAppearanceState({ glassBlur: parseInt(e.target.value, 10) })}
-                  className={styles.rangeInput}
-                />
-              </div>
-
-              <div className={styles.sliderGroup}>
-                <div className={styles.sliderHeader}>
-                  <span>Window Surface Opacity</span>
-                  <span className={styles.sliderValue}>{appearance.glassOpacity}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="35"
-                  max="95"
-                  value={appearance.glassOpacity}
-                  onChange={(e) => updateAppearanceState({ glassOpacity: parseInt(e.target.value, 10) })}
-                  className={styles.rangeInput}
-                />
-              </div>
-
-              <div className={styles.sliderGroup}>
-                <div className={styles.sliderHeader}>
-                  <span>Window Corner Rounding</span>
-                  <span className={styles.sliderValue}>{appearance.borderRadius}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="4"
-                  max="16"
-                  value={appearance.borderRadius}
-                  onChange={(e) => updateAppearanceState({ borderRadius: parseInt(e.target.value, 10) })}
-                  className={styles.rangeInput}
-                />
-              </div>
-
-              <div className={styles.divider} />
-
-              <div className={styles.toggleRow}>
-                <div>
-                  <div className={styles.labelTitle}>Night Light (Blue Light Shield)</div>
-                  <div className={styles.labelDesc}>Warms OS color spectrum to alleviate ocular fatigue during nighttime.</div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={appearance.nightLight}
-                  onChange={(e) => updateAppearanceState({ nightLight: e.target.checked })}
-                  className={styles.switchCheckbox}
-                />
+                  );
+                })}
               </div>
             </div>
           </div>
