@@ -25,6 +25,13 @@ class SubwaySurgeAudioEngine {
     this.jetpackGain = null;
     this.hoverboardOsc = null;
     this.hoverboardGain = null;
+
+    // Live gameplay intensity (0-1), drives dynamic music layers
+    this.currentIntensity = 0;
+    this.padOsc1 = null;
+    this.padOsc2 = null;
+    this.padFilter = null;
+    this.padGain = null;
   }
 
   init() {
@@ -40,6 +47,12 @@ class SubwaySurgeAudioEngine {
       this.musicGain = this.ctx.createGain();
       this.musicGain.gain.setValueAtTime(0.4, this.ctx.currentTime);
       this.musicGain.connect(this.masterGain);
+
+      // Separate bus so the sidechain "pump" duck can automate freely
+      // without ever touching the user's music volume slider value.
+      this.musicBus = this.ctx.createGain();
+      this.musicBus.gain.setValueAtTime(1, this.ctx.currentTime);
+      this.musicBus.connect(this.musicGain);
 
       this.sfxGain = this.ctx.createGain();
       this.sfxGain.gain.setValueAtTime(0.65, this.ctx.currentTime);
@@ -82,6 +95,13 @@ class SubwaySurgeAudioEngine {
     if (this.sfxGain && this.ctx) {
       this.sfxGain.gain.setValueAtTime(Math.max(0, Math.min(1, vol)) * 0.65, this.ctx.currentTime);
     }
+  }
+
+  // Live 0-1 gameplay intensity (speed + combo + ghost surge) — the music
+  // sequencer reads this each step to brighten the bassline, add extra hats,
+  // and bring in the pad layer as things get more intense.
+  setIntensity(level) {
+    this.currentIntensity = Math.max(0, Math.min(1, level));
   }
 
   // --- BILLIGHOST THEMED SPECTRAL EFFECTS ---
@@ -601,18 +621,62 @@ class SubwaySurgeAudioEngine {
       49, 49, 49, 49, 58.27, 58.27, 65.41, 65.41,
     ];
 
-    const leadMelody = [
+    // Two alternating 2-bar lead phrases so the loop doesn't repeat every
+    // 32 steps — phrase B answers phrase A for a proper call-and-response.
+    const leadMelodyA = [
       440, 0, 523.25, 0, 587.33, 0, 659.25, 0,
       587.33, 0, 523.25, 0, 440, 0, 392, 0,
     ];
+    const leadMelodyB = [
+      523.25, 0, 659.25, 0, 698.46, 0, 880, 0,
+      698.46, 0, 659.25, 0, 587.33, 0, 523.25, 0,
+    ];
+
+    // Pad chord roots (two octaves above bass) matching the bassline's
+    // harmonic movement — fades in with intensity for extra fullness.
+    const padRootsA = 220; // A3
+    const padRootsB = 196; // G3
+
+    this.padFilter = this.ctx.createBiquadFilter();
+    this.padFilter.type = 'lowpass';
+    this.padFilter.frequency.setValueAtTime(900, this.ctx.currentTime);
+    this.padGain = this.ctx.createGain();
+    this.padGain.gain.setValueAtTime(0, this.ctx.currentTime);
+    this.padOsc1 = this.ctx.createOscillator();
+    this.padOsc1.type = 'sawtooth';
+    this.padOsc1.detune.setValueAtTime(-6, this.ctx.currentTime);
+    this.padOsc1.frequency.setValueAtTime(padRootsA, this.ctx.currentTime);
+    this.padOsc2 = this.ctx.createOscillator();
+    this.padOsc2.type = 'sawtooth';
+    this.padOsc2.detune.setValueAtTime(7, this.ctx.currentTime);
+    this.padOsc2.frequency.setValueAtTime(padRootsA * 1.5, this.ctx.currentTime);
+    this.padOsc1.connect(this.padFilter);
+    this.padOsc2.connect(this.padFilter);
+    this.padFilter.connect(this.padGain);
+    this.padGain.connect(this.musicBus);
+    this.padOsc1.start();
+    this.padOsc2.start();
 
     this.musicTimer = setInterval(() => {
       if (!this.isPlayingMusic || this.isMuted || !this.ctx) return;
 
       const currentStep = this.step % 16;
+      const bar = Math.floor(this.step / 16);
       const t = this.ctx.currentTime;
+      const intensity = this.currentIntensity;
 
-      // 1. Kick on 0, 4, 8, 12 (4-on-the-floor)
+      // Pad chord + gain follow the bassline's harmonic movement, fading
+      // in as gameplay intensity rises so the mix gets fuller when it matters.
+      if (currentStep === 0) {
+        const root = bar % 2 === 0 ? padRootsA : padRootsB;
+        this.padOsc1.frequency.setTargetAtTime(root, t, 0.4);
+        this.padOsc2.frequency.setTargetAtTime(root * 1.5, t, 0.4);
+        this.padGain.gain.setTargetAtTime(0.02 + intensity * 0.07, t, 0.6);
+        this.padFilter.frequency.setTargetAtTime(500 + intensity * 1800, t, 0.6);
+      }
+
+      // 1. Kick on 0, 4, 8, 12 (4-on-the-floor) — with a classic sidechain
+      // "pump": the whole music bus ducks on every kick then breathes back.
       if (currentStep % 4 === 0) {
         const kickOsc = this.ctx.createOscillator();
         const kickGain = this.ctx.createGain();
@@ -625,6 +689,10 @@ class SubwaySurgeAudioEngine {
         kickGain.connect(this.musicGain);
         kickOsc.start(t);
         kickOsc.stop(t + 0.13);
+
+        this.musicBus.gain.cancelScheduledValues(t);
+        this.musicBus.gain.setValueAtTime(0.5, t);
+        this.musicBus.gain.linearRampToValueAtTime(1, t + 0.22);
       }
 
       // 2. Snare on 4 and 12
@@ -645,12 +713,14 @@ class SubwaySurgeAudioEngine {
 
         snareNoise.connect(snareFilter);
         snareFilter.connect(snareGain);
-        snareGain.connect(this.musicGain);
+        snareGain.connect(this.musicBus);
         snareNoise.start(t);
       }
 
-      // 3. Hi-hat on offbeats (2, 6, 10, 14)
-      if (currentStep % 2 !== 0) {
+      // 3. Hi-hat on offbeats, with extra 16th-note rolls layered in as
+      // intensity climbs (speed/combo/ghost surge) for a driving feel.
+      const hatActive = currentStep % 2 !== 0 || (intensity > 0.55 && currentStep % 1 === 0);
+      if (hatActive) {
         const hat = this.ctx.createBufferSource();
         const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.05, this.ctx.sampleRate);
         const d = buf.getChannelData(0);
@@ -662,16 +732,18 @@ class SubwaySurgeAudioEngine {
         hatFilter.frequency.setValueAtTime(7000, t);
 
         const hatGain = this.ctx.createGain();
-        hatGain.gain.setValueAtTime(0.06, t);
+        const isOffbeat = currentStep % 2 !== 0;
+        hatGain.gain.setValueAtTime(isOffbeat ? 0.06 : 0.03 + intensity * 0.02, t);
         hatGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
 
         hat.connect(hatFilter);
         hatFilter.connect(hatGain);
-        hatGain.connect(this.musicGain);
+        hatGain.connect(this.musicBus);
         hat.start(t);
       }
 
-      // 4. Synth Rolling Bassline (every 16th note)
+      // 4. Synth Rolling Bassline — filter brightens with intensity for a
+      // more aggressive tone as the run heats up.
       const bassFreq = bassNotes[currentStep];
       if (bassFreq) {
         const bassOsc = this.ctx.createOscillator();
@@ -682,7 +754,7 @@ class SubwaySurgeAudioEngine {
         bassOsc.frequency.setValueAtTime(bassFreq, t);
 
         bassFilter.type = 'lowpass';
-        bassFilter.frequency.setValueAtTime(450, t);
+        bassFilter.frequency.setValueAtTime(450 + intensity * 900, t);
         bassFilter.Q.value = 4;
 
         bassGain.gain.setValueAtTime(0.14, t);
@@ -690,26 +762,29 @@ class SubwaySurgeAudioEngine {
 
         bassOsc.connect(bassFilter);
         bassFilter.connect(bassGain);
-        bassGain.connect(this.musicGain);
+        bassGain.connect(this.musicBus);
 
         bassOsc.start(t);
         bassOsc.stop(t + 0.1);
       }
 
-      // 5. Synth Lead Arpeggio
+      // 5. Synth Lead Arpeggio — alternates between two phrases for
+      // call-and-response variety, enters more often at higher intensity.
+      const leadMelody = bar % 4 < 2 ? leadMelodyA : leadMelodyB;
       const leadFreq = leadMelody[currentStep];
-      if (leadFreq && (this.step % 32 >= 16)) { // enters every other bar
+      const leadThreshold = intensity > 0.5 ? 8 : 16;
+      if (leadFreq && (this.step % 32 >= leadThreshold)) {
         const leadOsc = this.ctx.createOscillator();
         const leadGain = this.ctx.createGain();
 
         leadOsc.type = 'square';
         leadOsc.frequency.setValueAtTime(leadFreq, t);
 
-        leadGain.gain.setValueAtTime(0.05, t);
+        leadGain.gain.setValueAtTime(0.05 + intensity * 0.03, t);
         leadGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
 
         leadOsc.connect(leadGain);
-        leadGain.connect(this.musicGain);
+        leadGain.connect(this.musicBus);
 
         leadOsc.start(t);
         leadOsc.stop(t + 0.13);
@@ -725,6 +800,17 @@ class SubwaySurgeAudioEngine {
       clearInterval(this.musicTimer);
       this.musicTimer = null;
     }
+    [this.padOsc1, this.padOsc2].forEach(osc => {
+      if (!osc) return;
+      try {
+        osc.stop();
+        osc.disconnect();
+      } catch {}
+    });
+    this.padOsc1 = null;
+    this.padOsc2 = null;
+    this.padFilter = null;
+    this.padGain = null;
   }
 
   destroy() {

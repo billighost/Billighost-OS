@@ -67,7 +67,8 @@ export class SubwaySurgeEngine {
     this.ghostSurgeTimer = 0;
     this.speed = 28;
     this.baseSpeed = 28;
-    this.maxSpeed = 68;
+    this.maxSpeed = 80;
+    this.difficultyRampDistance = 2400; // distance (m) at which difficulty reaches maximum
     this.distance = 0;
     this.highScoreDistance = 0;
     this.recordBroken = false;
@@ -166,6 +167,9 @@ export class SubwaySurgeEngine {
     // Atmosphere Cycle
     this.dayNightFactor = 0; // 0: Night, 0.5: Dawn, 1: Twilight
     this.shakeIntensity = 0;
+    this.cameraPunch = 0;
+    this.floatingTexts = [];
+    this.musicIntensity = 0;
 
     // Bindings
     this.animate = this.animate.bind(this);
@@ -178,13 +182,22 @@ export class SubwaySurgeEngine {
     const width = this.canvas.clientWidth || 800;
     const height = this.canvas.clientHeight || 500;
 
-    // 1. Scene & Atmosphere Fog
+    // 1. Scene & Atmosphere — dusk-cyberpunk gradient sky instead of a flat dark fill
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x080d1a);
-    this.scene.fog = new THREE.FogExp2(0x080d1a, 0.014);
+    this.skyTexture = this.createSkyGradientTexture();
+    this.scene.background = this.skyTexture;
+    this.fogColor = new THREE.Color(0x2a3a5c);
+    this.scene.fog = new THREE.FogExp2(0x2a3a5c, 0.0068);
+
+    // Distant glowing horizon sun/moon disc for depth cueing
+    const sunGeo = new THREE.CircleGeometry(9, 32);
+    const sunMat = new THREE.MeshBasicMaterial({ color: 0xffb37a, transparent: true, opacity: 0.55, fog: false });
+    this.horizonSun = new THREE.Mesh(sunGeo, sunMat);
+    this.horizonSun.position.set(0, 14, -260);
+    this.scene.add(this.horizonSun);
 
     // 2. Camera Setup with Speed-Responsive FOV
-    this.camera = new THREE.PerspectiveCamera(66, width / height, 0.1, 300);
+    this.camera = new THREE.PerspectiveCamera(66, width / height, 0.1, 400);
     this.camera.position.set(0, 4.4, 7.6);
     this.camera.lookAt(0, 2, -10);
 
@@ -196,12 +209,18 @@ export class SubwaySurgeEngine {
       alpha: false,
     });
     this.renderer.setSize(width, height, false);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    if ('outputColorSpace' in this.renderer) this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    if ('toneMapping' in this.renderer) {
+      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      this.renderer.toneMappingExposure = 1.15;
+    }
 
     // 4. Lighting Rig
     this.setupLighting();
+    this.buildSkyDecor();
 
     // 5. Shared Material & Geometry Caches
     this.initCaches();
@@ -224,19 +243,123 @@ export class SubwaySurgeEngine {
     window.addEventListener('resize', this.handleResize);
   }
 
+  createSkyGradientTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 256);
+    // Twilight cyberpunk sky: deep indigo zenith -> warm amber/rose horizon glow -> cool haze near ground
+    grad.addColorStop(0.0, '#0b1130');
+    grad.addColorStop(0.35, '#1c2a5e');
+    grad.addColorStop(0.6, '#4a3d7a');
+    grad.addColorStop(0.78, '#c1587a');
+    grad.addColorStop(0.9, '#ffa969');
+    grad.addColorStop(1.0, '#2a3a5c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 32, 256);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace ? THREE.SRGBColorSpace : tex.colorSpace;
+    return tex;
+  }
+
+  getBillboardTexture(text, glowColor) {
+    if (!this._billboardCache) this._billboardCache = {};
+    const key = text + glowColor;
+    if (this._billboardCache[key]) return this._billboardCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'rgba(6, 10, 20, 0.92)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = glowColor;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+    ctx.font = 'bold 72px "Space Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 28;
+    ctx.fillStyle = glowColor;
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    const tex = new THREE.CanvasTexture(canvas);
+    this._billboardCache[key] = tex;
+    return tex;
+  }
+
+  buildSkyDecor() {
+    // Sparse starfield scattered across the upper sky
+    const starCount = 140;
+    const starGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 120 + Math.random() * 140;
+      positions[i * 3] = Math.cos(angle) * radius;
+      positions[i * 3 + 1] = 28 + Math.random() * 75;
+      positions[i * 3 + 2] = -Math.random() * 280 - 20;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.5, transparent: true, opacity: 0.7, fog: false, sizeAttenuation: true });
+    this.starField = new THREE.Points(starGeo, starMat);
+    this.scene.add(this.starField);
+
+    // Slowly drifting soft cloud sprites for atmospheric depth
+    const cloudTex = this.getCloudTexture();
+    this.clouds = [];
+    for (let i = 0; i < 5; i++) {
+      const cloudMat = new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: 0.28, depthWrite: false, fog: false });
+      const cloud = new THREE.Sprite(cloudMat);
+      const scale = 45 + Math.random() * 35;
+      cloud.scale.set(scale, scale * 0.42, 1);
+      cloud.position.set((Math.random() - 0.5) * 240, 42 + Math.random() * 22, -160 - Math.random() * 160);
+      this.scene.add(cloud);
+      this.clouds.push(cloud);
+    }
+  }
+
+  getCloudTexture() {
+    if (this._cloudTex) return this._cloudTex;
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    for (let i = 0; i < 6; i++) {
+      const cx = 40 + Math.random() * 176;
+      const cy = 64 + (Math.random() - 0.5) * 30;
+      const r = 28 + Math.random() * 32;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      grad.addColorStop(0, 'rgba(255,255,255,0.75)');
+      grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    this._cloudTex = new THREE.CanvasTexture(canvas);
+    return this._cloudTex;
+  }
+
   setupLighting() {
-    // Ambient Cool Blue Fill
-    this.ambientLight = new THREE.AmbientLight(0x405575, 1.1);
+    // Soft sky/ground hemisphere fill — this alone fixes most of the "everything is flat and dark" look
+    this.hemiLight = new THREE.HemisphereLight(0x9fb8ff, 0x1a2036, 1.35);
+    this.scene.add(this.hemiLight);
+
+    // Ambient Cool Blue Fill (brighter, so shadowed faces aren't pure black)
+    this.ambientLight = new THREE.AmbientLight(0x6b7aa8, 0.65);
     this.scene.add(this.ambientLight);
 
-    // Key Directional Sun / Cyber Light
-    this.dirLight = new THREE.DirectionalLight(0xfff5e6, 1.4);
-    this.dirLight.position.set(16, 32, 20);
+    // Key Directional Sun / Cyber Light (warm, low-angle "golden hour" dusk light)
+    this.dirLight = new THREE.DirectionalLight(0xffd9a8, 2.0);
+    this.dirLight.position.set(16, 26, 20);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 512;
-    this.dirLight.shadow.mapSize.height = 512;
+    this.dirLight.shadow.mapSize.width = 1024;
+    this.dirLight.shadow.mapSize.height = 1024;
     this.dirLight.shadow.camera.near = 0.5;
     this.dirLight.shadow.camera.far = 90;
+    this.dirLight.shadow.bias = -0.0015;
     const d = 22;
     this.dirLight.shadow.camera.left = -d;
     this.dirLight.shadow.camera.right = d;
@@ -245,16 +368,21 @@ export class SubwaySurgeEngine {
     this.scene.add(this.dirLight);
     this.scene.add(this.dirLight.target);
 
+    // Cool bounce/fill light from the opposite side so shadowed sides read with color, not black
+    this.fillLight = new THREE.DirectionalLight(0x6ea8ff, 0.55);
+    this.fillLight.position.set(-14, 10, -6);
+    this.scene.add(this.fillLight);
+
     // Neon Rim Accent Light (Billighost Cyan Glow)
-    this.rimLight = new THREE.DirectionalLight(0x06b6d4, 0.9);
+    this.rimLight = new THREE.DirectionalLight(0x06b6d4, 1.1);
     this.rimLight.position.set(-18, 12, -22);
     this.scene.add(this.rimLight);
   }
 
   initCaches() {
     this.materials = {
-      bed: new THREE.MeshLambertMaterial({ color: 0x131924 }),
-      curb: new THREE.MeshLambertMaterial({ color: 0x2c384a }),
+      bed: new THREE.MeshLambertMaterial({ color: 0x232c3e }),
+      curb: new THREE.MeshLambertMaterial({ color: 0x3d4c63 }),
       rail: new THREE.MeshStandardMaterial({ color: 0xa0aec0, metalness: 0.9, roughness: 0.2 }),
       tie: new THREE.MeshLambertMaterial({ color: 0x221a14 }),
       thirdRail: new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8, roughness: 0.3 }),
@@ -263,15 +391,15 @@ export class SubwaySurgeEngine {
       neonCyan: new THREE.MeshBasicMaterial({ color: 0x06b6d4 }),
       neonYellow: new THREE.MeshBasicMaterial({ color: 0xfef08a }),
       neonAmber: new THREE.MeshBasicMaterial({ color: 0xf59e0b }),
-      bldg: new THREE.MeshLambertMaterial({ color: 0x0c1322 }),
+      bldg: new THREE.MeshLambertMaterial({ color: 0x1a2338 }),
       bldgWinCyan: new THREE.MeshBasicMaterial({ color: 0x38bdf8 }),
       bldgWinAmber: new THREE.MeshBasicMaterial({ color: 0xfbbf24 }),
       bldgWinPurple: new THREE.MeshBasicMaterial({ color: 0xa855f7 }),
-      trainBody: new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.65, roughness: 0.28 }),
-      trainRoof: new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.35 }),
-      trainCorrugated: new THREE.MeshStandardMaterial({ color: 0x0369a1, metalness: 0.8, roughness: 0.25 }),
-      trainDarkMetal: new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9, roughness: 0.25 }),
-      trainGlass: new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.05, metalness: 0.95 }),
+      trainBody: new THREE.MeshStandardMaterial({ color: 0x1789d1, metalness: 0.55, roughness: 0.32 }),
+      trainRoof: new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.4 }),
+      trainCorrugated: new THREE.MeshStandardMaterial({ color: 0x0d7ec2, metalness: 0.7, roughness: 0.3 }),
+      trainDarkMetal: new THREE.MeshStandardMaterial({ color: 0x27364a, metalness: 0.85, roughness: 0.3 }),
+      trainGlass: new THREE.MeshStandardMaterial({ color: 0x1e2a3f, roughness: 0.1, metalness: 0.75 }),
       trainLight: new THREE.MeshBasicMaterial({ color: 0xfffae0 }),
       trainGlowHeadlight: new THREE.MeshBasicMaterial({ color: 0xffffff }),
       trainRedTail: new THREE.MeshBasicMaterial({ color: 0xef4444 }),
@@ -649,12 +777,18 @@ export class SubwaySurgeEngine {
     const armGeo = new THREE.BoxGeometry(0.18, 0.65, 0.18);
     this.leftArm = new THREE.Group();
     this.leftArm.position.set(-0.48, 0.8, 0);
-    this.leftArm.add(new THREE.Mesh(armGeo, armorMat));
+    const armMeshL = new THREE.Mesh(armGeo, armorMat);
+    armMeshL.position.y = -0.3;
+    armMeshL.castShadow = true;
+    this.leftArm.add(armMeshL);
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
     this.rightArm.position.set(0.48, 0.8, 0);
-    this.rightArm.add(new THREE.Mesh(armGeo, armorMat));
+    const armMeshR = new THREE.Mesh(armGeo, armorMat);
+    armMeshR.position.y = -0.3;
+    armMeshR.castShadow = true;
+    this.rightArm.add(armMeshR);
     this.charRoot.add(this.rightArm);
 
     this.leftLeg = this.buildHumanLeg(underMat, shoeMat, visorMat, -0.2);
@@ -698,12 +832,18 @@ export class SubwaySurgeEngine {
     const armGeo = new THREE.BoxGeometry(0.2, 0.65, 0.2);
     this.leftArm = new THREE.Group();
     this.leftArm.position.set(-0.48, 0.8, 0);
-    this.leftArm.add(new THREE.Mesh(armGeo, jacketMat));
+    const armMeshL = new THREE.Mesh(armGeo, jacketMat);
+    armMeshL.position.y = -0.3;
+    armMeshL.castShadow = true;
+    this.leftArm.add(armMeshL);
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
     this.rightArm.position.set(0.48, 0.8, 0);
-    this.rightArm.add(new THREE.Mesh(armGeo, jacketMat));
+    const armMeshR = new THREE.Mesh(armGeo, jacketMat);
+    armMeshR.position.y = -0.3;
+    armMeshR.castShadow = true;
+    this.rightArm.add(armMeshR);
     this.charRoot.add(this.rightArm);
 
     this.leftLeg = this.buildHumanLeg(pantsMat, shoeMat, neonWireMat, -0.2);
@@ -740,12 +880,18 @@ export class SubwaySurgeEngine {
     const armGeo = new THREE.BoxGeometry(0.2, 0.65, 0.2);
     this.leftArm = new THREE.Group();
     this.leftArm.position.set(-0.48, 0.8, 0);
-    this.leftArm.add(new THREE.Mesh(armGeo, coatMat));
+    const armMeshL = new THREE.Mesh(armGeo, coatMat);
+    armMeshL.position.y = -0.3;
+    armMeshL.castShadow = true;
+    this.leftArm.add(armMeshL);
     this.charRoot.add(this.leftArm);
 
     this.rightArm = new THREE.Group();
     this.rightArm.position.set(0.48, 0.8, 0);
-    this.rightArm.add(new THREE.Mesh(armGeo, coatMat));
+    const armMeshR = new THREE.Mesh(armGeo, coatMat);
+    armMeshR.position.y = -0.3;
+    armMeshR.castShadow = true;
+    this.rightArm.add(armMeshR);
     this.charRoot.add(this.rightArm);
 
     this.leftLeg = this.buildHumanLeg(coatMat, shoeMat, maskMat, -0.2);
@@ -1064,33 +1210,76 @@ export class SubwaySurgeEngine {
   addCityScenery(chunk) {
     [-15, 15].forEach((sideX, sideIdx) => {
       for (let i = 0; i < 2; i++) {
-        const h = 24 + i * 10;
-        const w = 8.5;
-        const d = 11;
+        const w = 6.5 + Math.random() * 4.5;
+        const h = 18 + i * 9 + Math.random() * 13;
+        const d = 8.5 + Math.random() * 4;
         const bldgGeo = new THREE.BoxGeometry(w, h, d);
         const bldg = new THREE.Mesh(bldgGeo, this.materials.bldg);
         const bZ = -this.chunkLength / 2 + i * 24;
         bldg.position.set(sideX, h / 2, bZ);
+        bldg.receiveShadow = true;
         chunk.add(bldg);
+
+        // Lit window grid on the track-facing side, grouped per color as
+        // InstancedMesh so a whole skyline costs only 3 draw calls per building
+        const faceX = sideIdx === 0 ? w / 2 + 0.03 : -(w / 2 + 0.03);
+        const faceRotY = sideIdx === 0 ? Math.PI / 2 : -Math.PI / 2;
+        const cols = 4;
+        const rows = Math.max(3, Math.floor(h / 2.4));
+        const winGeo = new THREE.PlaneGeometry(0.8, 1.15);
+        const winMats = [this.materials.bldgWinCyan, this.materials.bldgWinAmber, this.materials.bldgWinPurple];
+        const buckets = [[], [], []];
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            if (Math.random() > 0.42) continue; // most windows stay dark, some are lit
+            const colorIdx = Math.floor(Math.random() * 3);
+            const localY = -h / 2 + 1.6 + r * 2.3;
+            const localZLocal = -d / 2 + 1.4 + c * ((d - 2.8) / (cols - 1));
+            buckets[colorIdx].push([localY, localZLocal]);
+          }
+        }
+        buckets.forEach((list, ci) => {
+          if (!list.length) return;
+          const inst = new THREE.InstancedMesh(winGeo, winMats[ci], list.length);
+          const dummy = new THREE.Object3D();
+          dummy.rotation.y = faceRotY;
+          list.forEach(([ly, lz], idx) => {
+            dummy.position.set(faceX, ly, lz);
+            dummy.updateMatrix();
+            inst.setMatrixAt(idx, dummy.matrix);
+          });
+          inst.instanceMatrix.needsUpdate = true;
+          bldg.add(inst);
+        });
+
+        // Rooftop detail (water towers / HVAC clusters / antennas / parapet ledge)
+        this.addRooftopProps(bldg, w, h, d);
 
         // Flashing Aviation Beacon on top of skyscraper
         const beaconGeo = new THREE.SphereGeometry(0.24, 8, 8);
         const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff0033 });
         const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-        beacon.position.set(sideX, h + 0.3, bZ);
-        chunk.add(beacon);
+        beacon.position.set(0, h / 2 + 0.3, 0);
+        bldg.add(beacon);
 
-        // Holographic Billboard on selected buildings
-        if (i === 0 && sideIdx === 0) {
+        // Holographic Billboard on selected buildings — actual glowing text now
+        if (i === 0) {
+          const labels = [
+            ['BILLIGHOST OS', '#38bdf8'],
+            ['METRO SURGE', '#f59e0b'],
+            ['RUN // FREE', '#ec4899'],
+          ];
+          const [text, glow] = labels[Math.floor(Math.random() * labels.length)];
           const boardGeo = new THREE.PlaneGeometry(6.5, 3.2);
           const boardMat = new THREE.MeshBasicMaterial({
-            color: 0x06b6d4,
+            map: this.getBillboardTexture(text, glow),
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0.85,
+            opacity: 0.95,
           });
           const board = new THREE.Mesh(boardGeo, boardMat);
-          board.position.set(sideX + 3.8, 14, bZ);
+          const offset = sideIdx === 0 ? 3.8 : -3.8;
+          board.position.set(sideX + offset, 14, bZ);
           board.rotation.y = Math.PI / 2;
           chunk.add(board);
         }
@@ -1098,8 +1287,71 @@ export class SubwaySurgeEngine {
     });
   }
 
+  addRooftopProps(bldg, w, h, d) {
+    const propType = Math.floor(Math.random() * 4);
+    if (propType === 0) {
+      // Cylindrical water tower on a leg frame
+      const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 1.5, 10), this.materials.trainDarkMetal);
+      tank.position.set(0, h / 2 + 1.6, 0);
+      bldg.add(tank);
+      const roofCone = new THREE.Mesh(new THREE.ConeGeometry(1.35, 0.8, 10), this.materials.trainDarkMetal);
+      roofCone.position.set(0, h / 2 + 2.75, 0);
+      bldg.add(roofCone);
+      [-0.8, 0.8].forEach(lx => [-0.8, 0.8].forEach(lz => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.5, 6), this.materials.steel);
+        leg.position.set(lx, h / 2 + 0.75, lz);
+        bldg.add(leg);
+      }));
+    } else if (propType === 1) {
+      // Cluster of rooftop HVAC / AC units
+      const count = 2 + Math.floor(Math.random() * 3);
+      for (let n = 0; n < count; n++) {
+        const unit = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.9), this.materials.trainDarkMetal);
+        unit.position.set((Math.random() - 0.5) * (w - 1.5), h / 2 + 0.28, (Math.random() - 0.5) * (d - 1.5));
+        bldg.add(unit);
+      }
+    } else if (propType === 2) {
+      // Antenna mast with a blinking tip light
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 3.2, 6), this.materials.steel);
+      mast.position.set(0, h / 2 + 1.6, 0);
+      bldg.add(mast);
+      const tipLight = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff0033 }));
+      tipLight.position.set(0, h / 2 + 3.2, 0);
+      bldg.add(tipLight);
+    } else {
+      // Simple parapet ledge for rooftop grounding
+      const ledge = new THREE.Mesh(new THREE.BoxGeometry(w + 0.25, 0.35, d + 0.25), this.materials.trainDarkMetal);
+      ledge.position.set(0, h / 2 + 0.18, 0);
+      bldg.add(ledge);
+    }
+  }
+
+  getDifficultyFactor() {
+    return THREE.MathUtils.clamp(this.distance / this.difficultyRampDistance, 0, 1);
+  }
+
+  pickWeightedPattern(diff) {
+    // Early runs favor simple single-hazard layouts; as distance grows, dense
+    // multi-hazard layouts and moving trains become proportionally more common.
+    const weights = [
+      1.0 - diff * 0.4,        // 0: single train (easy)
+      0.35 + diff * 0.85,      // 1: moving train (harder — timing based)
+      0.4 + diff * 0.95,       // 2: hurdle + phantom
+      0.4 + diff * 0.95,       // 3: hurdle + slide combo
+      0.25 + diff * 0.55,      // 4: dense triple-threat (only really bites late)
+    ];
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return i;
+    }
+    return weights.length - 1;
+  }
+
   populateChunkGameplay(chunkZ) {
     const laneOccupied = [false, false, false];
+    const diff = this.getDifficultyFactor();
 
     // Check if we should spawn the Personal Record Banner Gate
     if (this.highScoreDistance > 100 && !this.recordBroken && !this.recordGateMesh) {
@@ -1108,7 +1360,7 @@ export class SubwaySurgeEngine {
       }
     }
 
-    const pattern = Math.floor(Math.random() * 5);
+    const pattern = this.pickWeightedPattern(diff);
 
     if (pattern === 0 || pattern === 1) {
       const trainLane = Math.floor(Math.random() * 3);
@@ -1119,7 +1371,8 @@ export class SubwaySurgeEngine {
 
       const otherLanes = [0, 1, 2].filter(l => l !== trainLane);
       const hurdleLane = otherLanes[Math.floor(Math.random() * otherLanes.length)];
-      if (Math.random() > 0.25) {
+      // More likely to add a second hazard next to the train as difficulty rises
+      if (Math.random() > 0.32 - diff * 0.24) {
         laneOccupied[hurdleLane] = true;
         const isSlide = Math.random() > 0.5;
         this.spawnObstacle(LANES[hurdleLane], chunkZ + (Math.random() * 8 - 4), isSlide ? 'slide' : 'hurdle');
@@ -1134,17 +1387,29 @@ export class SubwaySurgeEngine {
       const l2 = remaining[Math.floor(Math.random() * remaining.length)];
       laneOccupied[l2] = true;
       this.spawnPhantom(LANES[l2], chunkZ + 6);
-    } else {
+    } else if (pattern === 3) {
       const l1 = Math.floor(Math.random() * 3);
       laneOccupied[l1] = true;
       this.spawnObstacle(LANES[l1], chunkZ - 10, 'hurdle');
 
       const remaining = [0, 1, 2].filter(l => l !== l1);
       const l2 = remaining[Math.floor(Math.random() * remaining.length)];
-      if (Math.random() > 0.4) {
+      if (Math.random() > 0.42 - diff * 0.3) {
         laneOccupied[l2] = true;
         this.spawnObstacle(LANES[l2], chunkZ + 10, 'slide');
       }
+    } else {
+      // Dense triple-threat: train in one lane, hurdle + slide staggered in the
+      // remaining lane's depth so the player must weave — only common late-run.
+      const trainLane = Math.floor(Math.random() * 3);
+      laneOccupied[trainLane] = true;
+      this.spawnTrain(LANES[trainLane], chunkZ, Math.random() > 0.5, false);
+
+      const otherLanes = [0, 1, 2].filter(l => l !== trainLane);
+      const l2 = otherLanes[0];
+      laneOccupied[l2] = true;
+      this.spawnObstacle(LANES[l2], chunkZ - 9, Math.random() > 0.5 ? 'slide' : 'hurdle');
+      // third lane stays fully clear as the guaranteed safe path
     }
 
     // Spawn Coins & Rare Billighost Tokens in Open Lanes
@@ -1174,6 +1439,39 @@ export class SubwaySurgeEngine {
         this.spawnPowerupCrate(LANES[pLane], chunkZ + (Math.random() * 10 - 5), pType);
       }
     }
+  }
+
+  getGlowSpriteTexture() {
+    if (this._glowTex) return this._glowTex;
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.4, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+    this._glowTex = new THREE.CanvasTexture(canvas);
+    return this._glowTex;
+  }
+
+  addGlowSprite(parent, x, y, z, scale, color) {
+    const mat = new THREE.SpriteMaterial({
+      map: this.getGlowSpriteTexture(),
+      color,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      fog: false,
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(scale, scale, 1);
+    sprite.position.set(x, y, z);
+    parent.add(sprite);
+    return sprite;
   }
 
   // --- SUBWAY TRAINS ---
@@ -1286,6 +1584,8 @@ export class SubwaySurgeEngine {
     hlR.position.set(0.72, 1.1, length / 2 - 0.14);
     trainGroup.add(hlL);
     trainGroup.add(hlR);
+    this.addGlowSprite(trainGroup, -0.72, 1.1, length / 2 - 0.1, 1.1, 0xfff3d6);
+    this.addGlowSprite(trainGroup, 0.72, 1.1, length / 2 - 0.1, 1.1, 0xfff3d6);
 
     // Forward Headlight Beam Cones (Volumetric Cyber Effect)
     const coneGeo = new THREE.ConeGeometry(1.4, 8.0, 16, 1, true);
@@ -1843,6 +2143,9 @@ export class SubwaySurgeEngine {
       this.ghostSurgeCharge = 0;
       if (this.ghostSurgeAura) this.ghostSurgeAura.visible = true;
       subwayAudio.playGhostSurge();
+      this.triggerCameraPunch(1.3);
+      this.shakeIntensity = 0.3;
+      this.spawnFloatingText('GHOST SURGE!', this.playerGroup.position.x, this.playerGroup.position.y + 2.2, this.playerGroup.position.z, '#38bdf8', 1.15);
       this.callbacks.onGhostSurgeChange(0, true);
     }
   }
@@ -1958,6 +2261,7 @@ export class SubwaySurgeEngine {
     this.activePhantoms.forEach(p => this.scene.remove(p.group));
     this.activePowerups.forEach(p => this.scene.remove(p.group));
     this.particles.forEach(p => this.scene.remove(p.mesh));
+    this.floatingTexts.forEach(f => { this.scene.remove(f.sprite); f.sprite.material.dispose(); });
     if (this.recordGateMesh) {
       this.scene.remove(this.recordGateMesh);
       this.recordGateMesh = null;
@@ -1970,6 +2274,7 @@ export class SubwaySurgeEngine {
     this.activePhantoms = [];
     this.activePowerups = [];
     this.particles = [];
+    this.floatingTexts = [];
 
     this.chunks.forEach(c => this.scene.remove(c.group));
     this.chunks = [];
@@ -2001,16 +2306,30 @@ export class SubwaySurgeEngine {
 
     const mult = (this.multiplierActive ? 2 : 1) * this.combo;
     this.score = Math.floor(this.distance * mult);
-    this.callbacks.onScoreUpdate(this.score, Math.floor(this.distance), this.combo);
 
-    if (this.speed < this.maxSpeed) {
-      this.speed += delta * 0.38;
+    const speedFactor = THREE.MathUtils.clamp((this.speed - this.baseSpeed) / (this.maxSpeed - this.baseSpeed), 0, 1);
+    const comboFactor = THREE.MathUtils.clamp((this.combo - 1) / 15, 0, 1);
+    const intensity = Math.min(1, speedFactor * 0.6 + comboFactor * 0.5 + (this.ghostSurgeActive ? 0.4 : 0));
+    this.musicIntensity = intensity;
+    this._intensityTimer = (this._intensityTimer || 0) + delta;
+    if (this._intensityTimer > 0.12) {
+      this._intensityTimer = 0;
+      subwayAudio.setIntensity(intensity);
+    }
+    this.callbacks.onScoreUpdate(this.score, Math.floor(this.distance), this.combo, speedFactor);
+
+    const diff = this.getDifficultyFactor();
+    const targetSpeedCap = THREE.MathUtils.lerp(this.baseSpeed + 22, this.maxSpeed, diff);
+    if (this.speed < targetSpeedCap) {
+      this.speed += delta * (0.3 + diff * 0.5);
     }
 
     if (this.highScoreDistance > 0 && !this.recordBroken && this.distance >= this.highScoreDistance) {
       this.recordBroken = true;
       this.callbacks.onRecordBroken(Math.floor(this.distance));
       subwayAudio.playStreakMultiplier(16);
+      this.triggerCameraPunch(1.1);
+      this.spawnFloatingText('NEW BEST!', this.playerGroup.position.x, this.playerGroup.position.y + 2.2, this.playerGroup.position.z, '#fbbf24', 1.2);
       if (this.recordGateMesh) {
         this.createBurst(0, 7, this.recordGateMesh.position.z, 0xf59e0b, 50);
       }
@@ -2186,6 +2505,13 @@ export class SubwaySurgeEngine {
     }
 
     this.updateWorldMovement(moveDist, delta);
+    this.updateFloatingTexts(delta, moveDist);
+    if (this.clouds) {
+      this.clouds.forEach(c => {
+        c.position.x += delta * 0.5;
+        if (c.position.x > 140) c.position.x = -140;
+      });
+    }
     this.updateGhostChaser(delta);
     this.animatePlayerModel(delta);
     this.updateParticles(delta);
@@ -2449,7 +2775,9 @@ export class SubwaySurgeEngine {
 
     subwayAudio.playNearMiss();
     this.shakeIntensity = 0.2;
+    this.triggerCameraPunch(0.3);
     this.createBurst(this.playerGroup.position.x, this.playerGroup.position.y + 0.8, this.playerGroup.position.z, 0x38bdf8, 8);
+    this.spawnFloatingText('CLOSE CALL!', this.playerGroup.position.x, this.playerGroup.position.y + 1.9, this.playerGroup.position.z, '#38bdf8', 0.85);
     this.score += 150 * this.combo;
     this.callbacks.onNearMiss();
   }
@@ -2507,13 +2835,13 @@ export class SubwaySurgeEngine {
     if (now - this.lastCollectTime < 1800) {
       this.streakCount++;
       if (this.streakCount >= 40) {
-        if (this.combo < 16) { this.combo = 16; subwayAudio.playStreakMultiplier(16); this.callbacks.onComboUpdate(16, 'MAX SURGE x16!'); }
+        if (this.combo < 16) { this.combo = 16; subwayAudio.playStreakMultiplier(16); this.callbacks.onComboUpdate(16, 'MAX SURGE x16!'); this.triggerCameraPunch(0.9); this.spawnFloatingText('MAX SURGE x16!', this.playerGroup.position.x, this.playerGroup.position.y + 2.1, this.playerGroup.position.z, '#f59e0b', 1.1); }
       } else if (this.streakCount >= 20) {
-        if (this.combo < 8) { this.combo = 8; subwayAudio.playStreakMultiplier(8); this.callbacks.onComboUpdate(8, 'Ultra Combo x8!'); }
+        if (this.combo < 8) { this.combo = 8; subwayAudio.playStreakMultiplier(8); this.callbacks.onComboUpdate(8, 'Ultra Combo x8!'); this.triggerCameraPunch(0.65); this.spawnFloatingText('ULTRA COMBO x8!', this.playerGroup.position.x, this.playerGroup.position.y + 2.1, this.playerGroup.position.z, '#f59e0b', 1.0); }
       } else if (this.streakCount >= 10) {
-        if (this.combo < 4) { this.combo = 4; subwayAudio.playStreakMultiplier(4); this.callbacks.onComboUpdate(4, 'Super Streak x4!'); }
+        if (this.combo < 4) { this.combo = 4; subwayAudio.playStreakMultiplier(4); this.callbacks.onComboUpdate(4, 'Super Streak x4!'); this.triggerCameraPunch(0.45); this.spawnFloatingText('SUPER STREAK x4!', this.playerGroup.position.x, this.playerGroup.position.y + 2.1, this.playerGroup.position.z, '#fbbf24', 0.9); }
       } else if (this.streakCount >= 5) {
-        if (this.combo < 2) { this.combo = 2; subwayAudio.playStreakMultiplier(2); this.callbacks.onComboUpdate(2, 'Combo x2!'); }
+        if (this.combo < 2) { this.combo = 2; subwayAudio.playStreakMultiplier(2); this.callbacks.onComboUpdate(2, 'Combo x2!'); this.triggerCameraPunch(0.3); }
       }
     } else {
       this.streakCount = 1;
@@ -2530,6 +2858,7 @@ export class SubwaySurgeEngine {
     this.callbacks.onCoinsUpdate(this.coins);
     subwayAudio.playGhostToken();
     this.createBurst(token.group.position.x, token.group.position.y, token.group.position.z, 0x38bdf8, 16);
+    this.spawnFloatingText('+5', token.group.position.x, token.group.position.y + 0.8, token.group.position.z, '#7eb8ff', 0.7);
 
     this.ghostSurgeCharge = Math.min(100, this.ghostSurgeCharge + 25);
     this.callbacks.onGhostSurgeChange(this.ghostSurgeCharge, this.ghostSurgeActive);
@@ -2544,6 +2873,8 @@ export class SubwaySurgeEngine {
     this.activePowerups.splice(index, 1);
     subwayAudio.playPowerupGet();
     this.createBurst(pup.group.position.x, pup.group.position.y, pup.group.position.z, 0x38bdf8, 20);
+    const labels = { hoverboard: 'HOVERBOARD!', jetpack: 'JETPACK!', magnet: 'MAGNET!', multiplier: '2X COINS!', sneakers: 'SUPER SNEAKERS!' };
+    this.spawnFloatingText(labels[pup.type] || 'POWER UP!', pup.group.position.x, pup.group.position.y + 0.9, pup.group.position.z, '#38bdf8', 0.85);
 
     const type = pup.type;
     if (type === 'hoverboard') {
@@ -2593,6 +2924,53 @@ export class SubwaySurgeEngine {
     }
   }
 
+  spawnFloatingText(text, x, y, z, color = '#ffffff', scale = 1) {
+    if (!this._textTexCache) this._textTexCache = {};
+    const key = text + color;
+    let tex = this._textTexCache[key];
+    if (!tex) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 96;
+      const ctx = canvas.getContext('2d');
+      ctx.font = 'bold 46px "Space Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = color;
+      ctx.fillText(text, 128, 48);
+      tex = new THREE.CanvasTexture(canvas);
+      this._textTexCache[key] = tex;
+    }
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(1.7 * scale, 0.64 * scale, 1);
+    sprite.position.set(x, y, z);
+    this.scene.add(sprite);
+    this.floatingTexts.push({ sprite, life: 1.0, vy: 1.6 });
+  }
+
+  updateFloatingTexts(delta, moveDist) {
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const f = this.floatingTexts[i];
+      f.life -= delta * 0.85;
+      f.sprite.position.y += f.vy * delta;
+      f.sprite.position.z += moveDist;
+      f.sprite.material.opacity = Math.max(0, f.life);
+      f.sprite.scale.set(1.7 * (1 + (1 - f.life) * 0.15), 0.64 * (1 + (1 - f.life) * 0.15), 1);
+      if (f.life <= 0) {
+        this.scene.remove(f.sprite);
+        f.sprite.material.dispose();
+        this.floatingTexts.splice(i, 1);
+      }
+    }
+  }
+
+  triggerCameraPunch(amount) {
+    this.cameraPunch = Math.min(1.6, this.cameraPunch + amount);
+  }
+
   // --- ANIMATIONS & CAMERA ---
 
   animatePlayerModel(delta) {
@@ -2628,15 +3006,22 @@ export class SubwaySurgeEngine {
       if (this.leftArm) this.leftArm.rotation.x = -1.2;
       if (this.rightArm) this.rightArm.rotation.x = -1.2;
     } else {
+      const speedLean = THREE.MathUtils.clamp((this.speed - this.baseSpeed) / 220, 0, 0.16);
       this.charRoot.position.y = 1.0 + Math.abs(Math.sin(runCycle)) * 0.12;
-      this.charRoot.rotation.x = 0.1;
+      this.charRoot.rotation.x = 0.08 + speedLean;
       this.charRoot.rotation.y = 0;
 
       const stride = Math.sin(runCycle);
       if (this.leftLeg) this.leftLeg.rotation.x = stride * 0.9;
       if (this.rightLeg) this.rightLeg.rotation.x = -stride * 0.9;
-      if (this.leftArm) this.leftArm.rotation.x = -stride * 0.9;
-      if (this.rightArm) this.rightArm.rotation.x = stride * 0.9;
+      if (this.leftArm) {
+        this.leftArm.rotation.x = -stride * 0.95;
+        this.leftArm.rotation.z = 0.08 + Math.abs(stride) * 0.06;
+      }
+      if (this.rightArm) {
+        this.rightArm.rotation.x = stride * 0.95;
+        this.rightArm.rotation.z = -0.08 - Math.abs(stride) * 0.06;
+      }
 
       if (Math.abs(stride) > 0.85) {
         this.createFootstepDust(this.playerGroup.position.x, this.playerGroup.position.z);
@@ -2681,10 +3066,13 @@ export class SubwaySurgeEngine {
     this.camera.position.y += (targetCamY - this.camera.position.y) * Math.min(1, 8 * delta);
     this.camera.position.z += (targetCamZ - this.camera.position.z) * Math.min(1, 12 * delta);
 
-    const targetFov = THREE.MathUtils.clamp(66 + (speed - this.baseSpeed) * 0.45, 66, 84);
+    const targetFov = THREE.MathUtils.clamp(66 + (speed - this.baseSpeed) * 0.45 + this.cameraPunch * 7, 66, 94);
     if (Math.abs(this.camera.fov - targetFov) > 0.05) {
       this.camera.fov += (targetFov - this.camera.fov) * Math.min(1, 4 * delta);
       this.camera.updateProjectionMatrix();
+    }
+    if (this.cameraPunch > 0) {
+      this.cameraPunch = Math.max(0, this.cameraPunch - delta * 2.6);
     }
 
     if (this.shakeIntensity > 0) {

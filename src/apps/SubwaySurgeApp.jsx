@@ -106,6 +106,7 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const engineRef = useRef(null);
+  const speedFxRef = useRef(null);
 
   // Interactive 3D Turntable Refs
   const turntableCanvasRef = useRef(null);
@@ -141,10 +142,13 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
     if (!canvasRef.current) return;
 
     const engine = new SubwaySurgeEngine(canvasRef.current, {
-      onScoreUpdate: (currScore, currDist, currCombo) => {
+      onScoreUpdate: (currScore, currDist, currCombo, speedFactor) => {
         setScore(currScore);
         setDistance(currDist);
         setCombo(currCombo);
+        if (speedFxRef.current && typeof speedFactor === 'number') {
+          speedFxRef.current.style.opacity = String(Math.max(0, speedFactor - 0.12) * 0.85);
+        }
       },
       onCoinsUpdate: (c) => {
         setSessionCoins(c);
@@ -214,6 +218,13 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
       if (reviveTimerRef.current) clearInterval(reviveTimerRef.current);
     };
   }, []);
+
+  // Reset speed vignette whenever we're not actively running
+  useEffect(() => {
+    if (gameState !== 'playing' && speedFxRef.current) {
+      speedFxRef.current.style.opacity = '0';
+    }
+  }, [gameState]);
 
   // Handle Revive Countdown Timer
   useEffect(() => {
@@ -649,6 +660,7 @@ export default function SubwaySurgeApp({ playClick = () => {} }) {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
       />
+      <div ref={speedFxRef} className={styles.speedVignette} aria-hidden="true" />
 
       {/* Dynamic Glass HUD */}
       {gameState === 'playing' && (
