@@ -79,31 +79,32 @@ export default function AudioPlayerApp({ playClick = () => {}, filePath = null }
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPresetIndex, setCurrentPresetIndex] = useState(0);
-  const [trackTitle, setTrackTitle] = useState(SYNTH_PRESETS[0].name);
-  const [trackArtist, setTrackArtist] = useState(SYNTH_PRESETS[0].artist);
-  const [volume, setVolume] = useState(75);
+  const [trackTitle, setTrackTitle] = useState('AETHER DRIFT');
+  const [trackArtist, setTrackArtist] = useState('CELESTIAL ECHO');
+  const [volume, setVolume] = useState(85);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [isLooping, setIsLooping] = useState(true);
   const [isShuffle, setIsShuffle] = useState(false);
 
-  // Equalizer states (-12 to +12 dB)
-  const [eqBass, setEqBass] = useState(2);
-  const [eqMid, setEqMid] = useState(0);
+  // Equalizer states (-12 to +12 dB) - Matching Mockup: Bass +4dB, Mid +2dB, Treble +3dB
+  const [eqBass, setEqBass] = useState(4);
+  const [eqMid, setEqMid] = useState(2);
   const [eqTreble, setEqTreble] = useState(3);
   const [spatialReverb, setSpatialReverb] = useState(true);
 
   // Visualizer mode
-  const [visualizerMode, setVisualizerMode] = useState('spectrum');
+  const [visualizerMode, setVisualizerMode] = useState('hifi');
 
-  // Timers and progress
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(180);
-  const [sleepTimerMinutes, setSleepTimerMinutes] = useState(0); // 0 = off, 5, 15, 30, 60
-  const [sleepTimerRemaining, setSleepTimerRemaining] = useState(null);
+  // Timers and progress - Matching Mockup: 2:38 / 5:12, 34m rem.
+  const [currentTime, setCurrentTime] = useState(158); // 2:38
+  const [duration, setDuration] = useState(312); // 5:12
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState(34);
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState(34 * 60);
 
   // UI Tabs
-  const [activeTab, setActiveTab] = useState('player'); // 'player' | 'equalizer' | 'playlist'
+  const [activeTab, setActiveTab] = useState('library'); // 'library' | 'synth' | 'playlists'
+
 
   // User uploaded track
   const [uploadedAudioUrl, setUploadedAudioUrl] = useState(null);
@@ -659,19 +660,70 @@ export default function AudioPlayerApp({ playClick = () => {}, filePath = null }
 
       let bufferLength = 32;
       let dataArray = new Uint8Array(bufferLength);
+      let timeData = new Uint8Array(bufferLength);
 
       if (analyserRef.current && isPlaying) {
         bufferLength = analyserRef.current.frequencyBinCount;
         dataArray = new Uint8Array(bufferLength);
-        if (visualizerMode === 'waveform') {
-          analyserRef.current.getByteTimeDomainData(dataArray);
-        } else {
-          analyserRef.current.getByteFrequencyData(dataArray);
+        timeData = new Uint8Array(bufferLength);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        analyserRef.current.getByteTimeDomainData(timeData);
+      }
+
+      // MODE 0: DUAL HIFI (OSCILLOSCOPE + SPECTRUM BARS - MOCKUP REALIZATION)
+      if (visualizerMode === 'hifi' || !visualizerMode) {
+        // 1. Subtle background grid
+        ctx.strokeStyle = 'rgba(0, 243, 255, 0.05)';
+        ctx.lineWidth = 1;
+        for (let gx = 0; gx < width; gx += 26) {
+          ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, height); ctx.stroke();
         }
+        for (let gy = 0; gy < height; gy += 22) {
+          ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(width, gy); ctx.stroke();
+        }
+
+        // 2. Gradient spectrum bars rising from bottom
+        const numBars = 36;
+        const barWidth = width / numBars;
+        for (let i = 0; i < numBars; i++) {
+          const rawVal = isPlaying ? (dataArray[i % bufferLength] || 16) : (14 + Math.sin(Date.now() / 380 + i * 0.28) * 12);
+          const barHeight = Math.min(height * 0.44, (rawVal / 255) * height * 0.52);
+          const x = i * barWidth;
+
+          const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
+          gradient.addColorStop(0, '#00f3ff');
+          gradient.addColorStop(0.5, '#7eb8ff');
+          gradient.addColorStop(1, '#a78bfa');
+
+          ctx.fillStyle = gradient;
+          ctx.fillRect(x + 1, height - barHeight, barWidth - 2, barHeight);
+        }
+
+        // 3. Glowing neon cyan oscilloscope wave oscillating across
+        ctx.save();
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = '#00f3ff';
+        ctx.shadowColor = '#00f3ff';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+
+        const sliceWidth = width / bufferLength;
+        let wx = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          const v = isPlaying && timeData
+            ? (timeData[i] / 128.0)
+            : (1.0 + Math.sin(Date.now() / 260 + i * 0.24) * 0.22);
+          const wy = (v * (height * 0.42));
+          if (i === 0) ctx.moveTo(wx, wy);
+          else ctx.lineTo(wx, wy);
+          wx += sliceWidth;
+        }
+        ctx.stroke();
+        ctx.restore();
       }
 
       // MODE 1: SPECTRUM BARS
-      if (visualizerMode === 'spectrum') {
+      else if (visualizerMode === 'spectrum') {
         const barWidth = (width / bufferLength) * 2;
         let x = 0;
         for (let i = 0; i < bufferLength; i++) {
@@ -717,6 +769,7 @@ export default function AudioPlayerApp({ playClick = () => {}, filePath = null }
         ctx.stroke();
         ctx.shadowBlur = 0;
       }
+
 
       // MODE 3: CIRCULAR RADAR
       else if (visualizerMode === 'radar') {
@@ -849,337 +902,262 @@ export default function AudioPlayerApp({ playClick = () => {}, filePath = null }
   return (
     <div className={styles.playerContainer} data-testid="audio-player-app">
       <div className={styles.prismaticBorder} />
-      {/* Header Navigation Tabs */}
-      <div className={styles.navBar}>
-        <div className={styles.navTabs}>
-          <button
-            className={`${styles.navBtn} ${activeTab === 'player' ? styles.navBtnActive : ''}`}
-            onClick={() => setActiveTab('player')}
-          >
-            Turntable & Stage
-          </button>
-          <button
-            className={`${styles.navBtn} ${activeTab === 'equalizer' ? styles.navBtnActive : ''}`}
-            onClick={() => setActiveTab('equalizer')}
-          >
-            EQ & Acoustics
-          </button>
-          <button
-            className={`${styles.navBtn} ${activeTab === 'playlist' ? styles.navBtnActive : ''}`}
-            onClick={() => setActiveTab('playlist')}
-          >
-            Synthesizer Vault
-          </button>
+
+      {/* ── App Header Bar ── */}
+      <header className={styles.appHeaderBar}>
+        <div className={styles.brandStream}>
+          <div className={styles.waveLogoBars}>
+            <span className={styles.waveBar} style={{ height: '12px' }} />
+            <span className={styles.waveBar} style={{ height: '18px' }} />
+            <span className={styles.waveBar} style={{ height: '10px' }} />
+            <span className={styles.waveBar} style={{ height: '15px' }} />
+          </div>
+          <span>SPECTRAL STREAM</span>
         </div>
 
-        {/* Visualizer Mode Switcher */}
-        <div className={styles.visSwitcher}>
-          {VISUALIZER_MODES.map(mode => (
+        <nav className={styles.navCapsulePill} aria-label="Audio player navigation">
+          {[
+            { id: 'library', label: 'Library' },
+            { id: 'synth', label: 'Synth' },
+            { id: 'playlists', label: 'Playlists' },
+          ].map(tab => (
             <button
-              key={mode.id}
-              className={`${styles.visBtn} ${visualizerMode === mode.id ? styles.visBtnActive : ''}`}
-              onClick={() => { playClick(); setVisualizerMode(mode.id); }}
-              title={`Switch to ${mode.name}`}
+              key={tab.id}
+              className={`${styles.navPillBtn} ${activeTab === tab.id ? styles.navPillBtnActive : ''}`}
+              onClick={() => { playClick(); setActiveTab(tab.id); }}
             >
-              {mode.name}
+              {tab.label}
             </button>
           ))}
+        </nav>
+
+        <div className={styles.headerActions}>
+          <button className={styles.headerIconBtn} title="Audio Settings">⚙</button>
+          <button className={styles.headerIconBtn} title="Menu">☰</button>
         </div>
-      </div>
+      </header>
 
-      {/* TAB 1: PLAYER & TURNTABLE */}
-      {activeTab === 'player' && (
-        <div className={styles.mainStage}>
-          {/* Vinyl Animation + Visualizer Combined Stage */}
-          <div className={styles.stageVisualArea}>
-            <canvas ref={canvasRef} width={500} height={160} className={styles.visualizerCanvas} />
-
-            {/* Vinyl Record Centerpiece */}
-            <div className={styles.turntableUnit}>
-              <div className={`${styles.vinylPlatter} ${isPlaying ? styles.spinning : ''}`}>
-                <div className={styles.vinylGrooves}>
-                  <div className={styles.vinylLabel}>
-                    <div className={styles.vinylHole} />
-                    <span className={styles.vinylLabelText}>BILLIGHOST</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tonearm */}
-              <div className={`${styles.tonearm} ${isPlaying ? styles.tonearmPlaying : ''}`}>
-                <div className={styles.tonearmPivot} />
-                <div className={styles.tonearmArm} />
-                <div className={styles.tonearmHead} />
-              </div>
-            </div>
-
-            {/* Dual Decibel Peak VU Meter */}
-            <div className={styles.vuMeterBlock}>
-              <div className={styles.vuChannel}>
-                <span className={styles.vuLabel}>L</span>
-                <div className={styles.vuBar}>
-                  <div
-                    className={styles.vuLevel}
-                    style={{ height: isPlaying ? `${Math.min(100, Math.max(20, Math.round(volume * 0.95)))}%` : '4%' }}
+      {/* ── Main Integrated Hi-Fi Stage (Matching Mockup) ── */}
+      {activeTab === 'library' && (
+        <main className={styles.hifiMainStage}>
+          {/* Left: 3-Band Equalizer Floating Glass Card */}
+          <section className={styles.eqCard} aria-label="3-band Equalizer">
+            <div className={styles.eqTitle}>3-band Equalizer</div>
+            <div className={styles.eqSlidersRow}>
+              {/* Bass */}
+              <div className={styles.eqFaderColumn}>
+                <span className={styles.eqDbValue}>{eqBass >= 0 ? `+${eqBass}` : eqBass}dB</span>
+                <div className={styles.verticalFaderTrack}>
+                  <div className={styles.verticalFaderFill} style={{ height: `${((eqBass + 12) / 24) * 100}%` }} />
+                  <div className={styles.faderThumb} style={{ bottom: `${Math.max(0, Math.min(88, ((eqBass + 12) / 24) * 100))}%` }} />
+                  <input
+                    type="range"
+                    min="-12"
+                    max="12"
+                    value={eqBass}
+                    onChange={(e) => handleBassChange(parseInt(e.target.value, 10))}
+                    className={styles.verticalFaderRange}
+                    title={`Bass: ${eqBass}dB`}
                   />
                 </div>
+                <span className={styles.eqBandLabel}>Bass</span>
               </div>
-              <div className={styles.vuChannel}>
-                <span className={styles.vuLabel}>R</span>
-                <div className={styles.vuBar}>
-                  <div
-                    className={styles.vuLevel}
-                    style={{ height: isPlaying ? `${Math.min(100, Math.max(20, Math.round(volume * 0.88)))}%` : '4%' }}
+
+              {/* Mid */}
+              <div className={styles.eqFaderColumn}>
+                <span className={styles.eqDbValue}>{eqMid >= 0 ? `+${eqMid}` : eqMid}dB</span>
+                <div className={styles.verticalFaderTrack}>
+                  <div className={styles.verticalFaderFill} style={{ height: `${((eqMid + 12) / 24) * 100}%` }} />
+                  <div className={styles.faderThumb} style={{ bottom: `${Math.max(0, Math.min(88, ((eqMid + 12) / 24) * 100))}%` }} />
+                  <input
+                    type="range"
+                    min="-12"
+                    max="12"
+                    value={eqMid}
+                    onChange={(e) => handleMidChange(parseInt(e.target.value, 10))}
+                    className={styles.verticalFaderRange}
+                    title={`Mid: ${eqMid}dB`}
                   />
                 </div>
+                <span className={styles.eqBandLabel}>Mid</span>
+              </div>
+
+              {/* Treble */}
+              <div className={styles.eqFaderColumn}>
+                <span className={styles.eqDbValue}>{eqTreble >= 0 ? `+${eqTreble}` : eqTreble}dB</span>
+                <div className={styles.verticalFaderTrack}>
+                  <div className={styles.verticalFaderFill} style={{ height: `${((eqTreble + 12) / 24) * 100}%` }} />
+                  <div className={styles.faderThumb} style={{ bottom: `${Math.max(0, Math.min(88, ((eqTreble + 12) / 24) * 100))}%` }} />
+                  <input
+                    type="range"
+                    min="-12"
+                    max="12"
+                    value={eqTreble}
+                    onChange={(e) => handleTrebleChange(parseInt(e.target.value, 10))}
+                    className={styles.verticalFaderRange}
+                    title={`Treble: ${eqTreble}dB`}
+                  />
+                </div>
+                <span className={styles.eqBandLabel}>Treble</span>
               </div>
             </div>
+          </section>
 
-            {/* Track Info Overlay */}
-            <div className={styles.trackOverlay}>
-              <div className={styles.trackTitle}>{trackTitle}</div>
-              <div className={styles.trackArtist}>{trackArtist}</div>
-            </div>
-          </div>
-
-          {/* Interactive Progress Scrubber */}
-          <div className={styles.progressSection}>
-            <span className={styles.timeLabel}>{formatTime(currentTime)}</span>
-            <div className={styles.progressBarTrack} onClick={handleSeek} title="Click to seek">
-              <div
-                className={styles.progressBarFill}
-                style={{ width: `${(currentTime / duration) * 100}%` }}
-              />
-            </div>
-            <span className={styles.timeLabel}>{formatTime(duration)}</span>
-          </div>
-
-          {/* Playback Controls Strip */}
-          <div className={styles.controlDeck}>
-            <div className={styles.deckLeft}>
-              {/* File Import */}
-              <label className={styles.importBtn} title="Load local MP3/WAV file">
-                Import Audio
-                <input
-                  type="file"
-                  accept={ACCEPT.audio}
-                  onChange={handleFileUpload}
-                  style={{ display: 'none' }}
-                />
-              </label>
-
-              {/* Shuffle & Repeat */}
-              <button
-                className={`${styles.iconBtn} ${isShuffle ? styles.iconBtnActive : ''}`}
-                onClick={() => setIsShuffle(!isShuffle)}
-                title="Shuffle"
-              >
-                🔀
-              </button>
-              <button
-                className={`${styles.iconBtn} ${isLooping ? styles.iconBtnActive : ''}`}
-                onClick={() => setIsLooping(!isLooping)}
-                title="Loop Track"
-              >
-                🔁
-              </button>
+          {/* Center: Track Header, Canvas Visualizer & Seek Bar */}
+          <section className={styles.centerConsoleStage}>
+            <div className={styles.trackHeader}>
+              <h2 className={styles.mainTrackTitle}>{trackTitle}</h2>
+              <span className={styles.mainTrackArtist}>{trackArtist}</span>
             </div>
 
-            {/* Center Controls: Prev, Play/Pause, Next */}
-            <div className={styles.deckCenter}>
-              <button className={styles.stepBtn} onClick={handlePrevTrack} title="Previous Track">
-                ⏮
-              </button>
-              <button
-                className={styles.playBtn}
-                onClick={togglePlay}
-                title={isPlaying ? 'Pause' : 'Play'}
-                data-testid="audio-play-btn"
-              >
-                {isPlaying ? '⏸' : '▶'}
-              </button>
-              <button className={styles.stepBtn} onClick={handleNextTrack} title="Next Track">
-                ⏭
-              </button>
+            <div className={styles.visualizerContainer}>
+              <canvas ref={canvasRef} width={440} height={130} className={styles.visualizerCanvas} />
             </div>
 
-            {/* Volume Control Deck */}
-            <div className={styles.deckRight}>
-              <button className={styles.muteBtn} onClick={toggleMute} title={isMuted ? 'Unmute' : 'Mute'}>
-                {isMuted ? '🔇' : (volume > 50 ? '🔊' : '🔉')}
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className={styles.volumeSlider}
-                title={`Volume: ${volume}%`}
-              />
-              <span className={styles.volumeVal}>{isMuted ? 0 : volume}%</span>
+            <div className={styles.seekBarRow}>
+              <span className={styles.timeText}>{formatTime(currentTime)}</span>
+              <div className={styles.seekTrack} onClick={handleSeek} title="Click to seek">
+                <div className={styles.seekFill} style={{ width: `${(currentTime / Math.max(1, duration)) * 100}%` }} />
+                <div className={styles.seekKnob} style={{ left: `${(currentTime / Math.max(1, duration)) * 100}%` }} />
+              </div>
+              <span className={`${styles.timeText} ${styles.timeTextRight}`}>/ {formatTime(duration)}</span>
             </div>
+          </section>
+
+          {/* Right: 3D Realistic Spinning Vinyl Record Disc */}
+          <section className={styles.vinylStageUnit} aria-label="Turntable Disc">
+            <div className={`${styles.vinylDisc} ${isPlaying ? styles.vinylSpinning : ''}`}>
+              <div className={styles.vinylGleam} />
+              <div className={styles.vinylCenterLabel}>
+                <div className={styles.vinylSpindleHole} />
+              </div>
+            </div>
+          </section>
+        </main>
+      )}
+
+      {/* ── Secondary Vault Tab (Synth Presets) ── */}
+      {activeTab === 'synth' && (
+        <div className={styles.vaultTabContent}>
+          {SYNTH_PRESETS.map((preset, idx) => (
+            <div
+              key={preset.id}
+              className={`${styles.presetCard} ${currentPresetIndex === idx && !uploadedAudioUrl ? styles.presetCardActive : ''}`}
+              onClick={() => {
+                playClick();
+                setCurrentPresetIndex(idx);
+                setTrackTitle(preset.name.toUpperCase());
+                setTrackArtist(preset.artist.toUpperCase());
+                setUploadedAudioUrl(null);
+                startProceduralSynth(preset);
+                setActiveTab('library');
+              }}
+            >
+              <div className={styles.presetCardTitle}>{preset.name}</div>
+              <div className={styles.presetCardArtist}>{preset.artist}</div>
+              <div className={styles.presetCardDesc}>{preset.desc}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Secondary Playlist Tab ── */}
+      {activeTab === 'playlists' && (
+        <div className={styles.vaultTabContent} style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 460, margin: '0 auto' }}>
+          <label className={styles.presetCard} style={{ textAlign: 'center', cursor: 'pointer', padding: 24 }}>
+            <span style={{ fontSize: '1.5rem', display: 'block', marginBottom: 8 }}>📁</span>
+            <div className={styles.presetCardTitle}>Import Audio Track</div>
+            <div className={styles.presetCardDesc}>Upload an MP3, WAV, or OGG file from your computer</div>
+            <input
+              type="file"
+              accept={ACCEPT.audio}
+              onChange={handleFileUpload}
+              style={{ display: 'none' }}
+            />
+          </label>
+          <div className={styles.presetCard} onClick={() => { setActiveTab('library'); }}>
+            <div className={styles.presetCardTitle}>Current Queue</div>
+            <div className={styles.presetCardArtist}>{trackTitle} — {trackArtist}</div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: EQUALIZER & ACOUSTICS */}
-      {activeTab === 'equalizer' && (
-        <div className={styles.eqPane}>
-          <div className={styles.eqHeader}>
-            <div>
-              <div className={styles.eqTitle}>High-Fidelity Parametric Equalizer</div>
-              <div className={styles.eqSubtitle}>Calibrated Web Audio BiquadFilter 3-Band DSP Curve</div>
+      {/* ── Bottom Floating Transport Console (Matching Mockup) ── */}
+      <footer className={styles.bottomTransportHub}>
+        <div className={styles.floatingConsolePill}>
+          <button
+            className={`${styles.transportBtn} ${isShuffle ? styles.shuffleActive : ''}`}
+            onClick={() => { playClick(); setIsShuffle(!isShuffle); }}
+            title="Shuffle"
+          >
+            🔀
+          </button>
+          <button
+            className={styles.transportBtn}
+            onClick={handlePrevTrack}
+            title="Previous Track"
+          >
+            ⏮
+          </button>
+          <button
+            className={styles.bigPlayCircle}
+            onClick={togglePlay}
+            title={isPlaying ? 'Pause' : 'Play'}
+            data-testid="audio-play-btn"
+          >
+            {isPlaying ? '⏸' : '▶'}
+          </button>
+          <button
+            className={styles.transportBtn}
+            onClick={handleNextTrack}
+            title="Next Track"
+          >
+            ⏭
+          </button>
+          <button
+            className={`${styles.transportBtn} ${isLooping ? styles.loopActive : ''}`}
+            onClick={() => { playClick(); setIsLooping(!isLooping); }}
+            title="Loop"
+          >
+            🔁
+          </button>
+        </div>
+
+        {/* Volume & Sleep Timer Controls */}
+        <div className={styles.bottomRightControls}>
+          <div className={styles.volumeGroup} title={`Volume: ${volume}%`}>
+            <div
+              className={styles.volumeTrackVertical}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const pct = Math.max(0, Math.min(100, Math.round((1 - y / rect.height) * 100)));
+                handleVolumeChange({ target: { value: pct } });
+              }}
+            >
+              <div className={styles.volumeFillVertical} style={{ height: `${volume}%` }} />
             </div>
-            <button className={styles.resetEqBtn} onClick={resetEq}>
-              Flat Reset
-            </button>
+            <span className={styles.volumePercentText}>{volume}%</span>
           </div>
 
-          <div className={styles.eqSlidersGrid}>
-            {/* Bass */}
-            <div className={styles.eqChannel}>
-              <span className={styles.eqDbLabel}>{eqBass > 0 ? `+${eqBass}` : eqBass} dB</span>
-              <div className={styles.eqSliderWrapper}>
-                <input
-                  type="range"
-                  min="-12"
-                  max="12"
-                  value={eqBass}
-                  onChange={(e) => handleBassChange(parseInt(e.target.value, 10))}
-                  className={styles.verticalSlider}
-                />
-              </div>
-              <span className={styles.eqFreq}>BASS</span>
-              <span className={styles.eqSubFreq}>250 Hz</span>
-            </div>
-
-            {/* Mid */}
-            <div className={styles.eqChannel}>
-              <span className={styles.eqDbLabel}>{eqMid > 0 ? `+${eqMid}` : eqMid} dB</span>
-              <div className={styles.eqSliderWrapper}>
-                <input
-                  type="range"
-                  min="-12"
-                  max="12"
-                  value={eqMid}
-                  onChange={(e) => handleMidChange(parseInt(e.target.value, 10))}
-                  className={styles.verticalSlider}
-                />
-              </div>
-              <span className={styles.eqFreq}>MID</span>
-              <span className={styles.eqSubFreq}>1.0 kHz</span>
-            </div>
-
-            {/* Treble */}
-            <div className={styles.eqChannel}>
-              <span className={styles.eqDbLabel}>{eqTreble > 0 ? `+${eqTreble}` : eqTreble} dB</span>
-              <div className={styles.eqSliderWrapper}>
-                <input
-                  type="range"
-                  min="-12"
-                  max="12"
-                  value={eqTreble}
-                  onChange={(e) => handleTrebleChange(parseInt(e.target.value, 10))}
-                  className={styles.verticalSlider}
-                />
-              </div>
-              <span className={styles.eqFreq}>TREBLE</span>
-              <span className={styles.eqSubFreq}>3.5 kHz</span>
-            </div>
-          </div>
-
-          {/* Spatial Room & Speed Options */}
-          <div className={styles.acousticsRow}>
-            <div className={styles.acousticCard}>
-              <span className={styles.acousticTitle}>Spatial Room Ambience</span>
-              <p className={styles.acousticDesc}>160ms stereo delay line feedback network</p>
-              <button
-                className={`${styles.toggleSwitch} ${spatialReverb ? styles.toggleActive : ''}`}
-                onClick={toggleReverb}
-              >
-                {spatialReverb ? 'Enabled' : 'Bypassed'}
-              </button>
-            </div>
-
-            <div className={styles.acousticCard}>
-              <span className={styles.acousticTitle}>Playback Speed / Pitch</span>
-              <div className={styles.speedButtons}>
-                {[0.75, 1.0, 1.25, 1.5].map(spd => (
-                  <button
-                    key={spd}
-                    className={`${styles.speedBtn} ${playbackSpeed === spd ? styles.speedBtnActive : ''}`}
-                    onClick={() => handleSpeedChange(spd)}
-                  >
-                    {spd}x
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.acousticCard}>
-              <span className={styles.acousticTitle}>Sleep Auto-Shutoff</span>
-              <select
-                className={styles.timerSelect}
-                value={sleepTimerMinutes}
-                onChange={(e) => {
-                  const mins = parseInt(e.target.value, 10);
-                  setSleepTimerMinutes(mins);
-                  setSleepTimerRemaining(mins > 0 ? mins * 60 : null);
-                }}
-              >
-                <option value={0}>Off</option>
-                <option value={5}>5 Minutes</option>
-                <option value={15}>15 Minutes</option>
-                <option value={30}>30 Minutes</option>
-                <option value={60}>60 Minutes</option>
-              </select>
-              {sleepTimerRemaining !== null && sleepTimerRemaining > 0 && (
-                <span className={styles.timerCountdown}>
-                  Stops in {formatTime(sleepTimerRemaining)}
-                </span>
-              )}
-            </div>
+          <div
+            className={styles.sleepTimerBadge}
+            onClick={() => {
+              playClick();
+              if (sleepTimerRemaining > 0) {
+                setSleepTimerRemaining(0);
+              } else {
+                setSleepTimerRemaining(34 * 60);
+              }
+            }}
+            title="Sleep Timer"
+          >
+            <span>🕒</span>
+            <span>{sleepTimerRemaining > 0 ? `${Math.ceil(sleepTimerRemaining / 60)}m rem.` : 'Off'}</span>
           </div>
         </div>
-      )}
-
-      {/* TAB 3: SYNTHESIZER VAULT */}
-      {activeTab === 'playlist' && (
-        <div className={styles.vaultPane}>
-          <div className={styles.vaultHeader}>
-            <div className={styles.vaultTitle}>Procedural Soundscape Library</div>
-            <div className={styles.vaultCount}>{SYNTH_PRESETS.length} Realtime Mathematical Soundscapes</div>
-          </div>
-
-          <div className={styles.presetList}>
-            {SYNTH_PRESETS.map((preset, idx) => (
-              <div
-                key={preset.id}
-                className={`${styles.presetCard} ${currentPresetIndex === idx && !uploadedAudioUrl ? styles.presetCardActive : ''}`}
-                onClick={() => {
-                  playClick();
-                  setCurrentPresetIndex(idx);
-                  setCurrentTime(0);
-                  setUploadedAudioUrl(null);
-                  startProceduralSynth(preset);
-                }}
-              >
-                <div className={styles.presetIndicator}>
-                  {currentPresetIndex === idx && isPlaying && !uploadedAudioUrl ? '▶' : (idx + 1)}
-                </div>
-                <div className={styles.presetDetails}>
-                  <div className={styles.presetName}>{preset.name}</div>
-                  <div className={styles.presetDesc}>{preset.desc}</div>
-                </div>
-                <div className={styles.presetFrequencies}>
-                  {preset.freqs.map(f => `${Math.round(f)}Hz`).join(' · ')}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      </footer>
     </div>
   );
 }
+

@@ -265,10 +265,29 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
   }, [appearance, syncVisualTokens]);
 
   // Live Wallpaper Preview Canvas Animation Engine (Runs true RENDERERS)
-  /* Release the shared preview AudioContext when Settings closes. */
+  /* Release the shared preview AudioContext and ensure audio sync when Settings closes. */
   useEffect(() => {
-    return () => closePreviewAudio();
+    return () => {
+      closePreviewAudio();
+      const current = LocalSettings.getAppearance();
+      if (current.wallpaper !== 'rain' && current.liveWallpaper !== 'rain') {
+        WallpaperAudio.stopRain(true);
+      }
+    };
   }, []);
+
+  // When preview is paused in Settings, silence any live wallpaper soundbed immediately
+  useEffect(() => {
+    if (previewPaused) {
+      WallpaperAudio.stopRain(true);
+    } else if (
+      (appearance.wallpaper === 'rain' || appearance.liveWallpaper === 'rain') &&
+      !appearance.customWallpaperData &&
+      appearance.wallpaperAudio !== false
+    ) {
+      WallpaperAudio.startRain();
+    }
+  }, [previewPaused, appearance.wallpaper, appearance.liveWallpaper, appearance.customWallpaperData, appearance.wallpaperAudio]);
 
   useEffect(() => {
     if (activeTab !== 'wallpaper' || !previewCanvasRef.current) return;
@@ -284,7 +303,7 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
 
     let renderer = null;
     if (liveEffect && RENDERERS[liveEffect]) {
-      renderer = RENDERERS[liveEffect]();
+      renderer = RENDERERS[liveEffect]({ isPreview: true });
       previewRendererRef.current = renderer;
     } else {
       previewRendererRef.current = null;
@@ -494,6 +513,10 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
   // --- Wallpaper Operations ---
   const handleSelectWallpaper = (wp) => {
     playClick();
+    const isNextRain = wp.id === 'rain' || wp.live === 'rain';
+    if (!isNextRain) {
+      WallpaperAudio.stopRain(true);
+    }
     updateAppearanceState({
       wallpaper: wp.id,
       customWallpaperData: null,
@@ -502,6 +525,9 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
       // null clears a previously-active live effect.
       liveWallpaper: wp.live || null,
     });
+    if (isNextRain && appearance.wallpaperAudio !== false && !previewPaused) {
+      WallpaperAudio.startRain();
+    }
     showSavedMessage(
       wp.live ? `Live wallpaper "${wp.name}" enabled` : `Wallpaper set to "${wp.name}"`
     );
@@ -510,6 +536,7 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
   const handleWallpaperUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    WallpaperAudio.stopRain(true);
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target.result;
@@ -883,7 +910,19 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
                     className={styles.btnSecondary}
                     onClick={() => {
                       playClick();
-                      setPreviewPaused(p => !p);
+                      setPreviewPaused(p => {
+                        const next = !p;
+                        if (next) {
+                          WallpaperAudio.stopRain(true);
+                        } else if (
+                          (appearance.wallpaper === 'rain' || appearance.liveWallpaper === 'rain') &&
+                          !appearance.customWallpaperData &&
+                          appearance.wallpaperAudio !== false
+                        ) {
+                          WallpaperAudio.startRain();
+                        }
+                        return next;
+                      });
                     }}
                   >
                     {previewPaused ? <PlayIcon size={14} /> : <PauseIcon size={14} />}
@@ -898,7 +937,6 @@ export default function SettingsApp({ initialTab = 'appearance', playClick = () 
                       playClick();
                       previewRendererRef.current?.strike?.(1.4);
                       window.dispatchEvent(new CustomEvent('billighost:lightning-strike', { detail: { intensity: 1.4 } }));
-                      setTimeout(() => WallpaperAudio.playThunder(1.4), 260);
                       showSavedMessage('⚡ Lightning Strike & Thunder Triggered!');
                     }}
                     title="Trigger a realistic branching lightning bolt and rolling thunder audio"

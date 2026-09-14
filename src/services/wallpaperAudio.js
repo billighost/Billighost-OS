@@ -14,10 +14,15 @@ import { LocalSettings } from './storage/localStorage';
 
 let audioCtx = null;
 let rainGain = null;
+let rainLowpass = null;
 let rainSource = null;
+let rainLfo = null;
+let rainLfoGain = null;
 let patterInterval = null;
 let isPlayingRain = false;
 let userVolume = 0.65; // default wallpaper ambience balance
+const pendingThunderTimeouts = new Set();
+const activeThunderNodes = new Set();
 
 function getAudioContext() {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -73,6 +78,7 @@ function createRainNoiseBuffer(ctx) {
  * Procedural tiny droplet blip
  */
 function playDroplet(ctx, masterGain) {
+  if (!masterGain || !isPlayingRain) return;
   try {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -109,9 +115,13 @@ export const WallpaperAudio = {
   /** Set relative wallpaper sound volume (0 to 1) */
   setVolume(vol) {
     userVolume = Math.max(0, Math.min(1, vol));
-    if (rainGain && audioCtx) {
-      const targetGain = userVolume * 0.28 * getMasterMultiplier();
-      rainGain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.1);
+    if (rainGain && audioCtx && audioCtx.state !== 'closed') {
+      try {
+        const targetGain = userVolume * 0.28 * getMasterMultiplier();
+        rainGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        rainGain.gain.setValueAtTime(rainGain.gain.value, audioCtx.currentTime);
+        rainGain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.08);
+      } catch {}
     }
   },
 
@@ -123,9 +133,25 @@ export const WallpaperAudio = {
     return isPlayingRain;
   },
 
+  /** Schedule a thunder strike with tracked timeout for easy cancellation */
+  scheduleThunder(delayMs, intensity = 1.0) {
+    const tid = setTimeout(() => {
+      pendingThunderTimeouts.delete(tid);
+      WallpaperAudio.playThunder(intensity);
+    }, delayMs);
+    pendingThunderTimeouts.add(tid);
+    return tid;
+  },
+
+  /** Cancel all queued thunder strikes */
+  cancelPendingThunder() {
+    pendingThunderTimeouts.forEach(tid => clearTimeout(tid));
+    pendingThunderTimeouts.clear();
+  },
+
   /** Start ambient steady rain soundbed */
   startRain() {
-    if (isPlayingRain) return;
+    if (isPlayingRain && rainSource) return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
@@ -133,32 +159,35 @@ export const WallpaperAudio = {
       const masterMult = getMasterMultiplier();
       if (masterMult <= 0) return;
 
+      // Clean any stale audio nodes first
+      WallpaperAudio.stopRain(true);
+
       const rainBuf = createRainNoiseBuffer(ctx);
       rainSource = ctx.createBufferSource();
       rainSource.buffer = rainBuf;
       rainSource.loop = true;
 
       // Low-pass filter for soothing rain texture
-      const lowpass = ctx.createBiquadFilter();
-      lowpass.type = 'lowpass';
-      lowpass.frequency.setValueAtTime(1150, ctx.currentTime);
+      rainLowpass = ctx.createBiquadFilter();
+      rainLowpass.type = 'lowpass';
+      rainLowpass.frequency.setValueAtTime(1150, ctx.currentTime);
 
       // Subtle LFO for organic wind modulation
-      const lfo = ctx.createOscillator();
-      const lfoGain = ctx.createGain();
-      lfo.frequency.setValueAtTime(0.16, ctx.currentTime);
-      lfoGain.gain.setValueAtTime(180, ctx.currentTime);
-      lfo.connect(lfoGain);
-      lfoGain.connect(lowpass.frequency);
-      lfo.start();
+      rainLfo = ctx.createOscillator();
+      rainLfoGain = ctx.createGain();
+      rainLfo.frequency.setValueAtTime(0.16, ctx.currentTime);
+      rainLfoGain.gain.setValueAtTime(180, ctx.currentTime);
+      rainLfo.connect(rainLfoGain);
+      rainLfoGain.connect(rainLowpass.frequency);
+      rainLfo.start();
 
       rainGain = ctx.createGain();
       rainGain.gain.setValueAtTime(0.0001, ctx.currentTime);
       const targetGain = userVolume * 0.28 * masterMult;
-      rainGain.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 1.2);
+      rainGain.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.8);
 
-      rainSource.connect(lowpass);
-      lowpass.connect(rainGain);
+      rainSource.connect(rainLowpass);
+      rainLowpass.connect(rainGain);
       rainGain.connect(ctx.destination);
 
       rainSource.start();
@@ -167,36 +196,79 @@ export const WallpaperAudio = {
       // Scatter subtle droplet clicks
       if (patterInterval) clearInterval(patterInterval);
       patterInterval = setInterval(() => {
-        if (!isPlayingRain || !audioCtx) return;
+        if (!isPlayingRain || !audioCtx || !rainGain) return;
         if (Math.random() < 0.75) {
           playDroplet(audioCtx, rainGain);
         }
       }, 95);
     } catch {
       // Audio autoplay policy or blocked
+      isPlayingRain = false;
     }
   },
 
-  /** Stop ambient steady rain */
-  stopRain() {
-    if (!isPlayingRain) return;
-    try {
-      if (patterInterval) {
-        clearInterval(patterInterval);
-        patterInterval = null;
-      }
-      if (rainGain && audioCtx) {
-        rainGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.6);
-        setTimeout(() => {
-          try {
-            rainSource?.stop();
-            rainSource?.disconnect();
-            rainSource = null;
-          } catch {}
-        }, 700);
-      }
-    } catch {}
+  /** Stop ambient steady rain immediately or with a smooth decay */
+  stopRain(immediate = true) {
     isPlayingRain = false;
+
+    // 1. Clear droplet timer immediately
+    if (patterInterval) {
+      clearInterval(patterInterval);
+      patterInterval = null;
+    }
+
+    // 2. Clear any pending thunder strikes
+    WallpaperAudio.cancelPendingThunder();
+
+    const currGain = rainGain;
+    const currSource = rainSource;
+    const currLfo = rainLfo;
+    const currLfoGain = rainLfoGain;
+    const currLowpass = rainLowpass;
+
+    rainGain = null;
+    rainSource = null;
+    rainLfo = null;
+    rainLfoGain = null;
+    rainLowpass = null;
+
+    if (currGain && audioCtx && audioCtx.state !== 'closed') {
+      try {
+        currGain.gain.cancelScheduledValues(audioCtx.currentTime);
+        currGain.gain.setValueAtTime(currGain.gain.value, audioCtx.currentTime);
+        if (immediate) {
+          currGain.gain.setValueAtTime(0.00001, audioCtx.currentTime);
+        } else {
+          currGain.gain.linearRampToValueAtTime(0.00001, audioCtx.currentTime + 0.08);
+        }
+      } catch {}
+    }
+
+    const teardownNodes = () => {
+      try {
+        currSource?.stop();
+        currSource?.disconnect();
+      } catch {}
+      try {
+        currLfo?.stop();
+        currLfo?.disconnect();
+      } catch {}
+      try {
+        currLfoGain?.disconnect();
+      } catch {}
+      try {
+        currLowpass?.disconnect();
+      } catch {}
+      try {
+        currGain?.disconnect();
+      } catch {}
+    };
+
+    if (immediate) {
+      teardownNodes();
+    } else {
+      setTimeout(teardownNodes, 90);
+    }
   },
 
   /**
@@ -206,7 +278,7 @@ export const WallpaperAudio = {
   playThunder(intensity = 1.0) {
     try {
       const ctx = getAudioContext();
-      if (!ctx) return;
+      if (!ctx || ctx.state === 'closed') return;
 
       const masterMult = getMasterMultiplier();
       if (masterMult <= 0) return;
@@ -216,6 +288,8 @@ export const WallpaperAudio = {
       const finalVol = Math.min(1.0, userVolume * 0.42 * masterMult * intensity);
       thunderGain.gain.setValueAtTime(finalVol, t);
       thunderGain.connect(ctx.destination);
+
+      activeThunderNodes.add(thunderGain);
 
       // 1. Sub-bass boom oscillator
       const subOsc = ctx.createOscillator();
@@ -264,9 +338,33 @@ export const WallpaperAudio = {
 
       noise.start(t);
       noise.stop(t + noiseDur);
+
+      // Cleanup thunder gain node after noise finishes
+      setTimeout(() => {
+        try {
+          thunderGain.disconnect();
+        } catch {}
+        activeThunderNodes.delete(thunderGain);
+      }, (noiseDur + 0.2) * 1000);
     } catch {
       // AudioContext blocked
     }
+  },
+
+  /** Full immediate silence of all rain and thunder nodes */
+  stopAll() {
+    WallpaperAudio.stopRain(true);
+    WallpaperAudio.cancelPendingThunder();
+    activeThunderNodes.forEach(node => {
+      try {
+        if (audioCtx && audioCtx.state !== 'closed') {
+          node.gain.cancelScheduledValues(audioCtx.currentTime);
+          node.gain.setValueAtTime(0.00001, audioCtx.currentTime);
+        }
+        node.disconnect();
+      } catch {}
+    });
+    activeThunderNodes.clear();
   },
 };
 

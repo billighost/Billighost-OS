@@ -128,30 +128,33 @@ export default function LiveWallpaper({ effect, paused = false }) {
     // Wallpaper Ambient Sound (Rain & Thunder)
     const isRain = effect === 'rain';
     const appSettings = LocalSettings.getAppearance();
-    let audioEnabled = appSettings.wallpaperAudio !== false;
+    const audioEnabled = appSettings.wallpaperAudio !== false;
 
-    if (isRain && audioEnabled) {
+    if (isRain && audioEnabled && !paused) {
       WallpaperAudio.startRain();
+    } else {
+      WallpaperAudio.stopRain(true);
     }
 
     const onLightningStrike = (e) => {
-      if (!isRain) return;
+      if (!isRain || paused) return;
       const currentApp = LocalSettings.getAppearance();
       if (currentApp.wallpaperAudio === false) return;
       const intensity = e.detail?.intensity || 1.0;
-      // Delay thunder slightly for speed-of-sound realism
-      setTimeout(() => {
-        WallpaperAudio.playThunder(intensity);
-      }, 260);
+      // Schedule thunder with 260ms speed-of-sound acoustic delay
+      WallpaperAudio.scheduleThunder(260, intensity);
     };
     window.addEventListener('billighost:lightning-strike', onLightningStrike);
 
     const onAppearanceChange = (e) => {
       const next = e.detail || {};
-      if (isRain) {
+      const isNextRain = next.liveWallpaper === 'rain' || (next.wallpaper === 'rain' && !next.customWallpaperData);
+      if (!isNextRain) {
+        WallpaperAudio.stopRain(true);
+      } else if (isRain) {
         if (next.wallpaperAudio === false) {
-          WallpaperAudio.stopRain();
-        } else if (next.wallpaperAudio !== false) {
+          WallpaperAudio.stopRain(true);
+        } else if (next.wallpaperAudio !== false && !paused) {
           WallpaperAudio.startRain();
         }
       }
@@ -166,9 +169,7 @@ export default function LiveWallpaper({ effect, paused = false }) {
       window.removeEventListener('billighost:lightning-strike', onLightningStrike);
       window.removeEventListener('billighost:appearance-change', onAppearanceChange);
       document.removeEventListener('visibilitychange', onVisibility);
-      if (isRain) {
-        WallpaperAudio.stopRain();
-      }
+      WallpaperAudio.stopRain(true);
       renderer.destroy?.();
       rendererRef.current = null;
     };
@@ -176,8 +177,8 @@ export default function LiveWallpaper({ effect, paused = false }) {
 
   // Honour an explicit pause (e.g. battery saver) without tearing down.
   useEffect(() => {
-    if (paused) {
-      WallpaperAudio.stopRain();
+    if (paused || effect !== 'rain') {
+      WallpaperAudio.stopRain(true);
     } else if (effect === 'rain') {
       const appSettings = LocalSettings.getAppearance();
       if (appSettings.wallpaperAudio !== false) {

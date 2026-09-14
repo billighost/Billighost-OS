@@ -39,7 +39,8 @@ function surfaceBelow(obstacles, x, y) {
    glass as rivulets before evaporating.
    ══════════════════════════════════════════════ */
 
-export function createRain() {
+export function createRain(options = {}) {
+  const isPreview = Boolean(options.isPreview);
   let W = 0, H = 0;
   let drops = [];
   let splashes = [];
@@ -120,8 +121,8 @@ export function createRain() {
       intensity,
     };
 
-    // Notify sound engine
-    if (typeof window !== 'undefined') {
+    // Notify sound engine (live desktop only, never audio leaks from preview)
+    if (!isPreview && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('billighost:lightning-strike', {
         detail: { intensity }
       }));
