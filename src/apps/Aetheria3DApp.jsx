@@ -395,6 +395,10 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
       else if (e.code === 'KeyC') {
         engineRef.current?.dodgeRoll();
       }
+      // Power Attack / AOE Ground Slam (V)
+      else if (e.code === 'KeyV') {
+        engineRef.current?.powerAttack();
+      }
       // Health Potion (Q)
       else if (e.code === 'KeyQ') {
         engineRef.current?.usePotion();
@@ -842,6 +846,19 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 <span className={styles.actionKeyHint}>K</span>
               </button>
 
+              {/* Power Attack (AOE Ground Slam) */}
+              <button
+                className={styles.actionBtn}
+                onClick={() => {
+                  playClick();
+                  engineRef.current?.powerAttack();
+                }}
+                title="Power Attack — AOE Slam (V)"
+              >
+                <SwordIcon size={18} />
+                <span className={styles.actionKeyHint}>V</span>
+              </button>
+
               {/* Attack (Primary) */}
               <button
                 className={`${styles.actionBtn} ${styles.actionBtnPrimary}`}
@@ -889,8 +906,12 @@ export default function Aetheria3DApp({ playClick = () => {} }) {
                 <span className={styles.keyBadge}>Spacebar</span>
               </div>
               <div className={styles.controlRow}>
-                <span>3-Hit Combo Attack</span>
+                <span>3-Hit Combo + Spin Finisher</span>
                 <span className={styles.keyBadge}>J / Click</span>
+              </div>
+              <div className={styles.controlRow}>
+                <span>Power Attack (AOE Slam)</span>
+                <span className={styles.keyBadge}>V</span>
               </div>
               <div className={styles.controlRow}>
                 <span>Lock-On Target</span>

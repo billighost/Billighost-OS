@@ -95,6 +95,7 @@ export class AetheriaEngine {
       isJumping: false,
       jumpVelocity: 0,
       jumpCooldown: 0,
+      powerAttackCooldown: 0,
     };
 
     // Ghost Surge (Ascendance Overdrive)
@@ -185,10 +186,10 @@ export class AetheriaEngine {
     // 1. Scene & Atmospheric Fog
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x60a5fa);
-    this.scene.fog = new THREE.FogExp2(0x60a5fa, 0.008);
+    this.scene.fog = new THREE.FogExp2(0x60a5fa, 0.0055);
 
     // 2. Camera
-    this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 400);
+    this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 520);
 
     // 3. Renderer with high-performance WebGL
     this.renderer = new THREE.WebGLRenderer({
@@ -212,6 +213,8 @@ export class AetheriaEngine {
 
     // 7. Scatter Instanced Foliage & World Landmarks
     this.buildInstancedFoliage();
+    this.buildGroundClutter();
+    this.buildWaterDetail();
     this.buildWorldLandmarks();
     this.buildBillighostSanctuary();
 
@@ -363,7 +366,7 @@ export class AetheriaEngine {
     this.scene.add(this.moonLight);
 
     // Sky Dome Mesh (hemisphere with day/night color lerp)
-    const skyGeo = new THREE.SphereGeometry(380, 24, 16);
+    const skyGeo = new THREE.SphereGeometry(500, 24, 16);
     this.skyMat = new THREE.MeshBasicMaterial({ color: 0x60a5fa, side: THREE.BackSide });
     this.skyMesh = new THREE.Mesh(skyGeo, this.skyMat);
     this.scene.add(this.skyMesh);
@@ -384,7 +387,7 @@ export class AetheriaEngine {
     const starCount = this.graphicsQuality === 'low' ? 400 : 1000;
     const starPositions = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
-      const r = 300;
+      const r = 420;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(Math.random() * 0.9); // keep mostly above horizon
       starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
@@ -434,8 +437,8 @@ export class AetheriaEngine {
   }
 
   buildWorldTerrain() {
-    const size = 300;
-    const segments = 160;
+    const size = 440;
+    const segments = this.graphicsQuality === 'low' ? 170 : this.graphicsQuality === 'ultra' ? 260 : 220;
     const geo = new THREE.PlaneGeometry(size, size, segments, segments);
     geo.rotateX(-Math.PI / 2);
 
@@ -496,14 +499,14 @@ export class AetheriaEngine {
     this.scene.add(this.terrainMesh);
 
     // Riverbed floor (visible through the translucent shader water for depth)
-    const bedGeo = new THREE.PlaneGeometry(35, 300, 4, 20);
+    const bedGeo = new THREE.PlaneGeometry(35, 440, 4, 30);
     bedGeo.rotateX(-Math.PI / 2);
     const bedMat = new THREE.MeshStandardMaterial({ color: 0x0a3548, roughness: 1 });
     const bed = new THREE.Mesh(bedGeo, bedMat);
     bed.position.set(35, -1.1, 0);
     this.scene.add(bed);
 
-    const waterGeo = new THREE.PlaneGeometry(35, 300, 28, 90);
+    const waterGeo = new THREE.PlaneGeometry(35, 440, 28, 130);
     waterGeo.rotateX(-Math.PI / 2);
     this.waterMesh = new THREE.Mesh(waterGeo, this.materials.water);
     this.waterMesh.position.set(35, -0.4, 0);
@@ -517,7 +520,7 @@ export class AetheriaEngine {
     this.scatteredMeshes = [];
 
     // --- Layered pine trees: tapered trunk + 3 tiers of foliage cones, 3 colour variants ---
-    const treeCount = this.graphicsQuality === 'low' ? 80 : 150;
+    const treeCount = this.graphicsQuality === 'low' ? 150 : 270;
     const variants = 3;
     const perVariant = Math.ceil(treeCount / variants) + 1;
     const greenShades = [0x1e4620, 0x14532d, 0x0f3d24];
@@ -552,8 +555,8 @@ export class AetheriaEngine {
 
     let placed = 0;
     for (let i = 0; i < treeCount * 4 && placed < treeCount; i++) {
-      const tx = (Math.random() - 0.5) * 270;
-      const tz = (Math.random() - 0.5) * 270;
+      const tx = (Math.random() - 0.5) * 400;
+      const tz = (Math.random() - 0.5) * 400;
 
       if (Math.abs(tx - 35) < 20) continue; // river channel
       if (Math.hypot(tx - (-65), tz - (-65)) < 34) continue; // colosseum arena
@@ -620,15 +623,15 @@ export class AetheriaEngine {
     // --- Scattered rocks for grounding detail across all biomes ---
     const rockGeo = new THREE.IcosahedronGeometry(1, 0);
     const rockMat = new THREE.MeshStandardMaterial({ color: 0x5b6570, roughness: 0.95, flatShading: true });
-    const rockCount = this.graphicsQuality === 'low' ? 45 : 100;
+    const rockCount = this.graphicsQuality === 'low' ? 85 : 180;
     const rockMesh = new THREE.InstancedMesh(rockGeo, rockMat, rockCount);
     rockMesh.castShadow = this.graphicsQuality !== 'low';
     rockMesh.receiveShadow = true;
 
     let rPlaced = 0;
     for (let i = 0; i < rockCount * 4 && rPlaced < rockCount; i++) {
-      const rx = (Math.random() - 0.5) * 280;
-      const rz = (Math.random() - 0.5) * 280;
+      const rx = (Math.random() - 0.5) * 400;
+      const rz = (Math.random() - 0.5) * 400;
       if (Math.abs(rx - 35) < 10) continue;
       if (Math.hypot(rx, rz) < 10) continue;
 
@@ -651,13 +654,13 @@ export class AetheriaEngine {
       const grassGeo = new THREE.ConeGeometry(0.055, 0.45, 3);
       grassGeo.translate(0, 0.225, 0);
       const grassMat = new THREE.MeshLambertMaterial({ color: 0x4ea058, side: THREE.DoubleSide });
-      const grassCount = this.graphicsQuality === 'ultra' ? 2200 : 1100;
+      const grassCount = this.graphicsQuality === 'ultra' ? 3600 : 2000;
       const grassMesh = new THREE.InstancedMesh(grassGeo, grassMat, grassCount);
 
       let gPlaced = 0;
       for (let i = 0; i < grassCount * 2 && gPlaced < grassCount; i++) {
-        const gx = (Math.random() - 0.5) * 240;
-        const gz = (Math.random() - 0.5) * 240;
+        const gx = (Math.random() - 0.5) * 360;
+        const gz = (Math.random() - 0.5) * 360;
         if (Math.abs(gx - 35) < 16) continue;
         if (gx > 30 && gz < -30) continue;
         if (gx < -20 && gz > 20) continue;
@@ -678,6 +681,162 @@ export class AetheriaEngine {
       grassMesh.instanceMatrix.needsUpdate = true;
       this.scene.add(grassMesh);
       this.scatteredMeshes.push(grassMesh);
+    }
+  }
+
+  // Small ground-level clutter — twigs and mushrooms — for the "world feels detailed
+  // up close" ask. Cheap geometry, skipped on 'low' quality to protect frame rate.
+  buildGroundClutter() {
+    if (this.graphicsQuality === 'low') return;
+    const dummy = new THREE.Object3D();
+
+    // --- Twigs: thin bent cylinders lying flat on the forest floor ---
+    const twigMat = new THREE.MeshStandardMaterial({ color: 0x5c4530, roughness: 0.95 });
+    const twigGeo = new THREE.CylinderGeometry(0.018, 0.03, 0.55, 4);
+    const twigCount = this.graphicsQuality === 'ultra' ? 500 : 260;
+    const twigMesh = new THREE.InstancedMesh(twigGeo, twigMat, twigCount);
+
+    let tPlaced = 0;
+    for (let i = 0; i < twigCount * 2 && tPlaced < twigCount; i++) {
+      const tx = (Math.random() - 0.5) * 380;
+      const tz = (Math.random() - 0.5) * 380;
+      if (Math.abs(tx - 35) < 18) continue;
+      if (tx > 30 && tz < -30) continue; // barren volcanic crags
+      if (Math.hypot(tx - (-65), tz - (-65)) < 30) continue;
+
+      const ty = this.getTerrainHeight(tx, tz);
+      if (ty < 0.25) continue; // don't litter the shoreline sand
+
+      dummy.position.set(tx, ty + 0.02, tz);
+      dummy.rotation.set(Math.PI / 2 + (Math.random() - 0.5) * 0.3, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.2);
+      const s = 0.6 + Math.random() * 0.8;
+      dummy.scale.set(s, s * (0.8 + Math.random() * 0.5), s);
+      dummy.updateMatrix();
+      twigMesh.setMatrixAt(tPlaced, dummy.matrix);
+      tPlaced++;
+    }
+    twigMesh.count = tPlaced;
+    twigMesh.instanceMatrix.needsUpdate = true;
+    this.scene.add(twigMesh);
+    this.scatteredMeshes.push(twigMesh);
+
+    // --- Mushrooms: little stem + cap clusters, a few colour variants ---
+    const mushroomStemMat = new THREE.MeshStandardMaterial({ color: 0xf1ead6, roughness: 0.8 });
+    const mushroomCapColors = [0xdc2626, 0xd97706, 0xca8a04, 0x7c3aed];
+    const stemGeo = new THREE.CylinderGeometry(0.028, 0.036, 0.14, 6);
+    stemGeo.translate(0, 0.07, 0);
+    const capGeo = new THREE.SphereGeometry(0.09, 8, 6, 0, Math.PI * 2, 0, Math.PI * 0.55);
+    capGeo.translate(0, 0.14, 0);
+
+    const clusterCount = this.graphicsQuality === 'ultra' ? 140 : 75;
+    mushroomCapColors.forEach(color => {
+      const capMat = new THREE.MeshStandardMaterial({ color, roughness: 0.55 });
+      const stemMesh = new THREE.InstancedMesh(stemGeo, mushroomStemMat, clusterCount);
+      const capMesh = new THREE.InstancedMesh(capGeo, capMat, clusterCount);
+
+      let mPlaced = 0;
+      for (let i = 0; i < clusterCount * 2 && mPlaced < clusterCount; i++) {
+        const mx = (Math.random() - 0.5) * 380;
+        const mz = (Math.random() - 0.5) * 380;
+        if (Math.abs(mx - 35) < 18) continue;
+        if (mx > 30 && mz < -30) continue;
+        if (Math.hypot(mx - (-65), mz - (-65)) < 30) continue;
+
+        const my = this.getTerrainHeight(mx, mz);
+        if (my < 0.4 || my > 4.5) continue; // mushrooms favour shaded forest floor, not sand/peaks
+
+        dummy.position.set(mx, my, mz);
+        dummy.rotation.y = Math.random() * Math.PI * 2;
+        const s = 0.7 + Math.random() * 0.7;
+        dummy.scale.set(s, s, s);
+        dummy.updateMatrix();
+        stemMesh.setMatrixAt(mPlaced, dummy.matrix);
+        capMesh.setMatrixAt(mPlaced, dummy.matrix);
+        mPlaced++;
+      }
+      stemMesh.count = mPlaced;
+      capMesh.count = mPlaced;
+      stemMesh.instanceMatrix.needsUpdate = true;
+      capMesh.instanceMatrix.needsUpdate = true;
+      this.scene.add(stemMesh);
+      this.scene.add(capMesh);
+      this.scatteredMeshes.push(stemMesh, capMesh);
+    });
+  }
+
+  // Surface & shoreline detail for the river — lily pads, reeds, and a small
+  // school of fish — so the water reads as an actual habitat, not just a plane.
+  buildWaterDetail() {
+    const dummy = new THREE.Object3D();
+
+    // --- Lily pads floating on the surface, gently bobbing ---
+    if (this.graphicsQuality !== 'low') {
+      const padGeo = new THREE.CircleGeometry(0.4, 10);
+      padGeo.rotateX(-Math.PI / 2);
+      const padMat = new THREE.MeshStandardMaterial({ color: 0x1e6b3a, roughness: 0.6, side: THREE.DoubleSide });
+      const padCount = 26;
+      this.lilyPads = [];
+      for (let i = 0; i < padCount; i++) {
+        const pz = -195 + Math.random() * 390;
+        const px = 35 + (Math.random() - 0.5) * 22;
+        const s = 0.6 + Math.random() * 0.7;
+        const pad = new THREE.Mesh(padGeo, padMat);
+        pad.scale.set(s, 1, s);
+        pad.position.set(px, -0.38, pz);
+        pad.userData.bobOffset = Math.random() * Math.PI * 2;
+        pad.userData.baseY = -0.38;
+        this.scene.add(pad);
+        this.lilyPads.push(pad);
+      }
+    }
+
+    // --- Reeds along both riverbanks ---
+    const reedMat = new THREE.MeshLambertMaterial({ color: 0x3f6b2e });
+    const reedGeo = new THREE.ConeGeometry(0.03, 0.9, 3);
+    reedGeo.translate(0, 0.45, 0);
+    const reedCount = this.graphicsQuality === 'low' ? 60 : 140;
+    const reedMesh = new THREE.InstancedMesh(reedGeo, reedMat, reedCount);
+    let rPlaced = 0;
+    for (let i = 0; i < reedCount * 2 && rPlaced < reedCount; i++) {
+      const rz = -215 + Math.random() * 430;
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const riverHalfWidth = 17.5;
+      const rx = 35 + side * (riverHalfWidth + Math.random() * 2.5);
+      const ry = this.getTerrainHeight(rx, rz);
+      if (ry < 0.1 || ry > 1.2) continue; // only right at the bank
+
+      dummy.position.set(rx, ry, rz);
+      dummy.rotation.set((Math.random() - 0.5) * 0.15, Math.random() * Math.PI, (Math.random() - 0.5) * 0.15);
+      const s = 0.7 + Math.random() * 0.6;
+      dummy.scale.set(s, s * (0.8 + Math.random() * 0.6), s);
+      dummy.updateMatrix();
+      reedMesh.setMatrixAt(rPlaced, dummy.matrix);
+      rPlaced++;
+    }
+    reedMesh.count = rPlaced;
+    reedMesh.instanceMatrix.needsUpdate = true;
+    this.scene.add(reedMesh);
+    this.scatteredMeshes.push(reedMesh);
+
+    // --- A small school of fish swimming lazy figure-eights beneath the surface ---
+    if (this.graphicsQuality !== 'low') {
+      const fishMat = new THREE.MeshStandardMaterial({ color: 0x7dd3c0, roughness: 0.4, metalness: 0.3 });
+      const fishGeo = new THREE.ConeGeometry(0.06, 0.24, 4);
+      fishGeo.rotateX(Math.PI / 2);
+      this.fish = [];
+      const fishCount = 10;
+      for (let i = 0; i < fishCount; i++) {
+        const fish = new THREE.Mesh(fishGeo, fishMat);
+        const fz = -180 + Math.random() * 360;
+        fish.userData.centerX = 35;
+        fish.userData.centerZ = fz;
+        fish.userData.radius = 1.5 + Math.random() * 3;
+        fish.userData.speed = 0.4 + Math.random() * 0.5;
+        fish.userData.phase = Math.random() * Math.PI * 2;
+        fish.userData.depth = -0.6 - Math.random() * 0.8;
+        this.scene.add(fish);
+        this.fish.push(fish);
+      }
     }
   }
 
@@ -1214,24 +1373,26 @@ export class AetheriaEngine {
 
   buildArmoredLeg(mat, posX) {
     const legGroup = new THREE.Group();
-    legGroup.position.set(posX, 0.05, 0);
+    // Hip pivot sits at the charRoot origin — charRoot.position.y (0.9 at idle) is
+    // exactly the pelvis-to-ground height, so a leg built from y=0 down to y=-0.9
+    // will land the foot flush on the terrain instead of floating above it.
+    legGroup.position.set(posX, 0, 0);
 
-    // Rounded thigh/shin using a capsule instead of a blocky box — reads far more organic
-    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.135, 0.46, 4, 8), mat);
-    leg.position.y = -0.36;
+    // Thigh/shin capsule: hip (y=0) down to ankle (y=-0.75)
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(0.13, 0.49, 4, 8), mat);
+    leg.position.y = -0.375;
     leg.castShadow = true;
     legGroup.add(leg);
 
     // Knee joint sphere smooths the silhouette where thigh meets shin
-    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), this.materials.steel);
-    knee.position.set(0, -0.35, 0.06);
+    const knee = new THREE.Mesh(new THREE.SphereGeometry(0.145, 10, 8), this.materials.steel);
+    knee.position.set(0, -0.5, 0.05);
     knee.scale.set(1, 1, 0.85);
     legGroup.add(knee);
 
-    const sabaton = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.22, 3, 6), this.materials.steel);
-    sabaton.rotation.z = Math.PI / 2;
-    sabaton.position.set(0, -0.7, 0.1);
-    sabaton.scale.set(1, 1.15, 0.9);
+    // Foot: ankle (y=-0.75) down to ground (y=-0.9), flush with the terrain
+    const sabaton = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.15, 0.44), this.materials.steel);
+    sabaton.position.set(0, -0.825, 0.08);
     legGroup.add(sabaton);
 
     return legGroup;
@@ -1294,10 +1455,8 @@ export class AetheriaEngine {
     this.enemies = [];
 
     const ghostSpawns = [
-      [-40, 45],
-      [-55, 65],
-      [-70, 50],
-      [-35, 80],
+      [-40, 45], [-55, 65], [-70, 50], [-35, 80],
+      [-95, 90], [-110, 60], [-85, 115],
     ];
     ghostSpawns.forEach(([gx, gz], idx) => {
       this.spawnGhostEnemy({
@@ -1315,7 +1474,10 @@ export class AetheriaEngine {
       });
     });
 
-    const wolfSpawns = [[-12, -22], [-18, -30], [20, 24], [28, 32]];
+    const wolfSpawns = [
+      [-12, -22], [-18, -30], [20, 24], [28, 32],
+      [-140, -40], [-155, -60], [95, 100], [115, 120], [150, 30],
+    ];
     wolfSpawns.forEach(([wx, wz], idx) => {
       this.spawnWolfEnemy({
         id: `wolf-${idx}`,
@@ -1332,7 +1494,10 @@ export class AetheriaEngine {
       });
     });
 
-    const goblinSpawns = [[45, -45], [60, -60], [75, -40]];
+    const goblinSpawns = [
+      [45, -45], [60, -60], [75, -40],
+      [130, -90], [150, -120], [100, -140], [170, -60],
+    ];
     goblinSpawns.forEach(([gx, gz], idx) => {
       this.spawnGoblinEnemy({
         id: `goblin-${idx}`,
@@ -1346,6 +1511,24 @@ export class AetheriaEngine {
         speed: 5.8,
         aggroRadius: 16,
         attackRadius: 2.8,
+      });
+    });
+
+    // New enemy type, nesting deeper in the expanded Spectral Crypts biome
+    const spiderSpawns = [[-70, 75], [-90, 100], [-55, 110], [-100, 140]];
+    spiderSpawns.forEach(([sx, sz], idx) => {
+      this.spawnSpiderEnemy({
+        id: `spider-${idx}`,
+        name: 'Crypt Broodmother',
+        type: 'spider',
+        x: sx,
+        z: sz,
+        maxHp: 70,
+        hp: 70,
+        attackPower: 19,
+        speed: 7.2,
+        aggroRadius: 15,
+        attackRadius: 2.0,
       });
     });
 
@@ -1401,33 +1584,98 @@ export class AetheriaEngine {
     const y = this.getTerrainHeight(config.x, config.z);
     group.position.set(config.x, y, config.z);
 
-    const bodyGeo = new THREE.BoxGeometry(0.7, 0.55, 1.3);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.8 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.55;
+    const legHeight = 0.5;
+    const furMat = new THREE.MeshStandardMaterial({ color: 0x1c1a2e, roughness: 0.85 });
+    const furDarkMat = new THREE.MeshStandardMaterial({ color: 0x0d0c18, roughness: 0.9 });
+
+    // Body: capsule laid horizontal, raised onto legs instead of floating
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.26, 0.72, 4, 8), furMat);
+    body.rotation.x = Math.PI / 2;
+    body.position.set(0, legHeight + 0.28, 0.05);
     body.castShadow = true;
     group.add(body);
 
-    const headGeo = new THREE.BoxGeometry(0.45, 0.45, 0.6);
-    const head = new THREE.Mesh(headGeo, bodyMat);
-    head.position.set(0, 0.8, 0.7);
+    // Bristled shoulder hump — reads as a predator's raised hackles
+    const hump = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.3, 6), furDarkMat);
+    hump.position.set(0, legHeight + 0.58, 0.35);
+    hump.rotation.x = -0.3;
+    group.add(hump);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.32, 0.4), furMat);
+    head.position.set(0, legHeight + 0.52, 0.78);
     group.add(head);
 
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-    const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.08), eyeMat);
-    eyeL.position.set(-0.16, 0.85, 0.96);
-    const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.08), eyeMat);
-    eyeR.position.set(0.16, 0.85, 0.96);
-    group.add(eyeL);
-    group.add(eyeR);
+    const snout = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.3), furDarkMat);
+    snout.position.set(0, legHeight + 0.46, 1.03);
+    group.add(snout);
 
-    const hpBar = this.createEnemyHpBar(1.4);
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+    nose.position.set(0, legHeight + 0.46, 1.18);
+    group.add(nose);
+
+    // Bared teeth for menace
+    const toothMat = new THREE.MeshBasicMaterial({ color: 0xf1f5f9 });
+    [-0.06, 0.06].forEach(tx => {
+      const tooth = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.06, 4), toothMat);
+      tooth.position.set(tx, legHeight + 0.38, 1.1);
+      tooth.rotation.x = Math.PI;
+      group.add(tooth);
+    });
+
+    const earGeo = new THREE.ConeGeometry(0.085, 0.22, 4);
+    const earL = new THREE.Mesh(earGeo, furDarkMat);
+    earL.position.set(-0.14, legHeight + 0.76, 0.7);
+    earL.rotation.z = 0.25;
+    const earR = new THREE.Mesh(earGeo, furDarkMat);
+    earR.position.set(0.14, legHeight + 0.76, 0.7);
+    earR.rotation.z = -0.25;
+    group.add(earL, earR);
+
+    // Glowing, emissive eyes — the single biggest "scary" upgrade
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff2b2b, emissive: 0xff2222, emissiveIntensity: 2.2 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), eyeMat);
+    eyeL.position.set(-0.1, legHeight + 0.55, 0.94);
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), eyeMat);
+    eyeR.position.set(0.1, legHeight + 0.55, 0.94);
+    group.add(eyeL, eyeR);
+
+    const tail = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.5, 6), furDarkMat);
+    tail.position.set(0, legHeight + 0.4, -0.52);
+    tail.rotation.x = Math.PI / 2 + 0.55;
+    group.add(tail);
+
+    // Four legs with paws, articulated at the hip for a real trotting gait
+    const legGeo = new THREE.CapsuleGeometry(0.075, legHeight * 0.55, 3, 6);
+    const legPositions = [
+      [-0.18, legHeight, 0.4],
+      [0.18, legHeight, 0.4],
+      [-0.18, legHeight, -0.38],
+      [0.18, legHeight, -0.38],
+    ];
+    const legs = legPositions.map(([lx, ly, lz]) => {
+      const legGroup = new THREE.Group();
+      legGroup.position.set(lx, ly, lz);
+      const legMesh = new THREE.Mesh(legGeo, furMat);
+      legMesh.position.y = -legHeight * 0.5;
+      legMesh.castShadow = true;
+      legGroup.add(legMesh);
+      const paw = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), furDarkMat);
+      paw.position.y = -legHeight * 0.95;
+      paw.scale.set(1, 0.6, 1.25);
+      legGroup.add(paw);
+      group.add(legGroup);
+      return legGroup;
+    });
+
+    const hpBar = this.createEnemyHpBar(1.55);
     group.add(hpBar.group);
 
     this.scene.add(group);
     this.enemies.push({
       ...config,
       group,
+      legs,
+      walkCycle: Math.random() * 10,
       hpBarFill: hpBar.fill,
       state: 'IDLE',
       originX: config.x,
@@ -1442,29 +1690,167 @@ export class AetheriaEngine {
     const y = this.getTerrainHeight(config.x, config.z);
     group.position.set(config.x, y, config.z);
 
-    const skinMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
-    const armorMat = new THREE.MeshStandardMaterial({ color: 0x713f12, roughness: 0.8 });
+    const legHeight = 0.42;
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x2f6b32, roughness: 0.75 });
+    const armorMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.85 });
 
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.8, 0.4), armorMat);
-    torso.position.y = 0.7;
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.27, 0.38, 4, 8), armorMat);
+    torso.position.set(0, legHeight + 0.42, 0);
+    torso.rotation.x = 0.28; // hunched, predatory posture
     torso.castShadow = true;
     group.add(torso);
 
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), skinMat);
-    head.position.y = 1.3;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 12, 10), skinMat);
+    head.position.set(0, legHeight + 0.78, 0.2);
+    head.scale.set(1, 0.95, 1.05);
     group.add(head);
 
-    const club = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.9, 0.15), this.materials.stone);
-    club.position.set(0.5, 0.8, 0.3);
-    group.add(club);
+    const earGeo = new THREE.ConeGeometry(0.075, 0.3, 4);
+    const earL = new THREE.Mesh(earGeo, skinMat);
+    earL.position.set(-0.25, legHeight + 0.82, 0.15);
+    earL.rotation.z = 1.1;
+    const earR = new THREE.Mesh(earGeo, skinMat);
+    earR.position.set(0.25, legHeight + 0.82, 0.15);
+    earR.rotation.z = -1.1;
+    group.add(earL, earR);
 
-    const hpBar = this.createEnemyHpBar(1.9);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xf59e0b, emissiveIntensity: 1.6 });
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), eyeMat);
+    eyeL.position.set(-0.08, legHeight + 0.8, 0.42);
+    const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), eyeMat);
+    eyeR.position.set(0.08, legHeight + 0.8, 0.42);
+    group.add(eyeL, eyeR);
+
+    // Sharp underbite tusks
+    [-0.07, 0.07].forEach(tx => {
+      const tusk = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.09, 4), new THREE.MeshBasicMaterial({ color: 0xf1f5f9 }));
+      tusk.position.set(tx, legHeight + 0.66, 0.4);
+      tusk.rotation.x = Math.PI;
+      group.add(tusk);
+    });
+
+    const armGeo = new THREE.CapsuleGeometry(0.085, 0.3, 3, 6);
+    const armR = new THREE.Mesh(armGeo, skinMat);
+    armR.position.set(0.32, legHeight + 0.55, 0.15);
+    armR.rotation.z = -0.55;
+    armR.castShadow = true;
+    group.add(armR);
+    const armL = new THREE.Mesh(armGeo, skinMat);
+    armL.position.set(-0.32, legHeight + 0.55, 0.15);
+    armL.rotation.z = 0.55;
+    group.add(armL);
+
+    const club = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.14, 0.7, 6), this.materials.stone);
+    club.position.set(0.5, legHeight + 0.32, 0.32);
+    club.rotation.z = -0.65;
+    club.castShadow = true;
+    group.add(club);
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 5), this.materials.darkSteel);
+    spike.position.set(0.62, legHeight + 0.05, 0.5);
+    spike.rotation.z = -0.65;
+    group.add(spike);
+
+    const legGeo = new THREE.CapsuleGeometry(0.1, legHeight * 0.58, 3, 6);
+    const legs = [[-0.15, legHeight, 0], [0.15, legHeight, 0]].map(([lx, ly, lz]) => {
+      const legGroup = new THREE.Group();
+      legGroup.position.set(lx, ly, lz);
+      const legMesh = new THREE.Mesh(legGeo, armorMat);
+      legMesh.position.y = -legHeight * 0.5;
+      legMesh.castShadow = true;
+      legGroup.add(legMesh);
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.1, 0.26), armorMat);
+      foot.position.set(0, -legHeight, 0.05);
+      legGroup.add(foot);
+      group.add(legGroup);
+      return legGroup;
+    });
+
+    const hpBar = this.createEnemyHpBar(1.75);
     group.add(hpBar.group);
 
     this.scene.add(group);
     this.enemies.push({
       ...config,
       group,
+      legs,
+      walkCycle: Math.random() * 10,
+      hpBarFill: hpBar.fill,
+      state: 'IDLE',
+      originX: config.x,
+      originZ: config.z,
+      attackCooldown: 0,
+      staggerTimer: 0,
+    });
+  }
+
+  // New enemy type: Crypt-dwelling Giant Spider — reuses the generic melee AI
+  // path, but with a distinct 8-legged silhouette and venomous glow for variety.
+  spawnSpiderEnemy(config) {
+    const group = new THREE.Group();
+    const y = this.getTerrainHeight(config.x, config.z);
+    group.position.set(config.x, y, config.z);
+
+    const legHeight = 0.38;
+    const chitinMat = new THREE.MeshStandardMaterial({ color: 0x1a0f24, roughness: 0.55, metalness: 0.25 });
+    const markingMat = new THREE.MeshStandardMaterial({ color: 0x7c3aed, emissive: 0x6d28d9, emissiveIntensity: 0.8, roughness: 0.4 });
+
+    const abdomen = new THREE.Mesh(new THREE.SphereGeometry(0.34, 12, 10), chitinMat);
+    abdomen.position.set(0, legHeight + 0.32, -0.28);
+    abdomen.scale.set(1, 0.85, 1.15);
+    abdomen.castShadow = true;
+    group.add(abdomen);
+
+    const marking = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), markingMat);
+    marking.position.set(0, legHeight + 0.5, -0.28);
+    group.add(marking);
+
+    const cephalothorax = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), chitinMat);
+    cephalothorax.position.set(0, legHeight + 0.28, 0.28);
+    group.add(cephalothorax);
+
+    // Cluster of glowing eyes
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x9333ea, emissiveIntensity: 2.0 });
+    for (let i = 0; i < 6; i++) {
+      const ex = (Math.random() - 0.5) * 0.22;
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.028, 6, 6), eyeMat);
+      eye.position.set(ex, legHeight + 0.32 + Math.random() * 0.06, 0.46);
+      group.add(eye);
+    }
+
+    // Fangs
+    [-0.08, 0.08].forEach(fx => {
+      const fang = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.14, 4), new THREE.MeshBasicMaterial({ color: 0xe9d5ff }));
+      fang.position.set(fx, legHeight + 0.16, 0.4);
+      fang.rotation.x = Math.PI;
+      group.add(fang);
+    });
+
+    // 8 spindly legs radiating outward
+    const legGeo = new THREE.CylinderGeometry(0.025, 0.045, legHeight * 1.3, 5);
+    const legs = [];
+    for (let i = 0; i < 8; i++) {
+      const side = i < 4 ? -1 : 1;
+      const idx = i % 4;
+      const legGroup = new THREE.Group();
+      const lz = 0.32 - idx * 0.22;
+      legGroup.position.set(side * 0.2, legHeight + 0.3, lz);
+      const legMesh = new THREE.Mesh(legGeo, chitinMat);
+      legMesh.rotation.z = side * 1.1;
+      legMesh.position.set(side * 0.28, -0.05, 0);
+      legGroup.add(legMesh);
+      group.add(legGroup);
+      legs.push(legGroup);
+    }
+
+    const hpBar = this.createEnemyHpBar(1.3);
+    group.add(hpBar.group);
+
+    this.scene.add(group);
+    this.enemies.push({
+      ...config,
+      group,
+      legs,
+      walkCycle: Math.random() * 10,
       hpBarFill: hpBar.fill,
       state: 'IDLE',
       originX: config.x,
@@ -1558,6 +1944,9 @@ export class AetheriaEngine {
       { x: 42, z: 32, reward: 'Elixir Potion x2', type: 'potion' },
       { x: -75, z: -75, reward: 'Golem Heart Core', type: 'relic' },
       { x: 70, z: -60, reward: 'Titan Claymore', type: 'weapon' },
+      { x: -130, z: 100, reward: 'Spider Silk Cloak', type: 'relic' },
+      { x: 140, z: -110, reward: 'Marauder\'s Warhammer', type: 'weapon' },
+      { x: -150, z: -50, reward: 'Elixir Potion x3', type: 'potion' },
     ];
 
     chestLocations.forEach((loc, idx) => {
@@ -1596,12 +1985,8 @@ export class AetheriaEngine {
   spawnGhostOrbs() {
     this.ghostOrbs = [];
     const orbLocations = [
-      [-30, 40],
-      [-50, 60],
-      [-65, 35],
-      [10, 30],
-      [40, -20],
-      [-25, -15],
+      [-30, 40], [-50, 60], [-65, 35], [10, 30], [40, -20], [-25, -15],
+      [-120, 80], [100, 90], [130, -100], [-160, -70],
     ];
 
     orbLocations.forEach(([ox, oz], idx) => {
@@ -1641,41 +2026,98 @@ export class AetheriaEngine {
     if (now - this.player.lastAttackTime > 1100) {
       this.player.comboStep = 1;
     } else {
-      this.player.comboStep = (this.player.comboStep % 3) + 1;
+      this.player.comboStep = (this.player.comboStep % 4) + 1;
     }
     this.player.lastAttackTime = now;
 
     this.player.isAttacking = true;
-    this.player.attackCooldown = 0.3;
+    this.player.attackCooldown = this.player.comboStep === 4 ? 0.45 : 0.3;
 
     aetheriaAudio.playSlash(this.player.comboStep);
 
     const forwardX = Math.sin(this.facingAngle);
     const forwardZ = Math.cos(this.facingAngle);
-    this.pos.x += forwardX * 0.8;
-    this.pos.z += forwardZ * 0.8;
+    this.pos.x += forwardX * (this.player.comboStep === 4 ? 1.1 : 0.8);
+    this.pos.z += forwardZ * (this.player.comboStep === 4 ? 1.1 : 0.8);
 
-    const hitRadius = 2.8;
+    // 4th hit is a spinning finisher: wider radius, bigger damage, knocks enemies back
+    const isFinisher = this.player.comboStep === 4;
+    const hitRadius = isFinisher ? 4.0 : 2.8;
     const attackOrigin = new THREE.Vector2(this.pos.x + forwardX * 1.4, this.pos.z + forwardZ * 1.4);
+    const originForKnockback = isFinisher ? new THREE.Vector2(this.pos.x, this.pos.z) : attackOrigin;
 
     this.enemies.forEach(enemy => {
       if (enemy.hp <= 0) return;
       const ex = enemy.group.position.x;
       const ez = enemy.group.position.z;
-      const dist = attackOrigin.distanceTo(new THREE.Vector2(ex, ez));
+      const checkPoint = isFinisher ? originForKnockback : attackOrigin;
+      const dist = checkPoint.distanceTo(new THREE.Vector2(ex, ez));
 
       if (dist < hitRadius) {
         const isCrit = Math.random() < this.player.critChance;
         const multiplier = isCrit ? 2.0 : 1.0;
-        const comboMult = this.player.comboStep === 3 ? 1.5 : 1.0;
+        const comboMult = isFinisher ? 2.0 : (this.player.comboStep === 3 ? 1.5 : 1.0);
         const surgeMult = this.ghostSurge.active ? 1.8 : 1.0;
         const damage = Math.round(this.player.attackPower * multiplier * comboMult * surgeMult);
 
         this.damageEnemy(enemy, damage, isCrit);
+        if (isFinisher) {
+          const dirX = (ex - this.pos.x) / Math.max(0.001, dist);
+          const dirZ = (ez - this.pos.z) / Math.max(0.001, dist);
+          this.applyKnockback(enemy, dirX, dirZ, 7);
+        }
       }
     });
 
+    if (isFinisher) {
+      this.createShockwave(this.pos.x, this.pos.y + 0.05, this.pos.z);
+      this.addFloatingText(this.pos.x, this.pos.y + 2.3, this.pos.z, 'FINISHER!', '#f59e0b');
+    }
+
     this.createSlashArc(this.pos.x + forwardX * 1.3, this.pos.y + 1.2, this.pos.z + forwardZ * 1.3);
+  }
+
+  // Power Attack: AOE ground slam ability, independent of the combo chain —
+  // usable anytime stamina allows, gives the moveset a second layer of options
+  // beyond the basic combo (knockback, bigger hitbox, longer cooldown).
+  powerAttack() {
+    if (!this.isRunning || this.isPaused || this.player.isRolling) return;
+    if (this.player.stamina < 35 || this.player.powerAttackCooldown > 0) return;
+
+    this.player.stamina -= 35;
+    this.player.powerAttackCooldown = 3.2;
+    this.player.isAttacking = true;
+    this.player.attackCooldown = 0.55;
+    this.player.comboStep = 4;
+
+    aetheriaAudio.playSlash(3);
+    this.createShockwave(this.pos.x, this.pos.y + 0.05, this.pos.z);
+    this.createBurst(this.pos.x, this.pos.y + 1.0, this.pos.z, 0xf59e0b, 32);
+
+    const hitRadius = 4.6;
+    this.enemies.forEach(enemy => {
+      if (enemy.hp <= 0) return;
+      const ex = enemy.group.position.x;
+      const ez = enemy.group.position.z;
+      const dist = Math.hypot(this.pos.x - ex, this.pos.z - ez);
+      if (dist < hitRadius) {
+        const isCrit = Math.random() < this.player.critChance;
+        const damage = Math.round(this.player.attackPower * (isCrit ? 2.6 : 1.9));
+        this.damageEnemy(enemy, damage, isCrit);
+        const dirX = (ex - this.pos.x) / Math.max(0.001, dist);
+        const dirZ = (ez - this.pos.z) / Math.max(0.001, dist);
+        this.applyKnockback(enemy, dirX, dirZ, 9);
+      }
+    });
+
+    this.addFloatingText(this.pos.x, this.pos.y + 2.4, this.pos.z, 'POWER STRIKE!', '#f59e0b');
+    this.callbacks.onStatsUpdate(this.player);
+  }
+
+  applyKnockback(enemy, dirX, dirZ, force) {
+    enemy.knockbackTimer = 0.35;
+    enemy.knockbackVX = dirX * force;
+    enemy.knockbackVZ = dirZ * force;
   }
 
   castMagicBolt() {
@@ -2036,6 +2478,26 @@ export class AetheriaEngine {
 
     if (this.waterUniforms) this.waterUniforms.uTime.value = this.clock.getElapsedTime();
 
+    const t = this.clock.getElapsedTime();
+    if (this.lilyPads) {
+      this.lilyPads.forEach(pad => {
+        pad.position.y = pad.userData.baseY + Math.sin(t * 0.8 + pad.userData.bobOffset) * 0.03;
+        pad.rotation.y = t * 0.05 + pad.userData.bobOffset;
+      });
+    }
+    if (this.fish) {
+      this.fish.forEach(f => {
+        const { centerX, centerZ, radius, speed, phase, depth } = f.userData;
+        const ang = t * speed + phase;
+        const nx = centerX + Math.cos(ang) * radius;
+        const nz = centerZ + Math.sin(ang * 1.3) * radius * 0.6;
+        const dx = -Math.sin(ang) * radius;
+        const dz = 1.3 * Math.cos(ang * 1.3) * radius * 0.6;
+        f.position.set(nx, depth, nz);
+        f.rotation.y = Math.atan2(dx, dz);
+      });
+    }
+
     if (!this.isSprinting && !this.player.isRolling && this.player.stamina < this.player.maxStamina) {
       this.player.stamina = Math.min(this.player.maxStamina, this.player.stamina + 20 * delta);
       this.callbacks.onStatsUpdate(this.player);
@@ -2062,6 +2524,7 @@ export class AetheriaEngine {
     }
     if (this.player.invulnerableTimer > 0) this.player.invulnerableTimer -= delta;
     if (this.player.jumpCooldown > 0) this.player.jumpCooldown -= delta;
+    if (this.player.powerAttackCooldown > 0) this.player.powerAttackCooldown -= delta;
 
     const groundY = this.getTerrainHeight(this.pos.x, this.pos.z);
     if (!this.isGrounded) {
@@ -2088,7 +2551,7 @@ export class AetheriaEngine {
     const horizSpeed = Math.hypot(this.vel.x, this.vel.z);
     this.telemetry.distanceTraveled += horizSpeed * delta;
 
-    const bound = 145;
+    const bound = 205;
     this.pos.x = THREE.MathUtils.clamp(this.pos.x, -bound, bound);
     this.pos.z = THREE.MathUtils.clamp(this.pos.z, -bound, bound);
 
@@ -2117,7 +2580,7 @@ export class AetheriaEngine {
 
   updateAtmosphere() {
     const sunAngle = this.dayTime * Math.PI * 2;
-    const sunDist = 180;
+    const sunDist = 250;
     const sunX = Math.cos(sunAngle) * sunDist;
     const sunY = Math.sin(sunAngle) * sunDist;
 
@@ -2187,6 +2650,20 @@ export class AetheriaEngine {
         enemy.group.position.y = this.getTerrainHeight(ex, ez) + 0.9 + Math.sin(time * 3 + enemy.hoverOffset) * 0.25;
       }
 
+      // Knockback physics take priority — enemy flies back from a heavy hit
+      // regardless of AI state, then AI resumes once it settles.
+      if (enemy.knockbackTimer > 0) {
+        enemy.knockbackTimer -= delta;
+        const nx = ex + enemy.knockbackVX * delta;
+        const nz = ez + enemy.knockbackVZ * delta;
+        const ny = enemy.type === 'ghost' ? this.getTerrainHeight(nx, nz) + 0.9 : this.getTerrainHeight(nx, nz);
+        enemy.group.position.set(nx, ny, nz);
+        enemy.knockbackVX *= Math.max(0, 1 - 6 * delta);
+        enemy.knockbackVZ *= Math.max(0, 1 - 6 * delta);
+        if (enemy.staggerTimer > 0) enemy.staggerTimer -= delta;
+        return;
+      }
+
       if (enemy.staggerTimer > 0) {
         enemy.staggerTimer -= delta;
         return;
@@ -2195,6 +2672,8 @@ export class AetheriaEngine {
       if (enemy.attackCooldown > 0) {
         enemy.attackCooldown -= delta;
       }
+
+      let moved = false;
 
       if (distToPlayer < enemy.aggroRadius) {
         enemy.state = 'CHASE';
@@ -2210,6 +2689,7 @@ export class AetheriaEngine {
           const nz = ez + stepZ;
           const ny = enemy.type === 'ghost' ? this.getTerrainHeight(nx, nz) + 0.9 : this.getTerrainHeight(nx, nz);
           enemy.group.position.set(nx, ny, nz);
+          moved = true;
         } else {
           if (enemy.attackCooldown <= 0) {
             enemy.attackCooldown = enemy.type === 'boss' ? 2.4 : 1.5;
@@ -2228,6 +2708,21 @@ export class AetheriaEngine {
           const nz = ez + stepZ;
           const ny = enemy.type === 'ghost' ? this.getTerrainHeight(nx, nz) + 0.9 : this.getTerrainHeight(nx, nz);
           enemy.group.position.set(nx, ny, nz);
+          moved = true;
+        }
+      }
+
+      // Generic articulated-leg walk cycle for any enemy with a `legs` array
+      if (enemy.legs && enemy.legs.length) {
+        if (moved) {
+          enemy.walkCycle = (enemy.walkCycle || 0) + delta * enemy.speed * 1.6;
+          const wc = enemy.walkCycle;
+          enemy.legs.forEach((leg, i) => {
+            const diagonalPhase = (i % 2 === 0 ? 0 : Math.PI) + (i >= (enemy.legs.length / 2) ? Math.PI * 0.5 : 0);
+            leg.rotation.x = Math.sin(wc + diagonalPhase) * 0.5;
+          });
+        } else {
+          enemy.legs.forEach(leg => { leg.rotation.x *= 0.85; });
         }
       }
 
@@ -2373,6 +2868,11 @@ export class AetheriaEngine {
       } else if (step === 2) {
         this.rightArm.rotation.x = -1.2;
         this.rightArm.rotation.z = 0.8;
+      } else if (step === 4) {
+        // full spinning finisher / power attack
+        this.charRoot.rotation.y = (time * 30) % (Math.PI * 2);
+        this.rightArm.rotation.x = -1.8;
+        this.rightArm.rotation.z = -1.4;
       } else {
         this.rightArm.rotation.x = -2.2;
         this.rightArm.rotation.z = 0;
@@ -2509,8 +3009,11 @@ export class AetheriaEngine {
     const camAngle = this.camYaw;
     const forwardX = Math.sin(camAngle);
     const forwardZ = Math.cos(camAngle);
-    const rightX = Math.cos(camAngle);
-    const rightZ = -Math.sin(camAngle);
+    // Camera "right" for this yaw convention is -cos/+sin (verified against the
+    // camera's actual lookAt basis) — the previous cos/-sin was mirrored, which is
+    // why A/D (and the joystick's left/right axis) felt swapped.
+    const rightX = -Math.cos(camAngle);
+    const rightZ = Math.sin(camAngle);
 
     const dirX = rightX * moveX + forwardX * moveZ;
     const dirZ = rightZ * moveX + forwardZ * moveZ;
