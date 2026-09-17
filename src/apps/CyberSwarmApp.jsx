@@ -67,6 +67,7 @@ export default function CyberSwarmApp({ playClick = () => {} }) {
   const powerupTimeoutRef = useRef(null);
   const profilePreviewCanvasRef = useRef(null);
   const profileAnimRef = useRef(null);
+  const cheatKeyRef = useRef({ count: 0, lastTime: 0 });
 
   // Game UI State: 'start' | 'playing' | 'paused' | 'levelup' | 'gameover' | 'victory' | 'profile'
   const [gameState, setGameState] = useState('start');
@@ -200,6 +201,21 @@ export default function CyberSwarmApp({ playClick = () => {} }) {
         if (engineRef.current) {
           const enabled = engineRef.current.toggleAutoAim();
           setStats(prev => ({ ...prev, autoAim: enabled }));
+        }
+      }
+
+      // CHEAT CODE: tap H three times in quick succession to fully top off
+      // the XP bar (whatever amount is needed) and trigger a level-up.
+      if (e.code === 'KeyH' && gameState === 'playing') {
+        const now = performance.now();
+        const cheat = cheatKeyRef.current;
+        if (now - cheat.lastTime > 1200) cheat.count = 0;
+        cheat.count += 1;
+        cheat.lastTime = now;
+
+        if (cheat.count >= 3) {
+          cheat.count = 0;
+          if (engineRef.current) engineRef.current.cheatFillXP();
         }
       }
 

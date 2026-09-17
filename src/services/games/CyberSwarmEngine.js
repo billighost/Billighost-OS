@@ -1238,6 +1238,22 @@ export class CyberSwarmEngine {
     this.callbacks.onStatsUpdate(this.getPublicStats());
   }
 
+  /** Cheat code: instantly tops off the XP bar by exactly however much is left
+   * to fill it (works the same whether that's 5 XP or 5000) and fires a normal
+   * level-up. Triggered from the UI after three quick presses of H. */
+  cheatFillXP() {
+    const needed = this.player.expNext - this.player.exp;
+    if (needed > 0) this.player.exp += needed;
+    this.addFloatingText(this.player.x, this.player.y - 30, 'CHEAT: XP FILLED', '#fde047');
+    this.createShockwave(this.player.x, this.player.y, '#fde047', 70);
+    cyberSwarmAudio.playPowerupPickup();
+    if (this.player.exp >= this.player.expNext) {
+      this.triggerLevelUp();
+    } else {
+      this.callbacks.onStatsUpdate(this.getPublicStats());
+    }
+  }
+
   triggerLevelUp() {
     this.player.level++;
     this.player.exp = Math.max(0, this.player.exp - this.player.expNext);
