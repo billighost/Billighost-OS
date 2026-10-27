@@ -1,16 +1,72 @@
-# React + Vite
+# Billighost OS
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**A full desktop operating system running in your browser.** Boot screen, windows, a start menu, file manager, terminal, a code editor, a paint studio and a video editor, all built from scratch in React with no UI kit.
 
-Currently, two official plugins are available:
+**[Live demo → billighost-os.vercel.app](https://billighost-os.vercel.app/)** (best on a desktop screen)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## What's inside
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Desktop shell**
+- Boot sequence with a canvas entanglement animation
+- Draggable, resizable windows with a window manager and Task View
+- Start menu, Spotlight-style search, widgets panel and system tray flyouts
+- Global right-click context menu and notification toasts
+- Live animated wallpapers and a liquid-glass visual theme
+- System hooks for battery, network status, audio and storage quota
 
-## Expanding the Oxlint configuration
+**Built-in apps**
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| Productivity and tools | Creative | Also included |
+|---|---|---|
+| File Manager, Recycle Bin | Paint Studio | Aetheria 3D |
+| Notepad, Code Editor | Video Editor | Cyber Swarm |
+| Terminal, Task Manager | Audio Player, Image Viewer | Subway Surge |
+| Calculator, Settings | Ghost Browser | Void Strike |
+
+---
+
+## How it's built
+
+The interesting part is that **every app is declared in one manifest** (`src/app/manifest.js`) and nothing else needs editing to add one. The manifest holds each app's id, icon, default and minimum window size, the file extensions it opens, and its settings schema.
+
+`src/app/registry.js` derives everything else from that single source:
+
+- **File associations** are built from each app's declared extensions, so double-clicking a `.png` opens the Image Viewer and unknown types fall back to Notepad. A new app can't silently disagree with a separate routing table.
+- **Window sizing** comes from per-app tiers, with safe fallbacks so a window is never created too small to grab.
+- **Settings** merge each app's own schema with a universal set every app receives.
+
+### Stack
+
+- React 19 with CSS Modules
+- Vite
+- Three.js for 3D and live wallpapers
+- Oxlint for linting
+- Node's built-in test runner for unit tests, and Playwright for browser checks
+
+---
+
+## Run it locally
+
+```bash
+git clone https://github.com/billighost/Billighost-OS.git
+cd Billighost-OS
+npm install
+npm run dev          # start the dev server
+```
+
+| Command | What it does |
+|---|---|
+| `npm run build` | Production build |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Lint with Oxlint |
+| `npm run test:unit` | Run unit tests |
+
+---
+
+## Status
+
+Actively developed. New apps and shell features are added regularly.
+
+Built by [Bilal Bello](https://github.com/billighost).
